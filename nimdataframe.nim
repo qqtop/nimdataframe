@@ -12,11 +12,12 @@
 ##   
 ##   Latest      : 2016-09-18
 ##
-##   Compiler    : Nim >= 0.14.2
+##   Compiler    : Nim >= 0.14.3
 ##
 ##   OS          : Linux
 ##
 ##   Description :
+##   
 ##                 simple dataframe 
 ##                 
 ##                 create a dataframe for display or processing
@@ -205,6 +206,7 @@ proc getcolheaders*(df:nimdf): nimss =
       ## getcolheaders
       ## 
       ## get the first line of the dataframe df 
+      ## 
       ## we assume line 0 contains headers
       ## 
      
@@ -269,10 +271,15 @@ proc showDf*(df:nimdf,rows:int = 10,cols:int = 2 ,colwd:int = 18, showframe:bool
     ## Displays a dataframe 
     ## 
     ## number of rows default =  10
+    ## 
     ## with cols from left to right according to cols default = 2
+    ## 
     ## column width default = 18
+    ## 
     ## showFrame  default = off
+    ## 
     ## header indicates if an actual header is available
+    ## 
     ## frame character can be shown
     ##
   
@@ -328,7 +335,9 @@ proc showDfSelect*(df:nimdf,rows:int = 10,cols:seq[int] = @[1,2]  ,colwd:int = 1
     ## showDfSelect 
     ## 
     ## allows selective display of columns , with column numbers passed in as a seq
+    ## 
     ## the first column = 1 
+    ## 
       
     var okrows = rows
     var okcols = cols
@@ -390,9 +399,11 @@ proc showDfSelect*(df:nimdf,rows:int = 10,cols:seq[int] = @[1,2]  ,colwd:int = 1
   ##  
 
 
-
-
 proc showDataframeInfo*(df:nimdf) = 
+   ## showDataframeInfo
+   ## 
+   ## some basic information of the dataframe
+   ## 
    echo()
    hdx(printLn("Dataframe Info ",peru,styled = {}))
    showHeader(df)
@@ -437,10 +448,10 @@ proc makeNimDf*(dfcols : varargs[nimss]):nimdf =
   ## 
   ## creates a nimdf with passed in col data which is of type nimss
   ## 
-  ## still will need to check if all cols are same length otherwise append 
-  ## 
-  ## NaN etc
-  ## 
+  # still will need to check if all cols are same length otherwise append 
+  # 
+  # NaN etc
+  # 
   var df = newNimDf()
   for x in dfcols:
       df.add(x)
