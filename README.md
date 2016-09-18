@@ -22,7 +22,20 @@ Requirements
           
           nimble install https://github.com/qqtop/NimCx.git
  
- 
+
+              
+API Docs
+--------
+
+      http://qqtop.github.io/nimdataframe.html
+
+
+Installation
+------------
+
+      nimble install https://github.com/qqtop/nimdataframe.git
+
+     
 Example Code 
  
  ```nimrod
