@@ -56,6 +56,4 @@ NOTE :
      
      Tested  openSuse 13.2 , openSuse Leap42.1 , openSuse TumbleWeed
               
-file:///data4/HugoStuff/nimstuff/static/images/qqtop.png
-
 ![Image](http://qqtop.github.io/qqtop.png?raw=true)
