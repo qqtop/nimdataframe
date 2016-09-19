@@ -26,9 +26,11 @@ Requirements
               
 API Docs
 --------
+```nimrod
 
         http://qqtop.github.io/nimdataframe.html
 
+```
 
 Installation
 ------------
@@ -57,7 +59,8 @@ doFinish()
 
 
 ```
-![Image](http://qqtop.github.io/nimdataframe1.png?raw=true width = 150 height = 150)
+![Image](http://qqtop.github.io/nimdataframe1.png?raw=false width="150" height="150")
+
 
 
 
