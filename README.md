@@ -78,4 +78,4 @@ NOTE :
      
      Tested  openSuse 13.2 , openSuse Leap42.1 , openSuse TumbleWeed
               
-![Image](http://qqtop.github.io/qqtop.png?width="150")
+![Image](http://qqtop.github.io/qqtop-small.png?raw=true)
