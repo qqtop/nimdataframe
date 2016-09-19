@@ -27,19 +27,22 @@ Requirements
 API Docs
 --------
 
-      http://qqtop.github.io/nimdataframe.html
+        http://qqtop.github.io/nimdataframe.html
 
 
 Installation
 ------------
+```nimrod
 
-      nimble install https://github.com/qqtop/nimdataframe.git
+        nimble install https://github.com/qqtop/nimdataframe.git
 
+```
      
 Example Code 
  
- ```nimrod
- 
+```nimrod
+
+## nimdfT1.nim 
 ## Testing nimdataframe
 
 var ufo =  "http://bit.ly/uforeports"    # data used in pandas documentation
@@ -54,7 +57,7 @@ doFinish()
 
 
 ```
-![Image](http://qqtop.github.io/nimdataframe1.png?raw=true)
+![Image](http://qqtop.github.io/nimdataframe1.png?raw=true width = 150 height = 150)
 
 
 
