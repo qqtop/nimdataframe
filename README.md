@@ -17,11 +17,14 @@ Dataframe for Nim
  
  
 Requirements
- 
-          nimble install random
+------------
+```nimrod
+
+        nimble install random
           
-          nimble install https://github.com/qqtop/NimCx.git
+        nimble install https://github.com/qqtop/NimCx.git
  
+```
 
               
 API Docs
@@ -59,7 +62,7 @@ doFinish()
 
 
 ```
-![Image](http://qqtop.github.io/nimdataframe1.png?raw=false width="150" height="150")
+![Image](http://qqtop.github.io/nimdataframe1.png?raw=true)
 
 
 
@@ -75,4 +78,4 @@ NOTE :
      
      Tested  openSuse 13.2 , openSuse Leap42.1 , openSuse TumbleWeed
               
-![Image](http://qqtop.github.io/qqtop.png?raw=true)
+![Image](http://qqtop.github.io/qqtop.png?raw=false width="150" height="150")
