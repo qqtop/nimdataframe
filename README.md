@@ -46,9 +46,12 @@ Installation
 Example Code 
  
 ```nimrod
+import cx , nimdataframe 
 
-## nimdfT1.nim 
+## nimdfT1.nim
 ## Testing nimdataframe
+## compile with : nim c -d:ssl -d:release -r nimdfT1
+
 
 var ufo =  "http://bit.ly/uforeports"    # data used in pandas documentation
 var ndf:nimdf                            # define a nim dataframe
@@ -56,17 +59,13 @@ var ndf:nimdf                            # define a nim dataframe
 ndf = createDataFrame(ufo)
 printLnBiCol("Data Source : " & ufo)
 echo()
-showDf(ndf, cols = 6 ,rows = 10,colwd = 15,showframe = true,header = true) 
+
+showDf(ndf, rows = 25,cols = @[1,3,4],colwd = @[],showframe = true,framecolor = salmon,header = true) 
 showDataframeInfo(ndf)
 doFinish()
 
-
 ```
 ![Image](http://qqtop.github.io/nimdataframe1.png?raw=true)
-
-
-
-
 
 
 

@@ -45,12 +45,17 @@ import parsecsv,streams,algorithm
 type      
       nimdf* = seq[seq[string]]   # nim data frame
       nimss* = seq[string]        # nim string seq
+      nimis* = seq[int]           # nim integer seq
 
-proc newNimDf():nimdf = @[]
-proc newNimSs():nimss = @[]
+proc newNimDf*():nimdf = @[]
+proc newNimSs*():nimss = @[]
+proc newNimIs*():nimis = @[]
 
-var dfcolwd = newSeq[int]()         # holds dataframe column widths 
+
+var dfcolwd = newNimIs()            # holds dataframe column widths 
 var csvrows = -1                    # in case of getdata2 csv files we may get processed rowcount back
+
+var temp = ""
 
 proc getData1*(url:string):auto =
   ## getData
@@ -60,9 +65,9 @@ proc getData1*(url:string):auto =
   try:
        result  = getcontent(url)   # orig test data
   except :
-      printLnBiCol("Error : " & url & " content could not be fetched . Retry with -d:ssl",":",red) 
-      printLn(getCurrentExceptionMsg(),red,xpos = 9)
-      doFinish()
+       printLnBiCol("Error : " & url & " content could not be fetched . Retry with -d:ssl",":",red) 
+       printLn(getCurrentExceptionMsg(),red,xpos = 9)
+       doFinish()
 
 
 proc getData2*(filename:string,cols:int = 2,sep:char = ','):auto = 
@@ -103,21 +108,24 @@ proc getData2*(filename:string,cols:int = 2,sep:char = ','):auto =
         open(x, s, filename,separator = sep)
         var dxset = newNimSs()
         var c = 0  # counter
-       
-        while readRow(x):
-          try:   
-                for val in items(x.row):
-                  if c < ccols :
-                    dxset.add(val)
-                    myseq[c].add(dxset)   
-                    inc c
-                    dxset = @[]
-                c = 0  
-          except:
-                c = 0
-                discard
+        try:
+          while readRow(x):
+              try:   
+                    for val in items(x.row):
+                      if c < ccols :
+                        dxset.add(val)
+                        myseq[c].add(dxset)   
+                        inc c
+                        dxset = @[]
+                    c = 0  
+              except:
+                    c = 0
+                    discard
                
-        csvrows = processedRows(x)
+          csvrows = processedRows(x)
+        except CsvError: 
+           discard
+        
         close(x)
         result = myseq    # this holds col data now
         
@@ -214,6 +222,7 @@ proc getcolheaders*(df:nimdf): nimss =
       for hx in df[0]:
          result.add(hx.strip(true,true))
 
+
 proc getTotalHeaderColsWitdh*(df:nimdf):int = 
      ## getTotalHeaderColsWitdh
      ## 
@@ -235,6 +244,8 @@ proc showHeader*(df:nimdf) =
    printLn("Headers or first Line",salmon,xpos = 2,styled = {})
    printLn(headers,xpos = 2)
    echo()
+   
+   
 proc showCounts*(df:nimdf) =    
    printLn("Columns and Rows Count",salmon,xpos = 2,styled = {})
    printLnBiCol("Col count : " & $getcolheaders(df).len,xpos = 2)
@@ -263,11 +274,14 @@ proc showMaxColWidths*(df:nimdf) =
     printLn("For data where there are no headers header data is taken from the first row.",lightgrey,xpos = 2)
     decho(2)
 
-  
-  
-proc showDf*(df:nimdf,rows:int = 10,cols:int = 2 ,colwd:int = 18, showframe:bool = false,header:bool = false) =
+       
+proc showDf*(df:nimdf,rows:int = 10,cols:nimis = @[], colwd:nimis = @[], showframe:bool = false,framecolor:string = white,header:bool = false,headertext:nimss = @[]) =
     ## showDf
-    ##
+    ## 
+    ## allows selective display of columns , with column numbers passed in as a seq
+    ## 
+    ## Convention :  the first column = 1 
+    ## 
     ## Displays a dataframe 
     ## 
     ## number of rows default =  10
@@ -280,114 +294,157 @@ proc showDf*(df:nimdf,rows:int = 10,cols:int = 2 ,colwd:int = 18, showframe:bool
     ## 
     ## header indicates if an actual header is available
     ## 
-    ## frame character can be shown
+    ## frame character can be shown in selectable color
+    ## 
+    ## headerless data can be show with headertest supplied
     ##
-  
-    var okrows = rows
-    var okcols = cols
-    
-    # if we have some over lengths specified we reset to ax possible
-    if okcols > df[0].len : okcols = df[0].len 
-    if okrows == 0 or okrows > df.len: okrows = df.len
-           
-    for x in 0.. <okrows:     # note we get rows data rows back and the header
-             
-      for y in 0.. <okcols:
-          var displaystr = ""        
-         
-         # this cuts the column contents to max colwd 
-          try:
-            for z in 0.. <df[x][y].len:
-              if z < colwd:
-                   displaystr = displaystr & $df[x][y][z]
-          except IndexError:
-             # for time being we do like this , needs improvement
-             printLn(getCurrentExceptionMsg(),red,xpos = 9)
-             continue
-                  
-          var colfm = "<" & $(colwd)
-          var fma = @[colfm,""]  
-          if showframe == false:
-              if x == 0:
-                  if header == true:
-                      print(fmtx(fma,displaystr,spaces(2)),yellowgreen,styled = {styleunderscore})  # here we make sure that there are 2 spaces between cols
-                  else:
-                      print(fmtx(fma,displaystr,spaces(2)),styled = {})  # here we make sure that there are 2 spaces between cols
-                     
-              else:
-                  print(fmtx(fma,displaystr,spaces(2)),lightgrey,styled = {})  # here we make sure that there are 2 spaces between cols
-          
-          else:  # show the frame
-              if x == 0:
-                  if header == true:  
-                      print(fmtx(fma,displaystr,spaces(1) & "|"),yellowgreen,styled = {styleunderscore})  # here we make sure that there are 2 spaces between cols
-                  else:
-                      print(fmtx(fma,displaystr,spaces(1) & "|"),styled = {})  # here we make sure that there are 2 spaces between cols
-              
-              else:
-                  print(fmtx(fma,displaystr,spaces(1) & "|"),lightgrey,styled = {})  # here we make sure that there are 2 spaces between cols
-    
-      echo()   
-  
-
-     
-proc showDfSelect*(df:nimdf,rows:int = 10,cols:seq[int] = @[1,2]  ,colwd:int = 18, showframe:bool = false,header:bool = false) =
-    ## showDfSelect 
-    ## 
-    ## allows selective display of columns , with column numbers passed in as a seq
-    ## 
-    ## the first column = 1 
-    ## 
       
     var okrows = rows
     var okcols = cols
-    var displaystr = ""
+    var okcolwd = colwd  
+    var toplineflag = false
+    var displaystr = ""   
     
+    # dynamic col width with colwd passed in if not colwd for all cols = 15 
+         
+    if okcolwd.len < okcols.len:
+       # we are missing some colwd data we add default widths
+       while okcolwd.len < okcols.len:
+             okcolwd.add(15)
+      
+    
+    # if not cols seq is specified we assume all cols
+    if okcols == @[] and df[0].len > 0:
+      try:
+        for colno in 1.. df[0].len:    # note colno starts at 1 
+             okcols.add(colno)
+      except IndexError:
+              discard
+              
     # we need a check to see if request cols actually exist
-    for x in cols:
-      if x > df[0].len:
+    for col in okcols:
+      if col > df[0].len:
          printLn("Error : showDfSelect needs correct column to display parameters cols",red) 
-         printLn("Error : Requested Column >= " & $x & " do not exist in dataframe",red)
+         printLn("Error : Requested Column >= " & $col & " does not exist in dataframe",red)
          # we exit
          doFinish()
+   
+   
+    # calculate length of topline of frame based on cols and colwd 
+    var frametoplinelen = 0
+    assert okcols.len == okcolwd.len
+    frametoplinelen = frametoplinelen + sum(okcolwd) +  (2 * okcols.len) + 1
     
     # take care of over lengths
     if okrows == 0 or okrows > df.len: okrows = df.len
                
-    for x in 0.. <okrows:   # note we get rows data rows back and the header
+    for row in 0.. <okrows:   # note we get rows data rows back and the header
              
-      for yy in okcols:
-          var y = yy - 1          
-          if y > -1:   # need as the seq count starts with 0
+      for col in 0.. <okcols.len:
+      
               try:                    
-                 displaystr = $df[x][y]  # will be cut to size by fmtx to fit into colwd
+                 displaystr = $df[row][col]  # will be cut to size by fma below to fit into colwd
               except IndexError:
                  # just throw it away ..
                  discard
-              
-              var colfm = "<" & $(colwd)  # constructing the format string
+                                       
+              var colfm = "<" & $(okcolwd[col])  # constructing the format string
               var fma = @[colfm,""]  
               if showframe == false:
-                  if x == 0:
-                      if header == true:
+                  if row == 0:  
+                      # no frame , but header either in data or just first row will be used 
+                      if header == true and headertext == @[]:  # first line will be header
                           print(fmtx(fma,displaystr,spaces(2)),yellowgreen,styled = {styleunderscore})  # here we make sure that there are 2 spaces between cols
-                      else:
+                      
+                      elif header == false:
+                          # no header  
                           print(fmtx(fma,displaystr,spaces(2)),styled = {})  # here we make sure that there are 2 spaces between cols
+                      
+                      elif header == true and headertext.len > 0:
+                          # header using headertext 
+                          print(fmtx(fma,headertext[col],spaces(2)),yellowgreen,styled = {styleunderscore}) 
+                        
                         
                   else:
+                      # all other rows data
                       print(fmtx(fma,displaystr,spaces(2)),lightgrey,styled = {})  # here we make sure that there are 2 spaces between cols
               
+              
               else:  # show the frame
-                  if x == 0:
-                      if header == true:  
-                          print(fmtx(fma,displaystr,spaces(1) & "|"),yellowgreen,styled = {styleunderscore})  # here we make sure that there are 2 spaces between cols
+                  if row == 0:
+                      
+                      if header == true and headertext == @[]: # first line will be used as header
+                          # set up topline of frame
+                          if toplineflag == false:
+                             print(".",lime)
+                             hline(frametoplinelen - 2 ,framecolor,xpos = 2) 
+                             println(".",lime)
+                             toplineflag = true   
+                             
+                          if col == 0:    # first col of header          
+                              print(framecolor & "|" & yellowgreen & fmtx(fma,displaystr,spaces(1) & framecolor & "|" & white),yellowgreen,styled = {styleunderscore})  # here we make sure that there are 2 spaces between cols
+                          else: # other cols of header
+                              print(fmtx(fma,displaystr,spaces(1) & framecolor & "|" & white),yellowgreen,styled = {styleunderscore})  # here we make sure that there are 2 spaces between cols
+                      
+                      elif header == true and headertext.len > 0:  # we use headers supplied in headertext
+                          ## here is still a problem .. the right framing not ok
+                          if toplineflag == false:
+                             
+                              print(".",lime)
+                              hline(frametoplinelen - 2 ,framecolor,xpos = 2) 
+                              println(".",lime)
+                              toplineflag = true
+                               
+                              for hs in 0.. <headertext.len:
+                                 var ncolfm = "<" & $(okcolwd[hs])  # constructing the format string
+                                 var nfma = @[ncolfm,""]
+                                 if col == 0:                                                                    
+                                      print(framecolor & "|" & yellowgreen & fmtx(nfma,headertext[hs].strip(true,true),spaces(1) &  white),yellowgreen,styled = {styleunderscore})
+                                 else :
+                                      print(fmtx(nfma,headertext[hs].strip(true,true),spaces(1) & framecolor & "|" & white),yellowgreen,styled = {styleunderscore})
+                              
+                                 if hs == headertext.len - 1:
+                                     print("|",framecolor)
+                              
+                              echo()   
+          
+                          if col == 0 : # if first col
+                              print(framecolor & "|" & white & fmtx(fma,displaystr,spaces(1) & framecolor & "|" & white),white,styled = {})
+                                                       
+                          else:  # all other cols
+                              print(fmtx(fma,displaystr,spaces(1) & framecolor & "|" & white),white,styled = {})  # here we make sure that there are 2 spaces between cols
+                       
+                      elif header == false:
+                        
+                             if toplineflag == false:
+                             
+                                  print(".",lime)
+                                  hline(frametoplinelen - 2 ,framecolor,xpos = 2) 
+                                  println(".",lime)
+                                  toplineflag = true   
+                                            
+                             print(framecolor & "|" & yellowgreen & fmtx(fma,displaystr,spaces(1) & white),yellowgreen,styled = {styleUnderscore})
+                             if col == okcols.len - 1:
+                                print("|",framecolor)
+                            
+                               
+                      
                       else:
-                          print(fmtx(fma,displaystr,spaces(1) & "|"),styled = {})  # here we make sure that there are 2 spaces between cols
+                          print(framecolor & "|" & white & fmtx(fma,displaystr,spaces(1) & framecolor & "|" & white),styled = {})  # here we make sure that there are 2 spaces between cols
                   
                   else:
-                      print(fmtx(fma,displaystr,spaces(1) & "|"),lightgrey,styled = {})  # here we make sure that there are 2 spaces between cols
+                     if col == 0:
+                        print(framecolor & "|" & white & fmtx(fma,displaystr,spaces(1) & framecolor & "|" & white),lightgrey,styled = {})  # here we make sure that there are 2 spaces between cols
+                     else:
+                        print(fmtx(fma,displaystr,spaces(1) & framecolor & "|" & white),lightgrey,styled = {})  # here we make sure that there are 2 spaces between cols
       
-      echo()   
+      echo()   # need this here
+    if showframe == true:
+          # draw a bottom frame line
+          print("|",framecolor)
+          hline(frametoplinelen - 2 ,framecolor) 
+          println("|",framecolor)
+          
 
 
 #proc showDfDynamic()
@@ -418,17 +475,68 @@ proc showDataframeInfo*(df:nimdf) =
 
 
 proc getColData*(df:nimdf,col:int):nimss =
-   ## getColData
-   ## 
-   ## get one column from a nimdf dataframe
-   ## 
+     ## getColData
+     ## 
+     ## get one column from a nimdf dataframe
+     ## 
 
-   result = newNimSs()
-   for x in 0.. <df.len:
-        result.add(df[x][col])
+     result = newNimSs()
+     for x in 0.. <df.len:
+            try:
+              result.add(df[x][col])
+            except IndexError:
+              discard
+
+proc getRowData*(df:nimdf,row:int = 1 ,dfcols: varargs[int]):nimss =
+     ## getRowData
+     ## 
+     ## gets one row of a nimdf dataframe
+     ## 
+     result = newNimSs()
+     if dfcols.len > 0:       # we have varargs that is specified cols
+          for x in 0.. <dfcols.len:
+             if dfcols[x] > df[row].len:
+                println("Error: Columns > " & $df[row].len & " cannot be specified.",red)
+                print("Check getRowData dfcols parameters given as : ",red)
+                for va in dfcols:
+                    print($va & spaces(1),red)
+                echo()
+                doFinish()
+             else:   
+                result.add(df[row][dfcols[x]])
+     
+     else:   # no varargs  that is we use all cols
+          for y in 0.. <df[row].len:
+             result.add(df[row][y])
+     
+ 
+ 
+
+proc getRowDataRange*(df:nimdf,rows:nimis = @[0] ,dfcols: varargs[int]):nimdf =
+     ## getRowData
+     ## 
+     ## gets one row of a nimdf dataframe
+     ## 
+     result = newNimDf()
+       
+     for row in rows:
+        result.add(getRowData(df,row,dfcols))
+        
+        
+          
+  
+     
+     
+
+proc getCellData*(df:nimdf,row:int = 1 ,col:int = 1):string =
+     ## getCellData
+     ## 
+     ## gets Data from a cell of the df at pos row/col 
+     result = df[row][col]
 
 
-# we want to sort data in one column des or asc
+
+# we want to sort data in one column desc or asc
 # maybe see there for multiple col df sorting 
 # http://nim-lang.org/docs/algorithm.html#*,int,SortOrder
 # 
@@ -440,6 +548,17 @@ proc sortcoldata*(coldata:nimss,order = Ascending):nimss =
    var datacol = coldata
    datacol.sort(cmp[string],order = order) 
    result = datacol
+
+
+proc sortdf*(df:nimdf,col:int):nimdf =
+  ## sortdf
+  ##
+  ## sort df based on column number col 
+  ##
+  ##
+  discard
+
+
 
 
 
@@ -478,3 +597,5 @@ proc createDataFrame*(filename:string,cols:int = 2,sep:char = ','):nimdf =
   else:
       var data2 = getdata2(filename = filename,cols = cols,sep = sep)  
       result = makeDf2(data2,cols)
+
+  println(clearline)
