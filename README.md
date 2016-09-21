@@ -60,7 +60,7 @@ ndf = createDataFrame(ufo)
 printLnBiCol("Data Source : " & ufo)
 echo()
 
-showDf(ndf, rows = 25,cols = @[1,3,4],colwd = @[],showframe = true,framecolor = salmon,header = true) 
+showDf(ndf, rows = 25,cols = @[1,2,3,4,5],colwd = @[15,15,14,6,15],showframe = true,framecolor = salmon,header = true) 
 showDataframeInfo(ndf)
 doFinish()
 
