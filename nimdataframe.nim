@@ -275,7 +275,7 @@ proc showMaxColWidths*(df:nimdf) =
     decho(2)
 
        
-proc showDf*(df:nimdf,rows:int = 10,cols:nimis = @[], colwd:nimis = @[], showframe:bool = false,framecolor:string = white,header:bool = false,headertext:nimss = @[]) =
+proc showDf*(df:nimdf,rows:int = 10,cols:nimis = @[], colwd:nimis = @[], colcolors:nimss = @[], showframe:bool = false,framecolor:string = white,header:bool = false,headertext:nimss = @[],leftalignflag:bool = true) =
     ## showDf
     ## 
     ## allows selective display of columns , with column numbers passed in as a seq
@@ -304,6 +304,7 @@ proc showDf*(df:nimdf,rows:int = 10,cols:nimis = @[], colwd:nimis = @[], showfra
     var okcolwd = colwd  
     var toplineflag = false
     var displaystr = ""   
+    var okcolcolors = colcolors
     
     # dynamic col width with colwd passed in if not colwd for all cols = 15 
          
@@ -321,13 +322,30 @@ proc showDf*(df:nimdf,rows:int = 10,cols:nimis = @[], colwd:nimis = @[], showfra
       except IndexError:
               discard
               
-    # we need a check to see if request cols actually exist
+    #  need a check to see if request cols actually exist
     for col in okcols:
       if col > df[0].len:
          printLn("Error : showDfSelect needs correct column to display parameters cols",red) 
          printLn("Error : Requested Column >= " & $col & " does not exist in dataframe",red)
          # we exit
          doFinish()
+   
+    # set up column text and background color
+    
+    if okcolcolors == @[]: # default white on black
+        var tmpcols = newNimSs()
+        for col in 0.. <okcols.len:
+           tmpcols.add(lightgrey)
+        okcolcolors = tmpcols   
+           
+    else: # we get some colors passed in but not for all columns we set to white    
+      
+        var tmpcols = newNimSs()
+        tmpcols = okcolcolors
+        while tmpcols.len < okcols.len :
+                 tmpcols.add(lightgrey)
+        okcolcolors = tmpcols         
+                   
    
    
     # calculate length of topline of frame based on cols and colwd 
@@ -343,31 +361,37 @@ proc showDf*(df:nimdf,rows:int = 10,cols:nimis = @[], colwd:nimis = @[], showfra
       for col in 0.. <okcols.len:
       
               try:                    
-                 displaystr = $df[row][col]  # will be cut to size by fma below to fit into colwd
+                   displaystr = $df[row][col]  # will be cut to size by fma below to fit into colwd
               except IndexError:
-                 # just throw it away ..
-                 discard
-                                       
-              var colfm = "<" & $(okcolwd[col])  # constructing the format string
+                   # just throw it away ..
+                   discard
+              
+              var colfm = ""
+              if leftalignflag == true:
+                  colfm = "<" & $(okcolwd[col])  # constructing the format string
+              else:
+                  colfm = ">" & $(okcolwd[col])  # constructing the format string
               var fma = @[colfm,""]  
               if showframe == false:
                   if row == 0:  
                       # no frame , but header either in data or just first row will be used 
-                      if header == true and headertext == @[]:  # first line will be header
+                      if header == true and headertext == @[]:  # first line will be header in header col
                           print(fmtx(fma,displaystr,spaces(2)),yellowgreen,styled = {styleunderscore})  # here we make sure that there are 2 spaces between cols
                       
-                      elif header == false:
-                          # no header  
-                          print(fmtx(fma,displaystr,spaces(2)),styled = {})  # here we make sure that there are 2 spaces between cols
                       
                       elif header == true and headertext.len > 0:
                           # header using headertext 
                           print(fmtx(fma,headertext[col],spaces(2)),yellowgreen,styled = {styleunderscore}) 
                         
+                      
+                      elif header == false:
+                          # no header 
+                          print(fmtx(fma,displaystr,spaces(2)),okcolcolors[col],styled = {})  # here we make sure that there are 2 spaces between cols
+                      
                         
                   else:
                       # all other rows data
-                      print(fmtx(fma,displaystr,spaces(2)),lightgrey,styled = {})  # here we make sure that there are 2 spaces between cols
+                      print(fmtx(fma,displaystr,spaces(2)),okcolcolors[col],styled = {})  # here we make sure that there are 2 spaces between cols
               
               
               else:  # show the frame
@@ -387,20 +411,23 @@ proc showDf*(df:nimdf,rows:int = 10,cols:nimis = @[], colwd:nimis = @[], showfra
                               print(fmtx(fma,displaystr,spaces(1) & framecolor & "|" & white),yellowgreen,styled = {styleunderscore})  # here we make sure that there are 2 spaces between cols
                       
                       elif header == true and headertext.len > 0:  # we use headers supplied in headertext
-                          ## here is still a problem .. the right framing not ok
+                         
                           if toplineflag == false:
                              
                               print(".",lime)
                               hline(frametoplinelen - 2 ,framecolor,xpos = 2) 
                               println(".",lime)
                               toplineflag = true
-                               
+                              var ncolfm = "" 
                               for hs in 0.. <headertext.len:
-                                 var ncolfm = "<" & $(okcolwd[hs])  # constructing the format string
+                                 if leftalignflag == true:
+                                    ncolfm = "<" & $(okcolwd[hs])  # constructing the format string
+                                 else:
+                                    ncolfm = ">" & $(okcolwd[hs])
                                  var nfma = @[ncolfm,""]
                                  if col == 0:                                                                    
                                       print(framecolor & "|" & yellowgreen & fmtx(nfma,headertext[hs].strip(true,true),spaces(1) &  white),yellowgreen,styled = {styleunderscore})
-                                 else :
+                                 else : # other cols of header
                                       print(fmtx(nfma,headertext[hs].strip(true,true),spaces(1) & framecolor & "|" & white),yellowgreen,styled = {styleunderscore})
                               
                                  if hs == headertext.len - 1:
@@ -409,10 +436,10 @@ proc showDf*(df:nimdf,rows:int = 10,cols:nimis = @[], colwd:nimis = @[], showfra
                               echo()   
           
                           if col == 0 : # if first col
-                              print(framecolor & "|" & white & fmtx(fma,displaystr,spaces(1) & framecolor & "|" & white),white,styled = {})
+                                print(framecolor & "|" & okcolcolors[col] & fmtx(fma,displaystr,spaces(1) & framecolor & "|" & white),okcolcolors[col],styled = {})
                                                        
                           else:  # all other cols
-                              print(fmtx(fma,displaystr,spaces(1) & framecolor & "|" & white),white,styled = {})  # here we make sure that there are 2 spaces between cols
+                                print(fmtx(fma,displaystr,spaces(1) & framecolor & "|" & white),okcolcolors[col],styled = {})  # here we make sure that there are 2 spaces between cols
                        
                       elif header == false:
                         
@@ -430,20 +457,21 @@ proc showDf*(df:nimdf,rows:int = 10,cols:nimis = @[], colwd:nimis = @[], showfra
                                
                       
                       else:
-                          print(framecolor & "|" & white & fmtx(fma,displaystr,spaces(1) & framecolor & "|" & white),styled = {})  # here we make sure that there are 2 spaces between cols
+                          print(framecolor & "|" & white & fmtx(fma,displaystr,spaces(1) & framecolor & "|" & white),okcolcolors[col],styled = {})  # here we make sure that there are 2 spaces between cols
                   
                   else:
                      if col == 0:
-                        print(framecolor & "|" & white & fmtx(fma,displaystr,spaces(1) & framecolor & "|" & white),lightgrey,styled = {})  # here we make sure that there are 2 spaces between cols
+                          print(framecolor & "|" & okcolcolors[col] & fmtx(fma,displaystr,spaces(1) & framecolor & "|" & white),okcolcolors[col],styled = {})  # here we make sure that there are 2 spaces between cols
                      else:
-                        print(fmtx(fma,displaystr,spaces(1) & framecolor & "|" & white),lightgrey,styled = {})  # here we make sure that there are 2 spaces between cols
+                          print(fmtx(fma,displaystr,spaces(1) & framecolor & "|" & white),okcolcolors[col],styled = {})  # here we make sure that there are 2 spaces between cols
       
       echo()   # need this here
+      
     if showframe == true:
           # draw a bottom frame line
-          print("|",framecolor)
+          print(".",lime)
           hline(frametoplinelen - 2 ,framecolor) 
-          println("|",framecolor)
+          println(".",lime)
           
 
 
