@@ -10,7 +10,7 @@
 ##
 ##   ProjectStart: 2016-09-16
 ##   
-##   Latest      : 2016-09-18
+##   Latest      : 2016-09-23
 ##
 ##   Compiler    : Nim >= 0.14.3
 ##
@@ -40,7 +40,7 @@
 import cx,httpclient,browsers,terminal
 import parsecsv,streams,algorithm
 
-
+let NIMDATAFRAMEVERSION* = "0.0.1"
    
 type      
       nimdf* = seq[seq[string]]   # nim data frame
@@ -51,11 +51,8 @@ proc newNimDf*():nimdf = @[]
 proc newNimSs*():nimss = @[]
 proc newNimIs*():nimis = @[]
 
-
 var dfcolwd = newNimIs()            # holds dataframe column widths 
 var csvrows = -1                    # in case of getdata2 csv files we may get processed rowcount back
-
-var temp = ""
 
 proc getData1*(url:string):auto =
   ## getData
@@ -275,7 +272,7 @@ proc showMaxColWidths*(df:nimdf) =
     decho(2)
 
        
-proc showDf*(df:nimdf,rows:int = 10,cols:nimis = @[], colwd:nimis = @[], colcolors:nimss = @[], showframe:bool = false,framecolor:string = white,header:bool = false,headertext:nimss = @[],leftalignflag:bool = true) =
+proc showDf*(df:nimdf,rows:int = 10,cols:nimis = @[], colwd:nimis = @[], colcolors:nimss = @[], showframe:bool = false,framecolor:string = white,header:bool = false,headertext:nimss = @[],leftalignflag:bool = true,xpos:int = 1) =
     ## showDf
     ## 
     ## allows selective display of columns , with column numbers passed in as a seq
@@ -335,7 +332,7 @@ proc showDf*(df:nimdf,rows:int = 10,cols:nimis = @[], colwd:nimis = @[], colcolo
     if okcolcolors == @[]: # default white on black
         var tmpcols = newNimSs()
         for col in 0.. <okcols.len:
-           tmpcols.add(lightgrey)
+            tmpcols.add(lightgrey)
         okcolcolors = tmpcols   
            
     else: # we get some colors passed in but not for all columns we set to white    
@@ -355,134 +352,193 @@ proc showDf*(df:nimdf,rows:int = 10,cols:nimis = @[], colwd:nimis = @[], colcolo
     
     # take care of over lengths
     if okrows == 0 or okrows > df.len: okrows = df.len
-               
-    for row in 0.. <okrows:   # note we get rows data rows back and the header
+     
+    var headerflagok = false 
+    var bottomrowflag = false 
+     
+    for row in 0.. <okrows:   # note we get okrows data rows back and the header
              
       for col in 0.. <okcols.len:
       
-              try:                    
-                   displaystr = $df[row][col]  # will be cut to size by fma below to fit into colwd
-              except IndexError:
-                   # just throw it away ..
-                   discard
+          try:                    
+                displaystr = $df[row][col]  # will be cut to size by fma below to fit into colwd
+          except IndexError:
+                # just throw it away ..
+                discard
+                
+          var colfm = ""
+          var fma   = newSeq[string]()
+          if leftalignflag == true:
+              colfm = "<" & $(okcolwd[col])  # constructing the format string
+          else:
+              colfm = ">" & $(okcolwd[col])  # constructing the format string
+          fma = @[colfm,""]  
+          
+          # new setup 6 options
+          
+          #noframe noheader           1 ok
+          #noframe firstlineheader    2 ok
+          #noframe headertextheader   3
+          
+          #frame   noheader
+          #frame   firstlineheader
+          #frame   headertextheader
+          
+          if showFrame == false:
+          
+                if showFrame == false and header == false:
+                            if col == 0 :
+                                print(fmtx(fma,displaystr,spaces(2)),okcolcolors[col],styled = {},xpos = xpos) 
+                            elif col > 0:
+                                print(fmtx(fma,displaystr,spaces(2)),okcolcolors[col],styled = {})
+                                if col == okcols.len - 1: echo()  
+                        
+                  
+                elif showFrame == false and header == true and headertext == @[]:
+                            
+                            if col == 0 and row == 0:
+                                print(fmtx(fma,displaystr,spaces(2)),yellowgreen,styled = {styleunderscore},xpos = xpos)  
+                            
+                            elif col > 0 and row == 0:
+                                print(fmtx(fma,displaystr,spaces(2)),yellowgreen,styled = {styleunderscore})                                   
+                                if col == okcols.len - 1: echo()                      
+                                
+                            # all other rows data
+                            if col == 0 and row > 0:
+                                print(fmtx(fma,displaystr,spaces(2)),okcolcolors[col],styled = {},xpos = xpos) 
+                            elif col > 0 and row > 0:
+                                print(fmtx(fma,displaystr,spaces(2)),okcolcolors[col],styled = {})
+                                      
+                                if col == okcols.len - 1:          
+                                    echo()  
+                        
+                        
+                  
+                elif showFrame == false and header == true and headertext != @[]:
+                            
+                            #print the header first
+                            
+                            if headerflagok == false:
+                              
+                                for hcol in 0.. <okcols.len:
+                                  
+                                    var hcolfm = ""
+                                    var hfma   = newSeq[string]()
+                                    if leftalignflag == true:
+                                          hcolfm = "<" & $(okcolwd[hcol])  # constructing the format string
+                                    else:
+                                          hcolfm = ">" & $(okcolwd[hcol])  # constructing the format string
+                                    hfma = @[hcolfm,""]   
+                                                                  
+                                    if hcol == 0:
+                                      print(fmtx(hfma,headertext[hcol],spaces(2)),yellowgreen,styled = {styleunderscore},xpos = xpos) 
+                                    elif hcol > 0:
+                                      print(fmtx(hfma,headertext[hcol],spaces(2)),yellowgreen,styled = {styleunderscore}) 
+                                      if hcol == okcols.len - 1: 
+                                          echo()    
+                                          headerflagok = true 
+                            
+                            if headerflagok == true:
+                                # all other rows data
+                                if col == 0 and row >= 0  :
+                                    print(fmtx(fma,displaystr,spaces(2)),okcolcolors[col],styled = {},xpos = xpos) 
+                                elif col > 0 and row >= 0 :
+                                    print(fmtx(fma,displaystr,spaces(2)),okcolcolors[col],styled = {})     
+                                    if col == okcols.len - 1: echo()           
+                                
+                    
+                      
+          if showFrame == true:            
               
-              var colfm = ""
-              if leftalignflag == true:
-                  colfm = "<" & $(okcolwd[col])  # constructing the format string
-              else:
-                  colfm = ">" & $(okcolwd[col])  # constructing the format string
-              var fma = @[colfm,""]  
-              if showframe == false:
-                  if row == 0:  
-                      # no frame , but header either in data or just first row will be used 
-                      if header == true and headertext == @[]:  # first line will be header in header col
-                          print(fmtx(fma,displaystr,spaces(2)),yellowgreen,styled = {styleunderscore})  # here we make sure that there are 2 spaces between cols
+              if showFrame == true and header == false:
+                      # set up topline of frame
+                      if toplineflag == false:
+                          print(".",lime,xpos = xpos)
+                          hline(frametoplinelen - 2 ,framecolor,xpos = 2) 
+                          println(".",lime)
+                          toplineflag = true 
                       
-                      
-                      elif header == true and headertext.len > 0:
-                          # header using headertext 
-                          print(fmtx(fma,headertext[col],spaces(2)),yellowgreen,styled = {styleunderscore}) 
+                      if col == 0: 
+                            print(framecolor & "|" & okcolcolors[col] & fmtx(fma,displaystr,spaces(1) & framecolor & "|" & white),okcolcolors[col],styled = {},xpos = xpos)
+                      else: # other cols of header
+                            print(fmtx(fma,displaystr,spaces(1) & framecolor & "|" & white),okcolcolors[col],styled = {})  
+                            if col == okcols.len - 1: echo() 
+                
+              if showFrame == true and header == true and headertext == @[]: # first line will be used as header
+                      # set up topline of frame
+                      if toplineflag == false:
+                          print(".",magenta,xpos = xpos)
+                          hline(frametoplinelen - 2 ,framecolor,xpos = 2) 
+                          println(".",lime)
+                          toplineflag = true   
                         
-                      
-                      elif header == false:
-                          # no header 
-                          print(fmtx(fma,displaystr,spaces(2)),okcolcolors[col],styled = {})  # here we make sure that there are 2 spaces between cols
-                      
-                        
-                  else:
+                                              
+                      # first row as header 
+                      if col == 0 and row == 0:
+                              print(framecolor & "|" & yellowgreen & fmtx(fma,displaystr,spaces(1) & framecolor & "|" & white),yellowgreen,styled = {styleunderscore},xpos = xpos)                           
+
+                      elif col > 0 and row == 0:
+                                  print(fmtx(fma,displaystr,spaces(1) & framecolor & "|" & white),yellowgreen,styled = {styleunderscore})  
+                                  if col == okcols.len - 1: echo()                      
+                                
                       # all other rows data
-                      print(fmtx(fma,displaystr,spaces(2)),okcolcolors[col],styled = {})  # here we make sure that there are 2 spaces between cols
-              
-              
-              else:  # show the frame
-                  if row == 0:
-                      
-                      if header == true and headertext == @[]: # first line will be used as header
-                          # set up topline of frame
-                          if toplineflag == false:
-                             print(".",lime)
-                             hline(frametoplinelen - 2 ,framecolor,xpos = 2) 
-                             println(".",lime)
-                             toplineflag = true   
-                             
-                          if col == 0:    # first col of header          
-                              print(framecolor & "|" & yellowgreen & fmtx(fma,displaystr,spaces(1) & framecolor & "|" & white),yellowgreen,styled = {styleunderscore})  # here we make sure that there are 2 spaces between cols
-                          else: # other cols of header
-                              print(fmtx(fma,displaystr,spaces(1) & framecolor & "|" & white),yellowgreen,styled = {styleunderscore})  # here we make sure that there are 2 spaces between cols
-                      
-                      elif header == true and headertext.len > 0:  # we use headers supplied in headertext
-                         
-                          if toplineflag == false:
-                             
-                              print(".",lime)
+                      if col == 0 and row > 0:
+                                  print(framecolor & "|" & okcolcolors[col] & fmtx(fma,displaystr,spaces(1) & framecolor & "|" & white),okcolcolors[col],styled = {},xpos = xpos)
+                              
+                      elif col > 0 and row > 0:
+                                  print(fmtx(fma,displaystr,spaces(1) & framecolor & "|" & white),okcolcolors[col],styled = {}) 
+                                  if col == okcols.len - 1: echo()  
+                  
+                
+              if showFrame == true and header == true and headertext != @[]:
+                  
+                            # set up topline of frame
+                            if toplineflag == false:
+                              print(".",magenta,xpos = xpos)
                               hline(frametoplinelen - 2 ,framecolor,xpos = 2) 
                               println(".",lime)
-                              toplineflag = true
-                              var ncolfm = "" 
-                              for hs in 0.. <headertext.len:
-                                 if leftalignflag == true:
-                                    ncolfm = "<" & $(okcolwd[hs])  # constructing the format string
-                                 else:
-                                    ncolfm = ">" & $(okcolwd[hs])
-                                 var nfma = @[ncolfm,""]
-                                 if col == 0:                                                                    
-                                      print(framecolor & "|" & yellowgreen & fmtx(nfma,headertext[hs].strip(true,true),spaces(1) &  white),yellowgreen,styled = {styleunderscore})
-                                 else : # other cols of header
-                                      print(fmtx(nfma,headertext[hs].strip(true,true),spaces(1) & framecolor & "|" & white),yellowgreen,styled = {styleunderscore})
-                              
-                                 if hs == headertext.len - 1:
-                                     print("|",framecolor)
-                              
-                              echo()   
-          
-                          if col == 0 : # if first col
-                                print(framecolor & "|" & okcolcolors[col] & fmtx(fma,displaystr,spaces(1) & framecolor & "|" & white),okcolcolors[col],styled = {})
-                                                       
-                          else:  # all other cols
-                                print(fmtx(fma,displaystr,spaces(1) & framecolor & "|" & white),okcolcolors[col],styled = {})  # here we make sure that there are 2 spaces between cols
-                       
-                      elif header == false:
+                              toplineflag = true   
                         
-                             if toplineflag == false:
-                             
-                                  print(".",lime)
-                                  hline(frametoplinelen - 2 ,framecolor,xpos = 2) 
-                                  println(".",lime)
-                                  toplineflag = true   
-                                            
-                             print(framecolor & "|" & yellowgreen & fmtx(fma,displaystr,spaces(1) & white),yellowgreen,styled = {styleUnderscore})
-                             if col == okcols.len - 1:
-                                print("|",framecolor)
-                            
-                               
-                      
-                      else:
-                          print(framecolor & "|" & white & fmtx(fma,displaystr,spaces(1) & framecolor & "|" & white),okcolcolors[col],styled = {})  # here we make sure that there are 2 spaces between cols
                   
-                  else:
-                     if col == 0:
-                          print(framecolor & "|" & okcolcolors[col] & fmtx(fma,displaystr,spaces(1) & framecolor & "|" & white),okcolcolors[col],styled = {})  # here we make sure that there are 2 spaces between cols
-                     else:
-                          print(fmtx(fma,displaystr,spaces(1) & framecolor & "|" & white),okcolcolors[col],styled = {})  # here we make sure that there are 2 spaces between cols
-      
-      echo()   # need this here
-      
-    if showframe == true:
-          # draw a bottom frame line
-          print(".",lime)
-          hline(frametoplinelen - 2 ,framecolor) 
-          println(".",lime)
+                            #print the header first
+                            
+                            if headerflagok == false:
+                              
+                                for hcol in 0.. <okcols.len:
+                                  
+                                    var hcolfm = ""
+                                    var hfma   = newSeq[string]()
+                                    if leftalignflag == true:
+                                          hcolfm = "<" & $(okcolwd[hcol])  # constructing the format string
+                                    else:
+                                          hcolfm = ">" & $(okcolwd[hcol])  # constructing the format string
+                                    hfma = @[hcolfm,""]   
+                                                                  
+                                    if hcol == 0:
+                                      print(framecolor & "|" & yellowgreen & fmtx(hfma,headertext[hcol],spaces(1) & framecolor & "|" & white),yellowgreen,styled = {styleunderscore},xpos = xpos) 
+                                    elif hcol > 0:
+                                      print(fmtx(hfma,headertext[hcol],spaces(1) & framecolor & "|" & white),yellowgreen,styled = {styleunderscore}) 
+                                      if hcol == okcols.len - 1: 
+                                          echo()    
+                                          headerflagok = true 
+                            
+                            if headerflagok == true:
+                                # all other rows data
+                                if col == 0 and row >= 0  :
+                                    print(framecolor & "|" & okcolcolors[col] & fmtx(fma,displaystr,spaces(1) & framecolor & "|" & white),okcolcolors[col],styled = {},xpos = xpos) 
+                                elif col > 0 and row >= 0 :
+                                    print(fmtx(fma,displaystr,spaces(1) & framecolor & "|" & white),okcolcolors[col],styled = {})     
+                                    if col == okcols.len - 1: echo()           
+
+
+          if row + 1 == okrows and col == okcols.len - 1  and bottomrowflag == false:
+                          # draw a bottom frame line 
+                          print(".",lime,xpos = xpos)  # left dot
+                          hline(frametoplinelen - 2 ,framecolor) 
+                          println(".",lime)
+                          bottomrowflag = true
           
-
-
-#proc showDfDynamic()
-  ##  this will show a dataframe with selective cols and selective colls width for each col
-  ##  each col shall be
-  ##  individually colorable 
-  ##  sort able 
-  ##  parts shall be easyly extract able 
-  ##  
-
+             
 
 proc showDataframeInfo*(df:nimdf) = 
    ## showDataframeInfo
@@ -568,14 +624,21 @@ proc getCellData*(df:nimdf,row:int = 1 ,col:int = 1):string =
 # maybe see there for multiple col df sorting 
 # http://nim-lang.org/docs/algorithm.html#*,int,SortOrder
 # 
-proc sortcoldata*(coldata:nimss,order = Ascending):nimss = 
+proc sortcoldata*(coldata:nimss,hasheader:bool = false,order = Ascending):nimss = 
    ## sortcoldata
    ## 
    ## available order Ascending, Descending
    ## 
+   ## 
+    
    var datacol = coldata
-   datacol.sort(cmp[string],order = order) 
-   result = datacol
+   if hasheader == false:
+      datacol.sort(cmp[string],order = order) 
+      result = datacol
+   else: # we have a header in row 1 so we exclude this
+      var newdatacol = datacol[1.. datacol.len]
+      newdatacol.sort(cmp[string],order = order) 
+      result = datacol
 
 
 proc sortdf*(df:nimdf,col:int):nimdf =

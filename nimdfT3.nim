@@ -6,6 +6,8 @@ import os,cx,nimFinLib,strutils,nimdataframe
 # 
 #  shows usage of nimdataframe with yahoo finance data obtained via nimfinlib
 #  
+#  and usage of nimfinlib Stocks object with nimdataframe
+#  
 #  display possibilities, column coloring and alignment
 #  
 
@@ -19,66 +21,88 @@ import os,cx,nimFinLib,strutils,nimdataframe
 # 
 # 
 
-var mystock = "0001.HK"   # yahoo stock code format
+var mystock = "AAPL"   # yahoo stock code format
 
-
-converter myclose(astock:Stocks):nimss =
-      result = @[]
-      for x in astock.close:
-          result.add($(x))
  
-converter mydate(astock:Stocks):nimss =
+converter finlibdate(astock:Stocks):nimss =
       result = @[]
       for x in astock.date:
-          result.add($(x)) 
+          result.add(x) 
+
  
- 
-converter myvolume(astock:Stocks):nimss =
+converter finlibopen(astock:Stocks):nimss =
       result = @[]
-      for x in astock.vol:
-          result.add($x)  
+      for x in astock.open:
+          result.add(ff2(x,3))   
  
 
-converter myhigh(astock:Stocks):nimss =
+converter finlibhigh(astock:Stocks):nimss =
       result = @[]
       for x in astock.high:
-          result.add($x)  
+          result.add(ff2(x,3))  
 
 
-
-converter mylow(astock:Stocks):nimss =
+converter finliblow(astock:Stocks):nimss =
       result = @[]
       for x in astock.low:
-          result.add($x)  
- 
- 
+          result.add(ff2(x,3))  
 
-converter myadjc(astock:Stocks):nimss =
+
+converter finlibclose(astock:Stocks):nimss =
+      result = @[]
+      for x in astock.close:
+          result.add(ff2(x,3))
+          
+
+converter finlibvolume(astock:Stocks):nimss =
+      result = @[]
+      for x in astock.vol:
+          result.add(ff2(x,0))
+          
+
+converter finlibadjc(astock:Stocks):nimss =
       result = @[]
       for x in astock.adjc:
-          result.add($x)   
+          result.add(ff2(x,3))   
           
  
 var myD2 = getSymbol2(mystock,minusdays(getDateStr(),365),getDateStr())   
 decho(3)
 
-var ndf = makeNimDf(mydate(myD2),myhigh(myD2),myadjc(myD2),myvolume(myD2))
+var ndf = makeNimDf(finlibdate(myD2),finlibopen(myD2),finliblow(myD2),finlibhigh(myD2),finlibclose(myD2),finlibadjc(myD2),finlibvolume(myD2))
+
+var headertext = @["Date","Open","Low","High","Close","Adj.Close","Volume"]
+var cols =  @[1,2,3,4,5,6,7]
+var colwd = @[10,10,10,10,10,10,14]
+var colcolors = @[yellow,lightblue,palegreen,pastelpink,pastelblue,pastelorange,truetomato]
 
 printLnBiCol("Nimdataframe test with yahoo stock data : " & mystock)
 echo()
-println("#1 no header , no frame  --> ok\n")
-showDf(ndf,rows = 5, cols = @[1,2,3,4] , colwd = @[10,8,9,13], colcolors = @[yellow,lightblue,palegreen,pastelpink], showframe = false,header = false,headertext = @["Date","High","Adj.Close","Volume"])
+println(fmtx(["<82",""],"#1 no frame , no header  --> ok","\n"),pastelblue,styled={stylereverse})
+showDf(ndf,rows = 5,cols = cols ,colwd = colwd,colcolors = colcolors,showframe = false,header = false,headertext = @[])
+  
+echo()
+println(fmtx(["<82",""],"#2 no frame , header =  first line --> ok","\n"),pastelblue,styled={stylereverse})
+showDf(ndf,rows = 5,cols = cols ,colwd = colwd,colcolors = colcolors,showframe = false,header = true,headertext = @[])
+      
   
 decho(1)
-println("#2 no frame , header w/headertext  --> ok\n")
-showDf(ndf,rows = 5, cols = @[1,2,3,4] , colwd = @[10,8,9,13], colcolors = @[yellow,green,red], showframe = false, header = true,headertext = @["Date","High","Adj.Close","Volume"])
-  
+println(fmtx(["<82",""],"#3 no frame , header = headertext alignright  --> ok","\n"),pastelblue,styled={stylereverse})
+showDf(ndf,rows = 5, cols = cols , colwd = colwd, colcolors = colcolors, showframe = false, header = true,headertext = headertext,leftalignflag = false)
+
+ 
 decho(1)
-println("#3 frame , no header first row assumed header  --> ok\n")
-showDf(ndf,rows = 5, cols = @[1,2,3,4] ,colwd = @[10,8,9,13],colcolors = @[cyan,yellow,red,lightgreen],showframe = true,framecolor = yellow,header = false,headertext = @[])
+println(fmtx(["<82",""],"#4 frame , no header  alignright --> ok","\n"),pastelblue,styled={stylereverse})
+showDf(ndf,rows = 5, cols = cols , colwd = colwd, colcolors = colcolors ,showframe = true,framecolor = yellow,header = false,headertext = @[],leftalignflag = false)
+
+   
+decho(1)
+println(fmtx(["<82",""],"#5 frame , header  = first line  alignright --> ok","\n"),pastelblue,styled={stylereverse})
+showDf(ndf,rows = 5, cols = cols , colwd = colwd, colcolors = colcolors ,showframe = true,framecolor = yellow,header = true,headertext = @[],leftalignflag = false)
+
     
 decho(1)
-println("#4 frame , header , aligned rightside  -->  ok \n ")
-showDf(ndf,rows = 5, cols = @[1,2,3,4] ,colwd = @[10,8,9,13],colcolors = @[lime,red,green,peru],showframe = true,header = true,headertext = @["Date","High","Adj.Close","Volume"],leftalignflag = false)
+println(fmtx(["<82",""],"#6 frame , header , aligned rightside  -->  ok","\n"),pastelblue,styled={stylereverse})
+showDf(ndf,rows = 5, cols = cols , colwd = colwd, colcolors = colcolors ,showframe = true,header = true,headertext = headertext,leftalignflag = false)
      
 doFinish()  
