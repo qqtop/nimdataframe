@@ -71,7 +71,7 @@ doFinish()
 
  Tests with StockData
 
-![Image](http://qqtop.github.io/nimdataframe2.png?raw=true)
+![Image](http://qqtop.github.io/nimdataframe2a.png?raw=true)
 ![Image](http://qqtop.github.io/nimdataframe3.png?raw=true)
 
 
