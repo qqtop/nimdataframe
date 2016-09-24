@@ -295,7 +295,16 @@ proc showDf*(df:nimdf,rows:int = 10,cols:nimis = @[], colwd:nimis = @[], colcolo
     ## 
     ## headerless data can be show with headertest supplied
     ##
-      
+    ## cols,colwd,colcolors parameters seqs must be of equal length and corresponding to each other
+    ## 
+    
+    if cols.len != colwd.len:
+      println("NOTE : Dataframe columns cols and colwd parameter are of different length. Exiting",red)
+      doAssert cols.len == colwd.len 
+    
+    if cols.len != colcolors.len:
+      printLnBiCol("NOTE : Dataframe columns cols and colcolors parameter are of different length",":",red,peru)
+        
     var okrows = rows
     var okcols = cols
     var okcolwd = colwd  
@@ -339,7 +348,7 @@ proc showDf*(df:nimdf,rows:int = 10,cols:nimis = @[], colwd:nimis = @[], colcolo
       
         var tmpcols = newNimSs()
         tmpcols = okcolcolors
-        while tmpcols.len < okcols.len :
+        while tmpcols.len < okcols.len  :
                  tmpcols.add(lightgrey)
         okcolcolors = tmpcols         
                    
@@ -360,11 +369,14 @@ proc showDf*(df:nimdf,rows:int = 10,cols:nimis = @[], colwd:nimis = @[], colcolo
              
       for col in 0.. <okcols.len:
       
+          var ncol = okcols[col] - 1
+           
           try:                    
-                displaystr = $df[row][col]  # will be cut to size by fma below to fit into colwd
+                displaystr = $df[row][ncol]  # will be cut to size by fma below to fit into colwd
           except IndexError:
                 # just throw it away ..
-                discard
+                raise
+                #discard
                 
           var colfm = ""
           var fma   = newSeq[string]()
@@ -421,6 +433,7 @@ proc showDf*(df:nimdf,rows:int = 10,cols:nimis = @[], colwd:nimis = @[], colcolo
                             if headerflagok == false:
                               
                                 for hcol in 0.. <okcols.len:
+                                    var nhcol = okcols[hcol] - 1
                                   
                                     var hcolfm = ""
                                     var hfma   = newSeq[string]()
@@ -431,9 +444,9 @@ proc showDf*(df:nimdf,rows:int = 10,cols:nimis = @[], colwd:nimis = @[], colcolo
                                     hfma = @[hcolfm,""]   
                                                                   
                                     if hcol == 0:
-                                      print(fmtx(hfma,headertext[hcol],spaces(2)),yellowgreen,styled = {styleunderscore},xpos = xpos) 
+                                      print(fmtx(hfma,headertext[nhcol],spaces(2)),yellowgreen,styled = {styleunderscore},xpos = xpos) 
                                     elif hcol > 0:
-                                      print(fmtx(hfma,headertext[hcol],spaces(2)),yellowgreen,styled = {styleunderscore}) 
+                                      print(fmtx(hfma,headertext[nhcol],spaces(2)),yellowgreen,styled = {styleunderscore}) 
                                       if hcol == okcols.len - 1: 
                                           echo()    
                                           headerflagok = true 
@@ -505,6 +518,8 @@ proc showDf*(df:nimdf,rows:int = 10,cols:nimis = @[], colwd:nimis = @[], colcolo
                             if headerflagok == false:
                               
                                 for hcol in 0.. <okcols.len:
+                                    
+                                    var nhcol = okcols[hcol] - 1
                                   
                                     var hcolfm = ""
                                     var hfma   = newSeq[string]()
@@ -515,9 +530,9 @@ proc showDf*(df:nimdf,rows:int = 10,cols:nimis = @[], colwd:nimis = @[], colcolo
                                     hfma = @[hcolfm,""]   
                                                                   
                                     if hcol == 0:
-                                      print(framecolor & "|" & yellowgreen & fmtx(hfma,headertext[hcol],spaces(1) & framecolor & "|" & white),yellowgreen,styled = {styleunderscore},xpos = xpos) 
+                                      print(framecolor & "|" & yellowgreen & fmtx(hfma,headertext[nhcol],spaces(1) & framecolor & "|" & white),yellowgreen,styled = {styleunderscore},xpos = xpos) 
                                     elif hcol > 0:
-                                      print(fmtx(hfma,headertext[hcol],spaces(1) & framecolor & "|" & white),yellowgreen,styled = {styleunderscore}) 
+                                      print(fmtx(hfma,headertext[nhcol],spaces(1) & framecolor & "|" & white),yellowgreen,styled = {styleunderscore}) 
                                       if hcol == okcols.len - 1: 
                                           echo()    
                                           headerflagok = true 
