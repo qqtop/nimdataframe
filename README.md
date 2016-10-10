@@ -9,7 +9,7 @@ Dataframe for Nim
 
 | Library      | Status      | Version | License        | OS     | Compiler       |
 |--------------|-------------|---------|----------------|--------|----------------|
-| nimdataframe | Development | 0.0.1   | MIT opensource | Linux  | Nim >= 0.14.3  |
+| nimdataframe | Development | 0.0.1.1 | MIT opensource | Linux  | Nim >= 0.15    |
 
 
  Early attempt of using csv data from the net or locally to implement
@@ -82,6 +82,6 @@ NOTE :
      Forking ,testing, suggestions , ideas are welcome.
      This is development code , hence use at your own risk.
      
-     Tested  openSuse 13.2 , openSuse Leap42.1 , openSuse TumbleWeed
+     Tested  openSuse 13.2 , openSuse TumbleWeed
               
 ![Image](http://qqtop.github.io/qqtop-small.png?raw=true)
