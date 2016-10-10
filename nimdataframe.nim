@@ -6,13 +6,13 @@
 ##
 ##   License     : MIT opensource
 ##
-##   Version     : 0.0.1
+##   Version     : 0.0.1.1
 ##
 ##   ProjectStart: 2016-09-16
 ##   
-##   Latest      : 2016-09-23
+##   Latest      : 2016-10-10
 ##
-##   Compiler    : Nim >= 0.14.3
+##   Compiler    : Nim >= 0.15
 ##
 ##   OS          : Linux
 ##
@@ -40,12 +40,13 @@
 import cx,httpclient,browsers,terminal
 import parsecsv,streams,algorithm
 
-let NIMDATAFRAMEVERSION* = "0.0.1"
+let NIMDATAFRAMEVERSION* = "0.0.1.1"
    
 type      
-      nimdf* = seq[seq[string]]   # nim data frame
-      nimss* = seq[string]        # nim string seq
-      nimis* = seq[int]           # nim integer seq
+      
+      nimss* = seq[string]         # nim string seq
+      nimis* = seq[int]            # nim integer seq
+      nimdf* = seq[nimss]          # nim data frame
 
 proc newNimDf*():nimdf = @[]
 proc newNimSs*():nimss = @[]
@@ -60,7 +61,8 @@ proc getData1*(url:string):auto =
   ## used for internet based data in csv format
   ## 
   try:
-       result  = getcontent(url)   # orig test data
+       var zcli = newHttpClient()
+       result  = zcli.getcontent(url)   # orig test data
   except :
        printLnBiCol("Error : " & url & " content could not be fetched . Retry with -d:ssl",":",red) 
        printLn(getCurrentExceptionMsg(),red,xpos = 9)
@@ -271,8 +273,41 @@ proc showMaxColWidths*(df:nimdf) =
     printLn("For data where there are no headers header data is taken from the first row.",lightgrey,xpos = 2)
     decho(2)
 
+proc colfitmax*(df:nimdf,cols:int = 0,adjustwd:int = 0):nimis =
+  ## colfitmax
+  ## 
+  ## calculates best column width to fit into terminal width
+  ## 
+  ## all column widths will be same size
+  ## 
+  ## cols parameter must state number of cols to be shown default = all cols
+  ## 
+  ## if the cols parameter in showDf is different an error will be thrown
+  ## 
+  ## adjustwd allows to nudge the column width if a few column chars are not shown
+  ## 
+  ## which may happen if no frame is shown
+  ## 
+  
+  var ccols = cols
+  if ccols == 0:
+    ccols = df[0].len
+  
+  var optcolwd = tw div ccols - ccols + adjustwd  
+  var cwd = newNimIs()
+  for x in 0.. <ccols: cwd.add(optcolwd)
+  result = cwd
+  
+  
+proc checkDfok(df:nimdf):bool =
+     if df.len > 0:
+        result = true
+     else:
+        printLnBiCol("ERROR  : Dataframe has no data. Exiting .. ",":",red,red)
+        result = false
+
        
-proc showDf*(df:nimdf,rows:int = 10,cols:nimis = @[], colwd:nimis = @[], colcolors:nimss = @[], showframe:bool = false,framecolor:string = white,header:bool = false,headertext:nimss = @[],leftalignflag:bool = true,xpos:int = 1) =
+proc showDf*(df:nimdf,rows:int = 10,cols:nimis = @[],colwd:nimis = @[], colcolors:nimss = @[], showframe:bool = false,framecolor:string = white,header:bool = false,headertext:nimss = @[],leftalignflag:bool = true,xpos:int = 1) =
     ## showDf
     ## 
     ## allows selective display of columns , with column numbers passed in as a seq
@@ -297,17 +332,27 @@ proc showDf*(df:nimdf,rows:int = 10,cols:nimis = @[], colwd:nimis = @[], colcolo
     ##
     ## cols,colwd,colcolors parameters seqs must be of equal length and corresponding to each other
     ## 
+    var okcolwd = colwd 
     
-    if cols.len != colwd.len:
-      println("NOTE : Dataframe columns cols and colwd parameter are of different length. Exiting",red)
-      doAssert cols.len == colwd.len 
+    
+    if checkDfok(df) == false:
+       doFinish()
+    
+    if cols.len != okcolwd.len:
+       okcolwd = colfitmax(df,cols.len)   # try to best fit rather than to throw error
+       #println("ERROR : Dataframe columns cols and colwd parameter are of different length. See showDf command. Exiting ..",red,truetomato)
+       #doAssert cols.len == okcolwd.len 
     
     if cols.len != colcolors.len:
-      printLnBiCol("NOTE : Dataframe columns cols and colcolors parameter are of different length",":",red,peru)
-        
+       printLnBiCol("NOTE  : Dataframe columns cols and colcolors parameter are of different length",":",red,peru)
+     
+    if df[0].len == 0: 
+       printLnBiCol("ERROR : Dataframe appears to have no columns. See showDf command. Exiting ..",":",red,truetomato)
+       quit(0)
+       
     var okrows = rows
     var okcols = cols
-    var okcolwd = colwd  
+     
     var toplineflag = false
     var displaystr = ""   
     var okcolcolors = colcolors
@@ -323,15 +368,17 @@ proc showDf*(df:nimdf,rows:int = 10,cols:nimis = @[], colwd:nimis = @[], colcolo
     # if not cols seq is specified we assume all cols
     if okcols == @[] and df[0].len > 0:
       try:
-        for colno in 1.. df[0].len:    # note colno starts at 1 
+        for colno in 1.. df[0].len:    # note column numbering starts at 1 , first col = 1
              okcols.add(colno)
       except IndexError:
-              discard
-              
+              #discard
+              raise
+   
+    
     #  need a check to see if request cols actually exist
     for col in okcols:
       if col > df[0].len:
-         printLn("Error : showDfSelect needs correct column to display parameters cols",red) 
+         printLn("Error : showDf needs correct column to display parameters cols",red) 
          printLn("Error : Requested Column >= " & $col & " does not exist in dataframe",red)
          # we exit
          doFinish()
@@ -364,17 +411,20 @@ proc showDf*(df:nimdf,rows:int = 10,cols:nimis = @[], colwd:nimis = @[], colcolo
      
     var headerflagok = false 
     var bottomrowflag = false 
+    var ncol = 0 
      
     for row in 0.. <okrows:   # note we get okrows data rows back and the header
              
       for col in 0.. <okcols.len:
-      
-          var ncol = okcols[col] - 1
+           
+          ncol = okcols[col] - 1
+        
            
           try:                    
                 displaystr = $df[row][ncol]  # will be cut to size by fma below to fit into colwd
           except IndexError:
-                # just throw it away ..
+               
+                echo row,"  ",ncol
                 raise
                 #discard
                 
@@ -390,11 +440,11 @@ proc showDf*(df:nimdf,rows:int = 10,cols:nimis = @[], colwd:nimis = @[], colcolo
           
           #noframe noheader           1 ok
           #noframe firstlineheader    2 ok
-          #noframe headertextheader   3
+          #noframe headertextheader   3 ok
           
-          #frame   noheader
-          #frame   firstlineheader
-          #frame   headertextheader
+          #frame   noheader           4 ok
+          #frame   firstlineheader    5 ok
+          #frame   headertextheader   6 ok
           
           if showFrame == false:
           
@@ -473,6 +523,7 @@ proc showDf*(df:nimdf,rows:int = 10,cols:nimis = @[], colwd:nimis = @[], colcolo
                       
                       if col == 0: 
                             print(framecolor & "|" & okcolcolors[col] & fmtx(fma,displaystr,spaces(1) & framecolor & "|" & white),okcolcolors[col],styled = {},xpos = xpos)
+                            if col == okcols.len - 1: echo()
                       else: # other cols of header
                             print(fmtx(fma,displaystr,spaces(1) & framecolor & "|" & white),okcolcolors[col],styled = {})  
                             if col == okcols.len - 1: echo() 
@@ -489,7 +540,7 @@ proc showDf*(df:nimdf,rows:int = 10,cols:nimis = @[], colwd:nimis = @[], colcolo
                       # first row as header 
                       if col == 0 and row == 0:
                               print(framecolor & "|" & yellowgreen & fmtx(fma,displaystr,spaces(1) & framecolor & "|" & white),yellowgreen,styled = {styleunderscore},xpos = xpos)                           
-
+                              
                       elif col > 0 and row == 0:
                                   print(fmtx(fma,displaystr,spaces(1) & framecolor & "|" & white),yellowgreen,styled = {styleunderscore})  
                                   if col == okcols.len - 1: echo()                      
@@ -546,7 +597,7 @@ proc showDf*(df:nimdf,rows:int = 10,cols:nimis = @[], colwd:nimis = @[], colcolo
                                     if col == okcols.len - 1: echo()           
 
 
-          if row + 1 == okrows and col == okcols.len - 1  and bottomrowflag == false:
+          if row + 1 == okrows and col == okcols.len - 1  and bottomrowflag == false and showFrame == true:
                           # draw a bottom frame line 
                           print(".",lime,xpos = xpos)  # left dot
                           hline(frametoplinelen - 2 ,framecolor) 
@@ -639,7 +690,7 @@ proc getCellData*(df:nimdf,row:int = 1 ,col:int = 1):string =
 # maybe see there for multiple col df sorting 
 # http://nim-lang.org/docs/algorithm.html#*,int,SortOrder
 # 
-proc sortcoldata*(coldata:nimss,hasheader:bool = false,order = Ascending):nimss = 
+proc sortcoldata*(coldata:nimss,header:bool = false,order = Ascending):nimss = 
    ## sortcoldata
    ## 
    ## available order Ascending, Descending
@@ -647,7 +698,7 @@ proc sortcoldata*(coldata:nimss,hasheader:bool = false,order = Ascending):nimss 
    ## 
     
    var datacol = coldata
-   if hasheader == false:
+   if header == false:
       datacol.sort(cmp[string],order = order) 
       result = datacol
    else: # we have a header in row 1 so we exclude this
