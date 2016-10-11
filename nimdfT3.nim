@@ -75,8 +75,8 @@ var headertext = @["Date","Open","Low","High","Close","Adj.Close","Volume"]  # c
 var rows = 3  # data rows to display
 
 # cols,colwd,colcolors parameters seqs must be of equal length
-var cols =  @[1,2,3,4,5,6,7]
-var colwd = @[10,10,10,10,10,10,14]
+var cols      = @[1,2,3,4,5,6,7]
+var colwd     = @[10,10,10,10,10,10,14]
 var colcolors = @[yellow,pastelyellowgreen,palegreen,pastelpink,pastelblue,pastelwhite,violet]
 
 var pbl = "90"
@@ -110,5 +110,7 @@ showDf(ndf,rows = rows, cols = cols , colwd = colwd, colcolors = colcolors ,show
 decho(1)
 println(fmtx(["<" & pbl,""],"#6 frame , header , aligned rightside  -->  ok","\n"),pcl,styled={stylereverse})
 showDf(ndf,rows = rows, cols = cols , colwd = colwd, colcolors = colcolors ,showframe = true,header = true,headertext = headertext,leftalignflag = false)
+     
+      
      
 doFinish()  
