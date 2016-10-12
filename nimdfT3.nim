@@ -85,31 +85,31 @@ var pcl = pastelyellowgreen
 printLnBiCol("Nimdataframe test with yahoo stock data : " & mystock)
 echo()
 println(fmtx(["<" & pbl,""],"#1 no frame , no header  --> ok","\n"),pcl,styled={stylereverse})
-showDf(ndf,rows = rows,cols = cols ,colwd = colwd,colcolors = colcolors,showframe = false,header = false,headertext = @[])
+showDf(ndf,rows = rows,cols = cols ,colwd = colwd,colcolors = colcolors,showFrame = false,showHeader = false,headertext = @[])
   
 echo()
 println(fmtx(["<" & pbl,""],"#2 no frame , header =  first line --> ok","\n"),pcl,styled={stylereverse})
-showDf(ndf,rows = rows,cols = cols ,colwd = colwd,colcolors = colcolors,showframe = false,header = true,headertext = @[])
+showDf(ndf,rows = rows,cols = cols ,colwd = colwd,colcolors = colcolors,showFrame = false,showHeader = true,headertext = @[])
       
   
 decho(1)
 println(fmtx(["<" & pbl,""],"#3 no frame , header = headertext alignright  --> ok","\n"),pcl,styled={stylereverse})
-showDf(ndf,rows = rows, cols = cols , colwd = colwd, colcolors = colcolors, showframe = false, header = true,headertext = headertext,leftalignflag = false)
+showDf(ndf,rows = rows, cols = cols , colwd = colwd, colcolors = colcolors, showFrame = false, showHeader = true,headertext = headertext,leftalignflag = false)
 
  
 decho(1)
 println(fmtx(["<" & pbl,""],"#4 frame , no header  alignright --> ok","\n"),pcl,styled={stylereverse})
-showDf(ndf,rows = rows, cols = cols , colwd = colwd, colcolors = colcolors ,showframe = true,framecolor = yellow,header = false,headertext = @[],leftalignflag = false)
+showDf(ndf,rows = rows, cols = cols , colwd = colwd, colcolors = colcolors ,showFrame = true,framecolor = yellow,showHeader = false,headertext = @[],leftalignflag = false)
 
    
 decho(1)
 println(fmtx(["<" & pbl,""],"#5 frame , header  = first line  alignright --> ok","\n"),pcl,styled={stylereverse})
-showDf(ndf,rows = rows, cols = cols , colwd = colwd, colcolors = colcolors ,showframe = true,framecolor = yellow,header = true,headertext = @[],leftalignflag = false)
+showDf(ndf,rows = rows, cols = cols , colwd = colwd, colcolors = colcolors ,showFrame = true,framecolor = yellow,showHeader = true,headertext = @[],leftalignflag = false)
 
     
 decho(1)
 println(fmtx(["<" & pbl,""],"#6 frame , header , aligned rightside  -->  ok","\n"),pcl,styled={stylereverse})
-showDf(ndf,rows = rows, cols = cols , colwd = colwd, colcolors = colcolors ,showframe = true,header = true,headertext = headertext,leftalignflag = false)
+showDf(ndf,rows = rows, cols = cols , colwd = colwd, colcolors = colcolors ,showFrame = true,showHeader = true,headertext = headertext,leftalignflag = false)
      
       
      

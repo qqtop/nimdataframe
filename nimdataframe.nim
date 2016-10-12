@@ -209,6 +209,13 @@ proc makeDf2*(ufo1:nimdf,cols:int = 0):nimdf =
    result = df  
 
 
+proc getColCount(df:nimdf):int = 
+     result = df[0].len 
+  
+proc getRowCount(df:nimdf):int = 
+     result = df.len 
+
+
 proc getcolheaders*(df:nimdf): nimss =
       ## getcolheaders
       ## 
@@ -247,8 +254,8 @@ proc showHeader*(df:nimdf) =
    
 proc showCounts*(df:nimdf) =    
    printLn("Columns and Rows Count",salmon,xpos = 2,styled = {})
-   printLnBiCol("Col count : " & $getcolheaders(df).len,xpos = 2)
-   printLnBiCol("Row count : " & $df.len,xpos = 2)
+   printLnBiCol("Col count : " & $getColCount(df),xpos = 2)
+   printLnBiCol("Row count : " & $getRowCount(df),xpos = 2)
    echo()
   
 
@@ -291,7 +298,7 @@ proc colfitmax*(df:nimdf,cols:int = 0,adjustwd:int = 0):nimis =
   
   var ccols = cols
   if ccols == 0:
-    ccols = df[0].len
+    ccols = getColCount(df)
   
   var optcolwd = tw div ccols - ccols + adjustwd  
   var cwd = newNimIs()
@@ -379,9 +386,9 @@ proc showDf*(df:nimdf,rows:int = 10,cols:nimis = @[],colwd:nimis = @[], colcolor
       
     
     # if not cols seq is specified we assume all cols
-    if okcols == @[] and df[0].len > 0:
+    if okcols == @[] and getColCount(df) > 0:
       try:
-        for colno in 0.. <df[0].len:    # note column numbering starts at 0 , first col = 0
+        for colno in 0.. <getColCount(df):    # note column numbering starts at 0 , first col = 0
              okcols.add(colno)
       except IndexError:
               #discard
@@ -390,7 +397,7 @@ proc showDf*(df:nimdf,rows:int = 10,cols:nimis = @[],colwd:nimis = @[], colcolor
     
     #  need a check to see if request cols actually exist
     for col in okcols:
-      if col > df[0].len:
+      if col > getColCount(df):
          printLn("Error : showDf needs correct column to display parameters cols",red) 
          printLn("Error : Requested Column >= " & $col & " does not exist in dataframe",red)
          # we exit
@@ -657,7 +664,7 @@ proc getColData*(df:nimdf,col:int):nimss =
      ## 
      
      var zcol = col - 1
-     if zcol < 0 or zcol > df[0].len :
+     if zcol < 0 or zcol > getColCount(df) :
         println("Error : Wrong column number specified",red)
         quit(0)
      

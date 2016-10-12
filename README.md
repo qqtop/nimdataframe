@@ -59,7 +59,7 @@ var ndf:nimdf                            # define a nim dataframe
 ndf = createDataFrame(ufo)
 printLnBiCol("Data Source : " & ufo)
 echo()
-showDf(ndf, rows = 15,cols = @[1,2,3,4,5],colwd = @[15,7,14,6,15],colcolors = @[pastelgreen,pastelpink,peru,gold],showframe = true,framecolor = dodgerblue,header = true) 
+showDf(ndf, rows = 15,cols = @[1,2,3,4,5],colwd = @[15,7,14,6,15],colcolors = @[pastelgreen,pastelpink,peru,gold],showFrame = true,framecolor = dodgerblue,showHeader = true) 
 echo()
 showDataframeInfo(ndf)
 doFinish()
