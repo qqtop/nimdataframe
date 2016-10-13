@@ -6,11 +6,11 @@
 ##
 ##   License     : MIT opensource
 ##
-##   Version     : 0.0.1.1
+##   Version     : 0.0.1.2
 ##
 ##   ProjectStart: 2016-09-16
 ##   
-##   Latest      : 2016-10-10
+##   Latest      : 2016-10-13
 ##
 ##   Compiler    : Nim >= 0.15
 ##
@@ -36,13 +36,13 @@
 ##   Notes       : Initial feeble attempt ...  
 ## 
 ##  
-
+import os
 import cx,httpclient,browsers,terminal
 import parsecsv,streams,algorithm
 import db_sqlite
 import typetraits,typeinfo
 
-let NIMDATAFRAMEVERSION* = "0.0.1.1"
+let NIMDATAFRAMEVERSION* = "0.0.1.2"
    
 type      
       
@@ -757,7 +757,7 @@ proc sortcoldata*(coldata:nimss,header:bool = false,order = Ascending,sort:bool 
       
    elif sort == false:
      
-     if header == true:
+      if header == true:
           datacol = datacol[1.. <datacol.len]
           
    result = datacol
@@ -770,8 +770,8 @@ proc typetest[T](x:T): T =
   
   #echo "type: ", type(x), ", value: ", x
   var cvflag = false
-  intflag = false
-  floatflag = false
+  intflag    = false
+  floatflag  = false
   stringflag = false
     
   if cvflag == false and floatflag == false and intflag == false and stringflag == false:
@@ -899,7 +899,7 @@ proc sortdf*(df:nimdf,sortcol:int = 1,sortorder = ""):nimdf =
     asortcol = 1
   var sortcolname = $chr(65 + asortcol - 1) 
   # commend next line if info not required
-  printlnBiCol("Sorted on         : Col : " & $asortcol & " Name : " & sortcolname) 
+  printlnBiCol("Sorted on         : Col : " & $asortcol & " Internal Name : " & sortcolname) 
   var selsql = "select * from dfTable ORDER BY" & spaces(1) & sortcolname & spaces(1) & sortorder 
   for dbrow in db.fastRows(sql(selsql)) :
     for x in 1.. <dbrow.len - 1:    
@@ -911,6 +911,7 @@ proc sortdf*(df:nimdf,sortcol:int = 1,sortorder = ""):nimdf =
   
   #prepare for output
   var df2 =  createDataFrame(filename = filename,cols = df[0].len)
+  removeFile(filename)
   result = df2
 
 
@@ -953,7 +954,7 @@ proc createDataFrame*(filename:string,cols:int = 2,sep:char = ','):nimdf =
   println(clearline)
   
 
-proc createRandomTestData*(filename:string = "nimDfTestData.csv") =
+proc createRandomTestData*(filename:string = "nimDfTestData.csv",datarows:int = 2000) =
   ## createRandomTestData
   ##
   ## a file will be created in current working directory
@@ -977,7 +978,7 @@ proc createRandomTestData*(filename:string = "nimDfTestData.csv") =
   for dx in 0.. <cols.len - 1: data.write(headers[dx] & ",")  
   data.writeLine(headers[cols.len - 1])
   
-  for dx in 0.. <2000:
+  for dx in 0.. <datarows:
        
       data.write(getRandomDate() & ",")
       data.write($getRandomInt(0,100000) & ",")

@@ -1,4 +1,4 @@
-import cx,nimdataframe,algorithm
+import os,cx,nimdataframe
 
 # nimdfT5
 # 
@@ -22,9 +22,9 @@ showDataframeInfo(ndf)
 # sort this dataframe on the 1st column
 printlnBiCol("Sorted Dataframe  : ndf2")
 var ndf2 = sortdf(ndf,1,"asc")  # and have a new dataframe sorted on some column
-var headertext = @["A","B","C","D","E","F","G"]
+var headertext = @["Date","B","C","D","E","F","G"]
 showDf(ndf2,rows = 15 , cols = @[1,2,3,4,5,6,7],colwd = @[10,10,10,10,10,10,14],showFrame = true,showHeader = true,colcolors = @[violet,pastelgreen],headertext = headertext,leftalignflag = false)    
 showDataframeInfo(ndf2)
 
-
+removeFile(data)
 doFinish()
