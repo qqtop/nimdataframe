@@ -39,6 +39,8 @@
 
 import cx,httpclient,browsers,terminal
 import parsecsv,streams,algorithm
+import db_sqlite
+import typetraits,typeinfo
 
 let NIMDATAFRAMEVERSION* = "0.0.1.1"
    
@@ -52,8 +54,18 @@ proc newNimDf*():nimdf = @[]
 proc newNimSs*():nimss = @[]
 proc newNimIs*():nimis = @[]
 
+proc createDataFrame*(filename:string,cols:int = 2,sep:char = ','):nimdf 
+
+
 var dfcolwd = newNimIs()            # holds dataframe column widths 
 var csvrows = -1                    # in case of getdata2 csv files we may get processed rowcount back
+
+# used in sortdf
+var intflag:bool = false
+var floatflag:bool = false
+var stringflag:bool = false
+
+
 
 proc getData1*(url:string):auto =
   ## getData
@@ -209,10 +221,10 @@ proc makeDf2*(ufo1:nimdf,cols:int = 0):nimdf =
    result = df  
 
 
-proc getColCount(df:nimdf):int = 
+proc getColCount*(df:nimdf):int = 
      result = df[0].len 
   
-proc getRowCount(df:nimdf):int = 
+proc getRowCount*(df:nimdf):int = 
      result = df.len 
 
 
@@ -500,8 +512,7 @@ proc showDf*(df:nimdf,rows:int = 10,cols:nimis = @[],colwd:nimis = @[], colcolor
                                 if col == okcols.len - 1:          
                                     echo()  
                         
-                        
-                  
+           
                 elif frame == false and header == true and headertext != @[]:
                             
                             #print the header first
@@ -727,7 +738,11 @@ proc getCellData*(df:nimdf,row:int = 1 ,col:int = 1):string =
 proc sortcoldata*(coldata:nimss,header:bool = false,order = Ascending,sort:bool = true):nimss = 
    ## sortcoldata
    ## 
-   ## available order Ascending, Descending , NoSort
+   ## sorts data in a single column 
+   ## 
+   ## available order Ascending, Descending 
+   ## 
+   ## if sort is false no sorting will be performed
    ## 
    ## 
     
@@ -744,18 +759,159 @@ proc sortcoldata*(coldata:nimss,header:bool = false,order = Ascending,sort:bool 
      
      if header == true:
           datacol = datacol[1.. <datacol.len]
-    
-      
+          
    result = datacol
 
 
-proc sortdf*(df:nimdf,col:int):nimdf =
+
+proc `$`[T](some:typedesc[T]): string = name(T)
+proc typetest[T](x:T): T =
+  # used to determine the field types in the temp sqllite table used for sorting
+  
+  #echo "type: ", type(x), ", value: ", x
+  var cvflag = false
+  intflag = false
+  floatflag = false
+  stringflag = false
+    
+  if cvflag == false and floatflag == false and intflag == false and stringflag == false:
+    try:
+       var i1 =  parseInt(x)
+       if $type(i1) == "int":
+          intflag = true
+          #printlnBiCol("Intflag = true : " & $x )
+          cvflag = true
+    except ValueError:
+          discard
+    
+  if cvflag == false and floatflag == false and intflag == false and stringflag == false:
+   try:
+      var f1 = parseFloat(x)
+    
+      if $type(f1) == "float":
+         floatflag = true 
+         #printlnBiCol("Floatflag = true : " & $x )
+         cvflag = true
+   except ValueError:
+          discard
+         
+
+  if cvflag == false and intflag == false and floatflag == false and stringflag == false:
+        try:
+          # as all incoming are strings this will never fail and is put last here
+          if $type(x) == "string":
+             stringflag = true 
+             #printlnBiCol("Stringflag = true : " & $x )
+             cvflag = true
+        except ValueError:
+             discard 
+ 
+  result = $type(x)   
+
+
+proc sortdf*(df:nimdf,sortcol:int = 1,sortorder = ""):nimdf =
   ## sortdf
-  ##
-  ## sort df based on column number col 
-  ##
-  ##
-  discard
+  ## 
+  ## sorts a dataframe asc or desc 
+  ## 
+  ## supported sort types are integer ,float or string columns
+  ## 
+  ## other types maybe added later
+  ## 
+  ## the idea implemented here is to read the df into a temp sqllite table
+  ## sort it and return the sorted output as nimdf
+  ## 
+  ##  .. code-block:: nim
+  ##  
+  ##     var ndf2 = sortdf(ndf,5,"asc")  $ sort a dataframe on the fifth col ascending
+
+  var asortcol = sortcol
+  
+  let db = open("localhost", "user", "password", "dbname")
+  db.exec(sql"DROP TABLE IF EXISTS dfTable")
+  var createstring = "CREATE TABLE dfTable (Id INTEGER PRIMARY KEY "
+  for x in 0.. <getColCount(df):
+       discard typetest(df[1][x])   # here we do the type testing for table creation
+       
+       if intflag == true:
+          createstring = createstring & "," & $char(x + 65) & " integer "   
+      
+       elif floatflag == true:
+          createstring = createstring & "," & $char(x + 65) & " float "  
+      
+       elif stringflag == true:
+          createstring = createstring & "," & $char(x + 65) & " varchar(50) "
+       
+     
+  createstring = createstring & ")"
+  db.exec(sql"BEGIN")
+  db.exec(sql(createstring))
+
+  # now the table exists and we add data
+
+  var insql = "INSERT INTO dfTable (" 
+  var tabl = ""
+  var vals = ""
+
+  # set up the cols of the insert sql 
+  for col in 0.. <getcolcount(df):
+        if col < getColCount(df) - 1:
+          tabl = tabl & $char(col + 65) & ","       
+        else:   
+          tabl = tabl & $char(col + 65)
+          
+
+  # set up the values of the insert sql   
+  for row in 1.. <getRowCount(df):
+      for col in 0.. <getColCount(df):
+         if typetest(df[row][col]) == "string":
+        
+            if col < getColCount(df) - 1:
+              vals = vals & dbQuote(df[row][col]) & ","
+            else:   
+              vals = vals & dbQuote(df[row][col])
+              
+         elif typetest(df[row][col]) == "integer":
+           
+            if col < getColCount(df) - 1:
+              vals = vals & df[row][col] & ","
+            else:   
+              vals = vals & df[row][col]
+              
+         elif typetest(df[row][col]) == "float":
+           
+            if col < getColCount(df) - 1:
+              vals = vals & df[row][col] & ","
+            else:   
+              vals = vals & df[row][col]
+
+      insql = insql & tabl & ") VALUES (" & vals & ")"   # the insert sql
+      #echo insql
+      db.exec(sql(insql))
+      insql = "INSERT INTO dfTable (" 
+      vals = ""  
+   
+  db.exec(sql"COMMIT")    
+  
+  var filename =  "nimDftempData.csv"
+  var  data2 = newFileStream(filename, fmWrite) 
+  if asortcol - 1 < 1:
+    asortcol = 1
+  var sortcolname = $chr(65 + asortcol - 1) 
+  # commend next line if info not required
+  printlnBiCol("Sorted on         : Col : " & $asortcol & " Name : " & sortcolname) 
+  var selsql = "select * from dfTable ORDER BY" & spaces(1) & sortcolname & spaces(1) & sortorder 
+  for dbrow in db.fastRows(sql(selsql)) :
+    for x in 1.. <dbrow.len - 1:    
+      data2.write(dbrow[x] & ",")
+    data2.writeLine(dbrow[dbrow.len - 1])
+  data2.close()
+  db.exec(sql"DROP TABLE IF EXISTS dfTable")
+  db.close()
+  
+  #prepare for output
+  var df2 =  createDataFrame(filename = filename,cols = df[0].len)
+  result = df2
 
 
 proc makeNimDf*(dfcols : varargs[nimss]):nimdf = 
