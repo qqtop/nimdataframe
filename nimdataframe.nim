@@ -460,10 +460,11 @@ proc showDf*(df:nimdf,rows:int = 10,cols:nimis = @[],colwd:nimis = @[], colcolor
           try:                    
                 displaystr = $df[row][ncol]  # will be cut to size by fma below to fit into colwd
           except IndexError:
-               
-                echo row,"  ",ncol
-                raise
-                #discard
+                # if row data not available we put NA , the actual df column does not contain NA
+                displaystr = "NA"
+                #echo row,"  ",ncol
+                #raise
+                
                 
           var colfm = ""
           var fma   = newSeq[string]()
@@ -864,6 +865,7 @@ proc sortdf*(df:nimdf,sortcol:int = 1,sortorder = ""):nimdf =
   # set up the values of the insert sql   
   for row in 1.. <getRowCount(df):
       for col in 0.. <getColCount(df):
+       try: 
          if typetest(df[row][col]) == "string":
         
             if col < getColCount(df) - 1:
@@ -884,7 +886,13 @@ proc sortdf*(df:nimdf,sortcol:int = 1,sortorder = ""):nimdf =
               vals = vals & df[row][col] & ","
             else:   
               vals = vals & df[row][col]
-
+       
+       except IndexError:
+              println("Error : Sorting of dataframe with columns of different row count currently only possible",red)
+              println("        if the column with the least rows is the first column of the dataframe",red)
+              echo()
+              raise
+       
       insql = insql & tabl & ") VALUES (" & vals & ")"   # the insert sql
       #echo insql
       db.exec(sql(insql))
@@ -895,11 +903,8 @@ proc sortdf*(df:nimdf,sortcol:int = 1,sortorder = ""):nimdf =
   
   var filename =  "nimDftempData.csv"
   var  data2 = newFileStream(filename, fmWrite) 
-  if asortcol - 1 < 1:
-    asortcol = 1
-  var sortcolname = $chr(65 + asortcol - 1) 
-  # commend next line if info not required
-  printlnBiCol("Sorted on         : Col : " & $asortcol & " Internal Name : " & sortcolname) 
+  if asortcol - 1 < 1: asortcol = 1
+  var sortcolname = $chr(64 + asortcol) 
   var selsql = "select * from dfTable ORDER BY" & spaces(1) & sortcolname & spaces(1) & sortorder 
   for dbrow in db.fastRows(sql(selsql)) :
     for x in 1.. <dbrow.len - 1:    
