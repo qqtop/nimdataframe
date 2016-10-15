@@ -59,4 +59,12 @@ showDf(ndf5,rows = rows ,cols = @[1,2,3],colwd = @[10,8,8],showFrame = true,show
        colcolors = @[pastelgreen,pastelgreen,lime],
        headertext = headertext,leftalignflag = false,xpos = 73)    
 
+decho(3)
+printlnBiCol("New df: with selected rows and cols stipulated via getRowDataRange from existing df ndf5")
+var ndf6 = getRowDataRange(ndf5,rows = @[1,2,4,6],cols = @[1,2,3])
+showDf(ndf6,rows = rows ,cols = @[1,2,3],colwd = @[10,8,8],showFrame = true,showHeader = true,
+       colcolors = @[pastelgreen,pastelgreen,pastelgreen],
+       headertext = headertext,leftalignflag = false)    
+
+
 doFinish()

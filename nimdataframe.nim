@@ -687,48 +687,39 @@ proc getColData*(df:nimdf,col:int):nimss =
             except IndexError:
               discard
 
-proc getRowData*(df:nimdf,row:int = 1 ,dfcols: varargs[int]):nimss =
-     ## getRowData
-     ## 
-     ## gets one row of a nimdf dataframe
-     ## 
-     result = newNimSs()
-     if dfcols.len > 0:       # we have varargs that is specified cols
-          for x in 0.. <dfcols.len:
-             if dfcols[x] > df[row].len:
-                println("Error: Columns > " & $df[row].len & " cannot be specified.",red)
-                print("Check getRowData dfcols parameters given as : ",red)
-                for va in dfcols:
-                    print($va & spaces(1),red)
-                echo()
-                doFinish()
-             else:   
-                result.add(df[row][dfcols[x]])
-     
-     else:   # no varargs  that is we use all cols
-          for y in 0.. <df[row].len:
-             result.add(df[row][y])
-     
- 
- 
 
-proc getRowDataRange*(df:nimdf,rows:nimis = @[0] ,dfcols: varargs[int]):nimdf =
-     ## getRowData
-     ## 
-     ## gets one row of a nimdf dataframe
-     ## 
-     result = newNimDf()
+
+proc getRowDataRange*(df:nimdf,rows:nimis = @[] , cols:nimis = @[] ) : nimdf =
+  ## getRowDataRange
+  ## 
+  ## creates a new df with rows and cols as stipulated extracted from an exisiting df
+  ## 
+  ## Following example uses rows 1,2,4,6 and cols 1,2,3 from df ndf5 to create a new df
+  ## 
+  ## ..code-block:: nim
+  ##   var ndf6 = getRowDataRange(ndf5,rows = @[1,2,4,6],cols = @[1,2,3])
+  ## 
+
+
+  var result = newNimDf()
+  var b = newNimSs()
+  
+  var arows = rows
+  var acols = cols
+  
+  # we extract named rows and cols from a df and create a new df
+  for row in 0.. <arows.len:     
+     for col in acols:
+         b.add(df[arows[row] - 1][col - 1])       
+     result.add(b) 
+     b = @[]
        
-     for row in rows:
-        result.add(getRowData(df,row,dfcols))
-        
-        
+  result
+ 
+  
+  
 
-proc getCellData*(df:nimdf,row:int = 1 ,col:int = 1):string =
-     ## getCellData
-     ## 
-     ## gets Data from a cell of the df at pos row/col 
-     result = df[row][col]
+
 
 
 
@@ -768,6 +759,7 @@ proc sortcoldata*(coldata:nimss,header:bool = false,order = Ascending,sort:bool 
 proc `$`[T](some:typedesc[T]): string = name(T)
 proc typetest[T](x:T): T =
   # used to determine the field types in the temp sqllite table used for sorting
+  # note these procs are used only locally a generic typetest exists in cx
   
   #echo "type: ", type(x), ", value: ", x
   var cvflag = false
