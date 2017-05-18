@@ -6,13 +6,13 @@
 ##
 ##   License     : MIT opensource
 ##
-##   Version     : 0.0.1.2
+##   Version     : 0.0.1.3
 ##
 ##   ProjectStart: 2016-09-16
 ##   
-##   Latest      : 2016-10-13
+##   Latest      : 2017-05-18
 ##
-##   Compiler    : Nim >= 0.15
+##   Compiler    : Nim >= 0.17.0
 ##
 ##   OS          : Linux
 ##
@@ -33,22 +33,21 @@
 ##
 ##   Tested      : OpenSuse 13.2 ,  OpenSuse Tumbleweed 
 ## 
-##   Notes       : Initial feeble attempt ...  
 ## 
 ##  
 import os
-import cx,httpclient,browsers,terminal
+import cx,cxutils,httpclient,browsers,terminal
 import parsecsv,streams,algorithm
 import db_sqlite
 import typetraits,typeinfo
 
-let NIMDATAFRAMEVERSION* = "0.0.1.2"
+let NIMDATAFRAMEVERSION* = "0.0.1.3"
    
 type      
       
-      nimss* = seq[string]         # nim string seq
-      nimis* = seq[int]            # nim integer seq
-      nimdf* = seq[nimss]          # nim data frame
+    nimss* = seq[string]         # nim string seq
+    nimis* = seq[int]            # nim integer seq
+    nimdf* = seq[nimss]          # nim data frame
 
 proc newNimDf*():nimdf = @[]
 proc newNimSs*():nimss = @[]
@@ -65,7 +64,25 @@ var intflag:bool = false
 var floatflag:bool = false
 var stringflag:bool = false
 
+converter toNimIs*(sq:seq[int]):nimis =
+    ## toNimIs
+    ## 
+    ## converter from seq[int] to nimis
+    ## 
+    var aresult = newNimIs()
+    for x in 0.. <sq.len: aresult.add(sq[x])
+    result = aresult
+    
 
+converter toNimSs*(sq:seq[string]):nimss =
+    ## toNimSs
+    ##
+    ## converter from seq[string] to nimss
+    ##
+    var aresult = newNimSs()
+    for x in 0.. <sq.len: aresult.add(sq[x])
+    result = aresult
+    
 
 proc getData1*(url:string):auto =
   ## getData
@@ -371,7 +388,7 @@ proc showDf*(df:nimdf,rows:int = 10,cols:nimis = @[],colwd:nimis = @[], colcolor
     
     if cols.len != okcolwd.len:
        okcolwd = colfitmax(df,cols.len)   # try to best fit rather than to throw error
-       #println("ERROR : Dataframe columns cols and colwd parameter are of different length. See showDf command. Exiting ..",red,truetomato)
+       #printLn("ERROR : Dataframe columns cols and colwd parameter are of different length. See showDf command. Exiting ..",red,truetomato)
        #doAssert cols.len == okcolwd.len 
     
     # turn this one if you want this info
@@ -453,9 +470,9 @@ proc showDf*(df:nimdf,rows:int = 10,cols:nimis = @[],colwd:nimis = @[], colcolor
           ncol = okcols[col] - 1
           if ncol < 0: ncol = 0
           
-          #printlnBiCol("\nncol        : " & $ncol)
+          #printLnBiCol("\nncol        : " & $ncol)
           #printLnBiCol("okcols[col] : " & $okcols[col])
-          #printlnBicol("col         : " & $col )
+          #printLnBiCol("col         : " & $col )
          
           try:                    
                 displaystr = $df[row][ncol]  # will be cut to size by fma below to fit into colwd
@@ -555,8 +572,8 @@ proc showDf*(df:nimdf,rows:int = 10,cols:nimis = @[],colwd:nimis = @[], colcolor
                       # set up topline of frame
                       if toplineflag == false:
                           print(".",lime,xpos = xpos)
-                          hline(frametoplinelen - 2 ,framecolor,xpos = 2) 
-                          println(".",lime)
+                          hline(frametoplinelen - 2 ,framecolor,xpos = xpos + 1) 
+                          printLn(".",lime)
                           toplineflag = true 
                       
                       if col == 0: 
@@ -570,8 +587,8 @@ proc showDf*(df:nimdf,rows:int = 10,cols:nimis = @[],colwd:nimis = @[], colcolor
                       # set up topline of frame
                       if toplineflag == false:
                           print(".",magenta,xpos = xpos)
-                          hline(frametoplinelen - 2 ,framecolor,xpos = 2) 
-                          println(".",lime)
+                          hline(frametoplinelen - 2 ,framecolor,xpos = xpos + 1) 
+                          printLn(".",lime)
                           toplineflag = true   
                         
                                               
@@ -597,8 +614,8 @@ proc showDf*(df:nimdf,rows:int = 10,cols:nimis = @[],colwd:nimis = @[], colcolor
                             # set up topline of frame
                             if toplineflag == false:
                               print(".",magenta,xpos = xpos)
-                              hline(frametoplinelen - 2 ,framecolor,xpos = 2) 
-                              println(".",lime)
+                              hline(frametoplinelen - 2 ,framecolor,xpos = xpos + 1) 
+                              printLn(".",lime)
                               toplineflag = true   
                         
                   
@@ -639,10 +656,10 @@ proc showDf*(df:nimdf,rows:int = 10,cols:nimis = @[],colwd:nimis = @[], colcolor
 
 
           if row + 1 == okrows and col == okcols.len - 1  and bottomrowflag == false and frame == true:
-                          # draw a bottom frame line 
+                          # draw a bottom frame line  
                           print(".",lime,xpos = xpos)  # left dot
-                          hline(frametoplinelen - 2 ,framecolor) 
-                          println(".",lime)
+                          hline(frametoplinelen - 2 ,framecolor,xpos = xpos + 1) 
+                          printLn(".",lime)
                           bottomrowflag = true
           
              
@@ -677,7 +694,7 @@ proc getColData*(df:nimdf,col:int):nimss =
      
      var zcol = col - 1
      if zcol < 0 or zcol > getColCount(df) :
-        println("Error : Wrong column number specified",red)
+        printLn("Error : Wrong column number specified",red)
         quit(0)
      
      result = newNimSs()
@@ -701,7 +718,7 @@ proc getRowDataRange*(df:nimdf,rows:nimis = @[] , cols:nimis = @[] ) : nimdf =
   ## 
 
 
-  var result = newNimDf()
+  var aresult = newNimDf()
   var b = newNimSs()
   
   var arows = rows
@@ -711,17 +728,11 @@ proc getRowDataRange*(df:nimdf,rows:nimis = @[] , cols:nimis = @[] ) : nimdf =
   for row in 0.. <arows.len:     
      for col in acols:
          b.add(df[arows[row] - 1][col - 1])       
-     result.add(b) 
+     aresult.add(b) 
      b = @[]
        
-  result
+  result = aresult
  
-  
-  
-
-
-
-
 
 # we want to sort data in one column desc or asc
 # maybe see there for multiple col df sorting 
@@ -772,7 +783,7 @@ proc typetest[T](x:T): T =
        var i1 =  parseInt(x)
        if $type(i1) == "int":
           intflag = true
-          #printlnBiCol("Intflag = true : " & $x )
+          #printLnBiCol("Intflag = true : " & $x )
           cvflag = true
     except ValueError:
           discard
@@ -783,7 +794,7 @@ proc typetest[T](x:T): T =
     
       if $type(f1) == "float":
          floatflag = true 
-         #printlnBiCol("Floatflag = true : " & $x )
+         #printLnBiCol("Floatflag = true : " & $x )
          cvflag = true
    except ValueError:
           discard
@@ -794,7 +805,7 @@ proc typetest[T](x:T): T =
           # as all incoming are strings this will never fail and is put last here
           if $type(x) == "string":
              stringflag = true 
-             #printlnBiCol("Stringflag = true : " & $x )
+             #printLnBiCol("Stringflag = true : " & $x )
              cvflag = true
         except ValueError:
              discard 
@@ -817,6 +828,7 @@ proc sortdf*(df:nimdf,sortcol:int = 1,sortorder = ""):nimdf =
   ##  .. code-block:: nim
   ##  
   ##     var ndf2 = sortdf(ndf,5,"asc")  $ sort a dataframe on the fifth col ascending
+  ##     
 
   var asortcol = sortcol
   
@@ -880,8 +892,8 @@ proc sortdf*(df:nimdf,sortcol:int = 1,sortorder = ""):nimdf =
               vals = vals & df[row][col]
        
        except IndexError:
-              println("Error : Sorting of dataframe with columns of different row count currently only possible",red)
-              println("        if the column with the least rows is the first column of the dataframe",red)
+              printLn("Error : Sorting of dataframe with columns of different row count currently only possible",red)
+              printLn("        if the column with the least rows is the first column of the dataframe",red)
               echo()
               raise
        
@@ -948,7 +960,7 @@ proc createDataFrame*(filename:string,cols:int = 2,sep:char = ','):nimdf =
       var data2 = getdata2(filename = filename,cols = cols,sep = sep)  
       result = makeDf2(data2,cols)
 
-  println(clearline)
+  printLn(clearline)
   
 
 proc createRandomTestData*(filename:string = "nimDfTestData.csv",datarows:int = 2000) =
@@ -966,9 +978,9 @@ proc createRandomTestData*(filename:string = "nimDfTestData.csv",datarows:int = 
   var colwd     = @[10,10,10,10,10,10,14]
   var colcolors = @[yellow,pastelyellowgreen,palegreen,pastelpink,pastelblue,pastelwhite,violet]
   
-  var cs = newWord(3,8)
-  var ci = getRandomInt(0,100000)
-  var cf = getrandomfloat() * 2345243.132310 * getRandomSignF()
+  var cs = cxutils.newWord(3,8)
+  var ci = getRndInt(0,100000)
+  var cf = getRndFloat() * 2345243.132310 * getRandomSignF()
 
   var  data = newFileStream(filename, fmWrite)
   
@@ -977,13 +989,13 @@ proc createRandomTestData*(filename:string = "nimDfTestData.csv",datarows:int = 
   
   for dx in 0.. <datarows:
        
-      data.write(getRandomDate() & ",")
-      data.write($getRandomInt(0,100000) & ",")
-      data.write($getRandomInt(0,100000) & ",")
+      data.write(getRndDate() & ",")
+      data.write($getRndInt(0,100000) & ",")
+      data.write($getRndInt(0,100000) & ",")
       data.write(newWord(3,8) & ",")
-      data.write(ff(getrandomfloat() * 345243.132310 * getRandomSignF(),2) & ",")
+      data.write(ff(getRndFloat() * 345243.132310 * getRandomSignF(),2) & ",")
       data.write(newWord(3,8) & ",")
-      data.writeln(newWord(3,8))
+      data.writeLine(newWord(3,8))
   
   data.close()
     
