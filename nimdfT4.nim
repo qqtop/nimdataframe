@@ -1,4 +1,4 @@
-import cx,nimdataframe,algorithm
+import nimcx,nimdataframe,algorithm
 
 #  nimdfT4.nim
 #  

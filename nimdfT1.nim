@@ -1,4 +1,4 @@
-import cx , nimdataframe 
+import nimcx , nimdataframe 
 
 ## nimdfT1.nim
 ## Testing nimdataframe

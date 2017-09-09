@@ -6,11 +6,11 @@
 ##
 ##   License     : MIT opensource
 ##
-##   Version     : 0.0.1.3
+##   Version     : 0.0.1.4
 ##
 ##   ProjectStart: 2016-09-16
 ##   
-##   Latest      : 2017-05-18
+##   Latest      : 2017-09-09
 ##
 ##   Compiler    : Nim >= 0.17.0
 ##
@@ -36,12 +36,12 @@
 ## 
 ##  
 import os
-import cx,cxutils,httpclient,browsers,terminal
+import nimcx,httpclient,browsers,terminal
 import parsecsv,streams,algorithm
 import db_sqlite
 import typetraits,typeinfo
 
-let NIMDATAFRAMEVERSION* = "0.0.1.3"
+let NIMDATAFRAMEVERSION* = "0.0.1.4"
    
 type      
       
@@ -53,11 +53,11 @@ proc newNimDf*():nimdf = @[]
 proc newNimSs*():nimss = @[]
 proc newNimIs*():nimis = @[]
 
-proc createDataFrame*(filename:string,cols:int = 2,sep:char = ','):nimdf 
+proc createDataFrame*(filename:string,cols:int = 2,rows:int = -1,sep:char = ','):nimdf 
 
 
 var dfcolwd = newNimIs()            # holds dataframe column widths 
-var csvrows = -1                    # in case of getdata2 csv files we may get processed rowcount back
+var okcsvrows = -1
 
 # used in sortdf
 var intflag:bool = false
@@ -93,24 +93,26 @@ proc getData1*(url:string):auto =
        var zcli = newHttpClient()
        result  = zcli.getcontent(url)   # orig test data
   except :
-       printLnBiCol("Error : " & url & " content could not be fetched . Retry with -d:ssl",":",red) 
+       printLnBiCol("Error : " & url & " content could not be fetched . Retry with -d:ssl",red,bblack,":",0,true,{}) 
        printLn(getCurrentExceptionMsg(),red,xpos = 9)
        doFinish()
 
 
-proc getData2*(filename:string,cols:int = 2,sep:char = ','):auto = 
+proc getData2*(filename:string,cols:int = 2,rows:int = -1,sep:char = ','):auto = 
     ## getData2
     ## 
     ## used for csv files with a path and filename available
     ## 
  
     # we read by row but add to col seqs --> so myseq contains seqs of col data 
+    var csvrows = -1                    # in case of getdata2 csv files we may get processed rowcount back
     var ccols = cols 
-      
+    var rrows = rows
+    if rrows == -1 : rrows = 50000  # limit any dataframe to 50000 rows if no rows param given
     var x: CsvParser
     var s = newFileStream(filename, fmRead)
     if s == nil: 
-            printLnBiCol("Error : " & filename & " content could not be accessed.",":",red)
+            printLnBiCol("Error : " & filename & " content could not be accessed.",red,bblack,":",0,true,{}) 
             printLn(getCurrentExceptionMsg(),red,xpos = 9)
             doFinish()
     else: 
@@ -137,7 +139,8 @@ proc getData2*(filename:string,cols:int = 2,sep:char = ','):auto =
         var dxset = newNimSs()
         var c = 0  # counter
         try:
-          while readRow(x):
+          while readRow(x) and csvrows < rrows: 
+          
               try:   
                     for val in items(x.row):
                       if c < ccols :
@@ -149,12 +152,13 @@ proc getData2*(filename:string,cols:int = 2,sep:char = ','):auto =
               except:
                     c = 0
                     discard
-               
-          csvrows = processedRows(x)
+              
+              csvrows = processedRows(x)
         except CsvError: 
            discard
         
         close(x)
+        okcsvrows = csvrows
         result = myseq    # this holds col data now
         
 
@@ -296,16 +300,16 @@ proc showMaxColWidths*(df:nimdf) =
     var sumwd = 0
     var headers = getcolheaders(df)
     for y in 0.. <dfcolwd.len:
-          printLnBiCol(fmtx(["<17","",""],headers[y],"--> ",dfcolwd[y]),"--> ",xpos = 2)
+          printLnBiCol(fmtx(["<17","",""],headers[y],"--> ",dfcolwd[y]),sep="--> ",xpos = 2,false,{})
           sumwd = sumwd + dfcolwd[y]
     echo() 
  
     if sumwd == 0:
-      printLnBiCol(fmtx(["<17","",""],"Row Width    Max ","--> ","N.A."),"--> ",darkgray,red,xpos = 2)
+      printLnBiCol(fmtx(["<17","",""],"Row Width    Max ","--> ","N.A."),darkgray,red,"--> ",2,false,{})
     else:
-      printLnBiCol(fmtx(["<17","",""],"Row Width    Max ","--> ",sumwd),"--> ",xpos = 2)
+      printLnBiCol(fmtx(["<17","",""],"Row Width    Max ","--> ",sumwd),sep = "--> ",xpos = 2,false,{})
     
-    printLnBiCol(fmtx(["<17","",""],"Header Width Max ","--> ",getTotalHeaderColsWitdh(df)),"--> ",xpos = 2)
+    printLnBiCol(fmtx(["<17","",""],"Header Width Max ","--> ",getTotalHeaderColsWitdh(df)),sep="--> ",xpos = 2,false,{})
     printLn("For data where there are no headers header data is taken from the first row.",lightgrey,xpos = 2)
     decho(2)
 
@@ -339,7 +343,7 @@ proc checkDfOk(df:nimdf):bool =
      if df.len > 0:
         result = true
      else:
-        printLnBiCol("ERROR  : Dataframe has no data. Exiting .. ",":",red,red)
+        printLnBiCol("ERROR  : Dataframe has no data. Exiting .. ",red,red,":",0,false,{})
         result = false
 
        
@@ -396,7 +400,7 @@ proc showDf*(df:nimdf,rows:int = 10,cols:nimis = @[],colwd:nimis = @[], colcolor
     #   printLnBiCol("NOTE  : Dataframe columns cols and colcolors parameter are of different length",":",red,peru)
      
     if df[0].len == 0: 
-       printLnBiCol("ERROR : Dataframe appears to have no columns. See showDf command. Exiting ..",":",red,truetomato)
+       printLnBiCol("ERROR : Dataframe appears to have no columns. See showDf command. Exiting ..",red,truetomato,":",0,false,{})
        quit(0)
        
     var okrows = rows
@@ -674,8 +678,8 @@ proc showDataframeInfo*(df:nimdf) =
    showHeader(df)
    showCounts(df)
    #showMaxColWidths(df)  # not really interesting
-   if csvrows - 1 > -1:
-       printLnBiCol("Processed Original Data Rows : " & $(csvrows - 1),xpos = 2)   
+   if okcsvrows - 1 > -1:
+       printLnBiCol("Processed Original Data Rows : " & $(okcsvrows - 1),xpos = 2)   
    echo()    
    printLn("End of Dataframe Info",xpos = 2,lightskyblue)
    hlineln(tw,lightgrey)
@@ -832,7 +836,8 @@ proc sortdf*(df:nimdf,sortcol:int = 1,sortorder = ""):nimdf =
 
   var asortcol = sortcol
   
-  let db = open("localhost", "user", "password", "dbname")
+  #let db = open("localhost", "user", "password", "dbname")
+  let db = open(":memory:", nil, nil, nil)
   db.exec(sql"DROP TABLE IF EXISTS dfTable")
   var createstring = "CREATE TABLE dfTable (Id INTEGER PRIMARY KEY "
   for x in 0.. <getColCount(df):
@@ -939,7 +944,7 @@ proc makeNimDf*(dfcols : varargs[nimss]):nimdf =
   result = makeDf2(df)
 
 
-proc createDataFrame*(filename:string,cols:int = 2,sep:char = ','):nimdf = 
+proc createDataFrame*(filename:string,cols:int = 2,rows:int = -1,sep:char = ','):nimdf = 
   ## createDataFrame
   ## 
   ## attempts to create a nimdf dataframe from url or local path
@@ -957,7 +962,7 @@ proc createDataFrame*(filename:string,cols:int = 2,sep:char = ','):nimdf =
       var data1 = getData1(filename)
       result = makeDf1(data1)
   else:
-      var data2 = getdata2(filename = filename,cols = cols,sep = sep)  
+      var data2 = getdata2(filename = filename,cols = cols,rows = rows,sep = sep)  
       result = makeDf2(data2,cols)
 
   printLn(clearline)
@@ -978,7 +983,7 @@ proc createRandomTestData*(filename:string = "nimDfTestData.csv",datarows:int = 
   var colwd     = @[10,10,10,10,10,10,14]
   var colcolors = @[yellow,pastelyellowgreen,palegreen,pastelpink,pastelblue,pastelwhite,violet]
   
-  var cs = cxutils.newWord(3,8)
+  var cs = newWord(3,8)
   var ci = getRndInt(0,100000)
   var cf = getRndFloat() * 2345243.132310 * getRandomSignF()
 

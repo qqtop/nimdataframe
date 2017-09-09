@@ -1,4 +1,4 @@
-import cx , nimdataframe 
+import nimcx , nimdataframe 
 
 # nimdfT6
 # 
@@ -42,7 +42,7 @@ showDf(ndf3,rows = rows ,cols = @[1,2,3],colwd = @[10,8,8],showFrame = true,show
 curup(15)
 asortcol = 2
 sortcolname = headertext[asortcol - 1]
-printlnBiCol("Sorted on Col : " & $asortcol & " Name : " & sortcolname,":",brightyellow,xpos = 37) 
+printlnBiCol("Sorted on Col : " & $asortcol & " Name : " & sortcolname,brightyellow,bblack,":",37,false,{}) 
 var ndf4 = sortdf(ndf2,asortcol,"asc")
 showDf(ndf4,rows = rows ,cols = @[1,2,3],colwd = @[10,8,8],showFrame = true,showHeader = true,
        colcolors = @[pastelgreen,lime,pastelgreen],
@@ -53,7 +53,7 @@ showDf(ndf4,rows = rows ,cols = @[1,2,3],colwd = @[10,8,8],showFrame = true,show
 curup(rows + 5)
 asortcol = 3
 sortcolname = headertext[asortcol - 1]
-printlnBiCol("Sorted on Col : " & $asortcol & " Name : " & sortcolname,":",lime,xpos = 73) 
+printlnBiCol("Sorted on Col : " & $asortcol & " Name : " & sortcolname,lime,bblack,":",73,false,{}) 
 var ndf5 = sortdf(ndf2,asortcol,"asc")
 showDf(ndf5,rows = rows ,cols = @[1,2,3],colwd = @[10,8,8],showFrame = true,showHeader = true,
        colcolors = @[pastelgreen,pastelgreen,lime],
