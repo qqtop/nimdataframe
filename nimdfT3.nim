@@ -1,4 +1,4 @@
-import os,cx,nimFinLib,strutils,nimdataframe
+import os,nimcx,nimFinLib,nimdataframe
 
 #  nimdfT3.nim
 #  
@@ -21,7 +21,7 @@ import os,cx,nimFinLib,strutils,nimdataframe
 # 
 # 
 
-var mystock = "AAPL"   # yahoo stock code format
+var mystock = "0005.HK"   # yahoo stock code format
 
  
 converter finlibdate(astock:Stocks):nimss =
