@@ -1,3 +1,4 @@
+
 # nimdataframe
 
 [![nimble](https://raw.githubusercontent.com/yglukhov/nimble-tag/master/nimble.png)](https://github.com/yglukhov/nimble-tag)
@@ -9,7 +10,7 @@ Dataframe for Nim
 
 | Library      | Status      | Version | License        | OS     | Compiler       |
 |--------------|-------------|---------|----------------|--------|----------------|
-| nimdataframe | Development | 0.0.1.x | MIT opensource | Linux  | Nim >= 0.15    |
+| nimdataframe | Development | 0.0.1.x | MIT opensource | Linux  | Nim >= 0.17.1  |
 
 
  Attempt of using csv data from the net, locally or generated to implement
@@ -19,10 +20,8 @@ Dataframe for Nim
 Requirements
 ------------
 ```nimrod
-
-        nimble install random
-          
-        nimble install https://github.com/qqtop/NimCx.git
+                  
+        nimble install nimcx
  
 ```
 
@@ -51,7 +50,7 @@ Example Code
 ## Testing nimdataframe
 ## compile with : nim c -d:ssl -d:release -r nimdfT1
 
-import cx , nimdataframe 
+import nimcx , nimdataframe 
 
 var ufo =  "http://bit.ly/uforeports"    # data used in pandas documentation
 var ndf:nimdf                            # define a nim dataframe
@@ -82,6 +81,6 @@ NOTE :
      Forking ,testing, suggestions , ideas are welcome.
      This is development code , hence use at your own risk.
      
-     Tested  openSuse 13.2 , openSuse TumbleWeed
+     Tested on  openSuse TumbleWeed
               
 ![Image](http://qqtop.github.io/qqtop-small.png?raw=true)

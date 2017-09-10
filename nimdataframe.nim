@@ -6,11 +6,11 @@
 ##
 ##   License     : MIT opensource
 ##
-##   Version     : 0.0.1.4
+##   Version     : 0.0.1.5
 ##
 ##   ProjectStart: 2016-09-16
 ##   
-##   Latest      : 2017-09-09
+##   Latest      : 2017-09-10
 ##
 ##   Compiler    : Nim >= 0.17.0
 ##
@@ -31,7 +31,7 @@
 ##
 ##   Docs        : http://qqtop.github.io/nimdataframe.html
 ##
-##   Tested      : OpenSuse 13.2 ,  OpenSuse Tumbleweed 
+##   Tested      : OpenSuse Tumbleweed 
 ## 
 ## 
 ##  
@@ -41,7 +41,7 @@ import parsecsv,streams,algorithm
 import db_sqlite
 import typetraits,typeinfo
 
-let NIMDATAFRAMEVERSION* = "0.0.1.4"
+let NIMDATAFRAMEVERSION* = "0.0.1.5"
    
 type      
       
