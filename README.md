@@ -14,7 +14,7 @@ Dataframe for Nim
 
 
  Attempt of using csv data from the net, locally or generated to implement
- display,handling,sorting and data extraction.
+ display,handling,sorting and data extraction. 
  
  
 Requirements
@@ -65,6 +65,11 @@ doFinish()
 
 
 ```
+Screenshot from nimdfT9.nim
+
+![Image](http://qqtop.github.io/d96data.png?raw=true)
+
+
 ![Image](http://qqtop.github.io/nimdataframe1.png?raw=true)
 
 

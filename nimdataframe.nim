@@ -6,11 +6,11 @@
 ##
 ##   License     : MIT opensource
 ##
-##   Version     : 0.0.1.5
+##   Version     : 0.0.1.6
 ##
 ##   ProjectStart: 2016-09-16
 ##   
-##   Latest      : 2017-09-10
+##   Latest      : 2017-10-05
 ##
 ##   Compiler    : Nim >= 0.17.0
 ##
@@ -23,6 +23,8 @@
 ##                 create a dataframe for display or processing
 ##                 
 ##                 from online or local csv files
+##                 
+##                 able to create subdataframes from dataframes and sorting on columns and column statistics
 ##
 ##
 ##   Usage       : import nimdataframe
@@ -33,15 +35,15 @@
 ##
 ##   Tested      : OpenSuse Tumbleweed 
 ## 
-## 
+##   Todo        : var calc on dataframes
 ##  
 import os
-import nimcx,httpclient,browsers,terminal
-import parsecsv,streams,algorithm
+import nimcx,httpclient,browsers
+import parsecsv,streams,algorithm,stats
 import db_sqlite
 import typetraits,typeinfo
 
-let NIMDATAFRAMEVERSION* = "0.0.1.5"
+let NIMDATAFRAMEVERSION* = "0.0.1.6"
    
 type      
       
@@ -56,7 +58,7 @@ proc newNimIs*():nimis = @[]
 proc createDataFrame*(filename:string,cols:int = 2,rows:int = -1,sep:char = ','):nimdf 
 
 
-var dfcolwd = newNimIs()            # holds dataframe column widths 
+var dfcolwd = newNimIs()         # holds dataframe column widths 
 var okcsvrows = -1
 
 # used in sortdf
@@ -105,7 +107,7 @@ proc getData2*(filename:string,cols:int = 2,rows:int = -1,sep:char = ','):auto =
     ## 
  
     # we read by row but add to col seqs --> so myseq contains seqs of col data 
-    var csvrows = -1                    # in case of getdata2 csv files we may get processed rowcount back
+    var csvrows = -1                # in case of getdata2 csv files we may get processed rowcount back
     var ccols = cols 
     var rrows = rows
     if rrows == -1 : rrows = 50000  # limit any dataframe to 50000 rows if no rows param given
@@ -121,8 +123,7 @@ proc getData2*(filename:string,cols:int = 2,rows:int = -1,sep:char = ','):auto =
         # we read one row:
         discard readRow(x)
         var itemcount = 0
-        for val in items(x.row):
-          inc itemcount
+        for val in items(x.row): inc itemcount
         close(x)
         close(s)
         
@@ -130,8 +131,7 @@ proc getData2*(filename:string,cols:int = 2,rows:int = -1,sep:char = ','):auto =
         if ccols > itemcount: ccols = itemcount
         
         var myseq = newNimDf()
-        for x in 0.. <ccols:
-           myseq.add(@[])
+        for x in 0.. <ccols:  myseq.add(@[])
            
         # here we actually use everything
         s = newFileStream(filename, fmRead)
@@ -182,11 +182,8 @@ proc makeDf1*(ufo1:string):nimdf =
       var wdc = 0
       for xx in 0.. <ufos.len:
           ns.add(ufos[xx].strip(true,true))
-          if wdc == dfcolwd.len:
-            wdc = 0
-          if dfcolwd[wdc] < ufos[xx].len:
-                dfcolwd[wdc] = ufos[xx].strip(true,true).len
-                     
+          if wdc == dfcolwd.len: wdc = 0
+          if dfcolwd[wdc] < ufos[xx].len: dfcolwd[wdc] = ufos[xx].strip(true,true).len
           inc wdc     
       df.add(ns)
    result = df  
@@ -205,8 +202,8 @@ proc makeDf2*(ufo1:nimdf,cols:int = 0):nimdf =
    var dfcols = 0
    var dfrows = 0
    try:
-     dfcols = ufo1.len  
-     dfrows = ufo1[0].len  # this assumes all cols have same number of rows maybe shud check this
+       dfcols = ufo1.len  
+       dfrows = ufo1[0].len  # this assumes all cols have same number of rows maybe shud check this
    except IndexError:
        printLn("dfcols = " & $dfcols,red)
        printLn("dfrows = " & $dfrows,red)
@@ -218,16 +215,14 @@ proc makeDf2*(ufo1:nimdf,cols:int = 0):nimdf =
      for cls  in 0.. <dfcols:  # cols count  
        # now build our row for df
        try:
-         if rws == dfrows - 1:
-            arow.add(ufo1[cls][rws])  
-         else:
-            arow.add(ufo1[cls][rws])  
+           if rws == dfrows - 1:  arow.add(ufo1[cls][rws])  
+           else:  arow.add(ufo1[cls][rws])  
        except IndexError:
             printLn("arow   = " & $arow,red)
             try:
                printLn("ufo1   = " & $ufo1[cls][rws],red)
             except IndexError:
-                  printLn("This error basically tells that the row data is not good\ncheck for empty rows or column less rows etc in the data file",red)
+                  printLn("This error tells that the row data is not good\ncheck for empty rows or column less rows etc in the data file",red)
             printLn("dfcols = " & $dfcols,red)
             printLn("dfrows = " & $dfrows,red)
             printLn("cls    = " & $cls,red)
@@ -340,8 +335,7 @@ proc colfitmax*(df:nimdf,cols:int = 0,adjustwd:int = 0):nimis =
   
   
 proc checkDfOk(df:nimdf):bool =
-     if df.len > 0:
-        result = true
+     if df.len > 0:  result = true
      else:
         printLnBiCol("ERROR  : Dataframe has no data. Exiting .. ",red,red,":",0,false,{})
         result = false
@@ -414,8 +408,7 @@ proc showDf*(df:nimdf,rows:int = 10,cols:nimis = @[],colwd:nimis = @[], colcolor
          
     if okcolwd.len < okcols.len:
        # we are missing some colwd data we add default widths
-       while okcolwd.len < okcols.len:
-             okcolwd.add(15)
+       while okcolwd.len < okcols.len: okcolwd.add(15)
       
     
     # if not cols seq is specified we assume all cols
@@ -679,7 +672,7 @@ proc showDataframeInfo*(df:nimdf) =
    showCounts(df)
    #showMaxColWidths(df)  # not really interesting
    if okcsvrows - 1 > -1:
-       printLnBiCol("Processed Original Data Rows : " & $(okcsvrows - 1),xpos = 2)   
+       printLnBiCol("Processed Original Data Rows : " & $(okcsvrows),xpos = 2)   
    echo()    
    printLn("End of Dataframe Info",xpos = 2,lightskyblue)
    hlineln(tw,lightgrey)
@@ -702,9 +695,9 @@ proc getColData*(df:nimdf,col:int):nimss =
         quit(0)
      
      result = newNimSs()
-     for x in 1.. <df.len:
+     for x in 0.. <df.len:
             try:
-              result.add(df[x][zcol])
+              result.add(df[x][zcol])    # orig x  but sums do not catch first row ?
             except IndexError:
               discard
 
@@ -912,6 +905,11 @@ proc sortdf*(df:nimdf,sortcol:int = 1,sortorder = ""):nimdf =
   
   var filename =  "nimDftempData.csv"
   var  data2 = newFileStream(filename, fmWrite) 
+  var hds = getcolheaders(df)   #after sorting the headers disappear so we need to put them back in this would be the place
+  if hds.len > 1:  # only do this if any headers are here
+    for x in 0.. <hds.len-1:
+       data2.write(hds[x] & ", ")
+    data2.writeLine(hds[hds.len - 1])   # the rightmost header item/column name
   if asortcol - 1 < 1: asortcol = 1
   var sortcolname = $chr(64 + asortcol) 
   var selsql = "select * from dfTable ORDER BY" & spaces(1) & sortcolname & spaces(1) & sortorder 
@@ -939,8 +937,7 @@ proc makeNimDf*(dfcols : varargs[nimss]):nimdf =
   # NaN etc
   # 
   var df = newNimDf()
-  for x in dfcols:
-      df.add(x)
+  for x in dfcols: df.add(x)
   result = makeDf2(df)
 
 
@@ -1005,4 +1002,36 @@ proc createRandomTestData*(filename:string = "nimDfTestData.csv",datarows:int = 
   data.close()
     
   
-  
+
+proc dfColumnStats*(df:nimdf,colseq:seq[int]): seq[Runningstat] =
+        ## dfColumnStats
+        ## 
+        ## returns a seq[Runningstat] for all columns specified in colseq for dataframe df
+        ## 
+        ## so if colSeq = @[1,3,6] , we would get stats for cols 1,3,6
+        ## 
+        ## see nimdfT9.nim for an example
+        ## 
+        #var dfColSums = newSeq[float]()
+        var psdata = newSeq[Runningstat]()
+        for x in colseq:
+           var coldata=getColData(df,x)
+           # var coldatasum = 0.0
+        
+           var ps : Runningstat
+           ps.clear()
+           for xx in coldata:
+              #echo typetest(xx)
+              var xxx =  parsefloat(xx.strip())
+              #coldatasum = coldatasum + xxx
+              ps.push(xxx)
+                    
+           #dfColSums.add(coldatasum)
+           psdata.add(ps) 
+           
+           #printLn("Sums for all rows")  
+           #echo dfColSums
+           echo()
+           
+        result = psdata
+    
