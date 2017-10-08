@@ -10,7 +10,7 @@
 ##
 ##   ProjectStart: 2016-09-16
 ##   
-##   Latest      : 2017-10-05
+##   Latest      : 2017-10-08
 ##
 ##   Compiler    : Nim >= 0.17.0
 ##
@@ -326,7 +326,7 @@ proc colfitmax*(df:nimdf,cols:int = 0,adjustwd:int = 0):nimis =
   
   var ccols = cols
   if ccols == 0:
-    ccols = getColCount(df)
+     ccols = getColCount(df)
   
   var optcolwd = tw div ccols - ccols + adjustwd  
   var cwd = newNimIs()
@@ -376,7 +376,10 @@ proc showDf*(df:nimdf,rows:int = 10,cols:nimis = @[],colwd:nimis = @[], colcolor
       
     var header = showHeader
     var frame  = showFrame
-       
+    let vfc  = "|"               # vertical frame char for column separation
+    let vfcs = "|"    # efs2 or efb2   # vertical frame char for left (and right side <--- needs to be implemented )
+    let hfct = efs2   # "_"      # horizontal framechar top of frame
+    let hfcb = efs2              # horizontal framechar for bottom of frame
     if cols.len == 1:
       # to display one column data showheader and showFrame must be false
       # to avoid messed up display , Todo: take care of this eventually 
@@ -569,40 +572,40 @@ proc showDf*(df:nimdf,rows:int = 10,cols:nimis = @[],colwd:nimis = @[], colcolor
                       # set up topline of frame
                       if toplineflag == false:
                           print(".",lime,xpos = xpos)
-                          hline(frametoplinelen - 2 ,framecolor,xpos = xpos + 1) 
+                          hline(frametoplinelen - 2 ,framecolor,xpos = xpos + 1,lt = hfct) 
                           printLn(".",lime)
                           toplineflag = true 
                       
                       if col == 0: 
-                            print(framecolor & "|" & okcolcolors[col] & fmtx(fma,displaystr,spaces(1) & framecolor & "|" & white),okcolcolors[col],styled = {},xpos = xpos)
+                            print(framecolor & vfcs & okcolcolors[col] & fmtx(fma,displaystr,spaces(1) & framecolor & vfc & white),okcolcolors[col],styled = {},xpos = xpos)
                             if col == okcols.len - 1: echo()
                       else: # other cols of header
-                            print(fmtx(fma,displaystr,spaces(1) & framecolor & "|" & white),okcolcolors[col],styled = {})  
+                            print(fmtx(fma,displaystr,spaces(1) & framecolor & vfc & white),okcolcolors[col],styled = {})  
                             if col == okcols.len - 1: echo() 
                 
               if frame == true and header == true and headertext == @[]: # first line will be used as header
                       # set up topline of frame
                       if toplineflag == false:
                           print(".",magenta,xpos = xpos)
-                          hline(frametoplinelen - 2 ,framecolor,xpos = xpos + 1) 
+                          hline(frametoplinelen - 2 ,framecolor,xpos = xpos + 1,lt = hfct) 
                           printLn(".",lime)
                           toplineflag = true   
                         
                                               
                       # first row as header 
                       if col == 0 and row == 0:
-                              print(framecolor & "|" & yellowgreen & fmtx(fma,displaystr,spaces(1) & framecolor & "|" & white),yellowgreen,styled = {styleunderscore},xpos = xpos)                           
+                              print(framecolor & vfcs & yellowgreen & fmtx(fma,displaystr,spaces(1) & framecolor & vfc & white),yellowgreen,styled = {styleunderscore},xpos = xpos)                           
                               
                       elif col > 0 and row == 0:
-                                  print(fmtx(fma,displaystr,spaces(1) & framecolor & "|" & white),yellowgreen,styled = {styleunderscore})  
+                                  print(fmtx(fma,displaystr,spaces(1) & framecolor & vfc & white),yellowgreen,styled = {styleunderscore})  
                                   if col == okcols.len - 1: echo()                      
                                 
                       # all other rows data
                       if col == 0 and row > 0:
-                                  print(framecolor & "|" & okcolcolors[col] & fmtx(fma,displaystr,spaces(1) & framecolor & "|" & white),okcolcolors[col],styled = {},xpos = xpos)
+                                  print(framecolor & vfcs & okcolcolors[col] & fmtx(fma,displaystr,spaces(1) & framecolor & vfc & white),okcolcolors[col],styled = {},xpos = xpos)
                               
                       elif col > 0 and row > 0:
-                                  print(fmtx(fma,displaystr,spaces(1) & framecolor & "|" & white),okcolcolors[col],styled = {}) 
+                                  print(fmtx(fma,displaystr,spaces(1) & framecolor & vfc & white),okcolcolors[col],styled = {}) 
                                   if col == okcols.len - 1: echo()  
                   
                 
@@ -611,7 +614,7 @@ proc showDf*(df:nimdf,rows:int = 10,cols:nimis = @[],colwd:nimis = @[], colcolor
                             # set up topline of frame
                             if toplineflag == false:
                               print(".",magenta,xpos = xpos)
-                              hline(frametoplinelen - 2 ,framecolor,xpos = xpos + 1) 
+                              hline(frametoplinelen - 2 ,framecolor,xpos = xpos + 1,lt = hfct) 
                               printLn(".",lime)
                               toplineflag = true   
                         
@@ -636,9 +639,9 @@ proc showDf*(df:nimdf,rows:int = 10,cols:nimis = @[],colwd:nimis = @[], colcolor
                                     hfma = @[hcolfm,""]   
                                                                   
                                     if hcol == 0:
-                                      print(framecolor & "|" & yellowgreen & fmtx(hfma,headertext[nhcol],spaces(1) & framecolor & "|" & white),yellowgreen,styled = {styleunderscore},xpos = xpos) 
+                                      print(framecolor & vfcs & yellowgreen & fmtx(hfma,headertext[nhcol],spaces(1) & framecolor & vfc & white),yellowgreen,styled = {styleunderscore},xpos = xpos) 
                                     elif hcol > 0:
-                                      print(fmtx(hfma,headertext[nhcol],spaces(1) & framecolor & "|" & white),yellowgreen,styled = {styleunderscore}) 
+                                      print(fmtx(hfma,headertext[nhcol],spaces(1) & framecolor & vfc & white),yellowgreen,styled = {styleunderscore}) 
                                       if hcol == okcols.len - 1: 
                                           echo()    
                                           headerflagok = true 
@@ -646,16 +649,16 @@ proc showDf*(df:nimdf,rows:int = 10,cols:nimis = @[],colwd:nimis = @[], colcolor
                             if headerflagok == true:
                                 # all other rows data
                                 if col == 0 and row >= 0  :
-                                    print(framecolor & "|" & okcolcolors[col] & fmtx(fma,displaystr,spaces(1) & framecolor & "|" & white),okcolcolors[col],styled = {},xpos = xpos) 
+                                    print(framecolor & vfcs & okcolcolors[col] & fmtx(fma,displaystr,spaces(1) & framecolor & vfc & white),okcolcolors[col],styled = {},xpos = xpos) 
                                 elif col > 0 and row >= 0 :
-                                    print(fmtx(fma,displaystr,spaces(1) & framecolor & "|" & white),okcolcolors[col],styled = {})     
+                                    print(fmtx(fma,displaystr,spaces(1) & framecolor & vfc & white),okcolcolors[col],styled = {})     
                                     if col == okcols.len - 1: echo()           
 
 
           if row + 1 == okrows and col == okcols.len - 1  and bottomrowflag == false and frame == true:
                           # draw a bottom frame line  
                           print(".",lime,xpos = xpos)  # left dot
-                          hline(frametoplinelen - 2 ,framecolor,xpos = xpos + 1) 
+                          hline(frametoplinelen - 2 ,framecolor,xpos = xpos + 1,lt = hfcb) # hfx
                           printLn(".",lime)
                           bottomrowflag = true
           
