@@ -10,7 +10,7 @@
 ##
 ##   ProjectStart: 2016-09-16
 ##   
-##   Latest      : 2017-10-08
+##   Latest      : 2017-10-11
 ##
 ##   Compiler    : Nim >= 0.17.0
 ##
@@ -35,7 +35,11 @@
 ##
 ##   Tested      : OpenSuse Tumbleweed 
 ## 
-##   Todo        : var calc on dataframes
+##   Todo        : additional  calculations on dataframes
+##  
+##   Bugs        : in a df with showHeader === true and headertext.len > 0 the first data line is not shown in showDf()
+##                 redisplaying such a df will have the data in the second column shifted one space to the right ... 
+##                 the showDf() proc will be refactored soon ...
 ##  
 import os
 import nimcx,httpclient,browsers
@@ -50,10 +54,12 @@ type
     nimss* = seq[string]         # nim string seq
     nimis* = seq[int]            # nim integer seq
     nimdf* = seq[nimss]          # nim data frame
+    nimfs* = seq[float]          # nim float seq
 
 proc newNimDf*():nimdf = @[]
 proc newNimSs*():nimss = @[]
 proc newNimIs*():nimis = @[]
+proc newNimFs*():nimfs = @[]
 
 proc createDataFrame*(filename:string,cols:int = 2,rows:int = -1,sep:char = ','):nimdf 
 
@@ -66,24 +72,24 @@ var intflag:bool = false
 var floatflag:bool = false
 var stringflag:bool = false
 
-converter toNimIs*(sq:seq[int]):nimis =
-    ## toNimIs
-    ## 
-    ## converter from seq[int] to nimis
-    ## 
-    var aresult = newNimIs()
-    for x in 0.. <sq.len: aresult.add(sq[x])
-    result = aresult
-    
-
-converter toNimSs*(sq:seq[string]):nimss =
-    ## toNimSs
-    ##
-    ## converter from seq[string] to nimss
-    ##
-    var aresult = newNimSs()
-    for x in 0.. <sq.len: aresult.add(sq[x])
-    result = aresult
+# converter toNimIs*(sq:seq[int]):nimis =
+#     ## toNimIs
+#     ## 
+#     ## converter from seq[int] to nimis
+#     ## 
+#     var aresult = newNimIs()
+#     for x in 0.. <sq.len: aresult.add(sq[x])
+#     result = aresult
+#     
+# 
+# converter toNimSs*(sq:seq[string]):nimss =
+#     ## toNimSs
+#     ##
+#     ## converter from seq[string] to nimss
+#     ##
+#     var aresult = newNimSs()
+#     for x in 0.. <sq.len: aresult.add(sq[x])
+#     result = aresult
     
 
 proc getData1*(url:string):auto =
@@ -193,7 +199,8 @@ proc makeDf2*(ufo1:nimdf,cols:int = 0):nimdf =
    ## makeDf2
    ## 
    ## used to create a dataframe with nimdf object received from getData2
-   ## 
+   ## note that overall it is better to preprocess data to check for row quality consistency
+   ## which is not done here yet , so errors may show
 
    var df = newNimDf()       # new dataframe to be returned
    var arow = newNimSs()     # one row of the data frame
@@ -212,22 +219,27 @@ proc makeDf2*(ufo1:nimdf,cols:int = 0):nimdf =
   
    for rws in 0.. <dfrows:     # rows count  
      arow = @[]
+     var olderrorrow = 0       # so we only display errors once per row
      for cls  in 0.. <dfcols:  # cols count  
        # now build our row for df
        try:
            if rws == dfrows - 1:  arow.add(ufo1[cls][rws])  
            else:  arow.add(ufo1[cls][rws])  
        except IndexError:
-            printLn("arow   = " & $arow,red)
+            printLn("Error row :  " & $arow,red)
             try:
                printLn("ufo1   = " & $ufo1[cls][rws],red)
             except IndexError:
-                  printLn("This error tells that the row data is not good\ncheck for empty rows or column less rows etc in the data file",red)
-            printLn("dfcols = " & $dfcols,red)
-            printLn("dfrows = " & $dfrows,red)
-            printLn("cls    = " & $cls,red)
-            printLn("rws    = " & $rws,red)
-            printLn("IndexError raised .",red)
+                 printLn("Invalid row data found ! Check for empty rows ,missing columns data etc. in the data file",red)
+                 
+            printLn("IndexError position at about: ",red)      
+            #printLn("dfcols = " & $dfcols,red,xpos=6)
+            #printLn("dfrows = " & $dfrows,red)
+            if rws <> olderrorrow:
+              printLnBiCol("column : " & $cls,yellowgreen,truetomato,":",6,false,{})
+              printLnBiCol("row    : " & $rws,yellowgreen,truetomato,":",6,false,{})
+              echo()
+            olderrorrow = rws  
             # we could stop here too
             #printLn("Exiting now...",red)
             #doFinish()   
@@ -244,7 +256,20 @@ proc getRowCount*(df:nimdf):int =
      result = df.len 
 
 
-proc getcolheaders*(df:nimdf): nimss =
+proc getcolheaders*(df:nimdf): seq[nimss] =
+      ## getcolheaders
+      ## 
+      ## get the first 2 lines  of the dataframe df 
+      ## 
+      ## we assume line 0 contains headers
+      ## 
+     
+      result = newseq[nimss]()
+      result.add(df[0])
+      result.add(df[1])
+      
+      
+proc getcolhdx(df:nimdf): nimss =
       ## getcolheaders
       ## 
       ## get the first line of the dataframe df 
@@ -254,15 +279,14 @@ proc getcolheaders*(df:nimdf): nimss =
      
       result = newNimss()
       for hx in df[0]:
-         result.add(hx.strip(true,true))
-
+         result.add(hx.strip(true,true))      
 
 proc getTotalHeaderColsWitdh*(df:nimdf):int = 
      ## getTotalHeaderColsWitdh
      ## 
      ## sum of all headers width
      ## 
-     var ch = getcolheaders(df)
+     var ch = getcolhdx(df)
      result = 0
      for x in 0.. <ch.len:
          result = result + ch[x].strip(true,true).len
@@ -270,13 +294,14 @@ proc getTotalHeaderColsWitdh*(df:nimdf):int =
 proc showHeader*(df:nimdf) = 
    ## showHeader
    ## 
-   ## shows headers or first row of dataframe
+   ## shows first 2 lines of df incl. headers if any of dataframe
    ## 
 
    var headers = getcolheaders(df)
    echo()
-   printLn("Headers or first Line",salmon,xpos = 2,styled = {})
-   printLn(headers,xpos = 2)
+   printLn("Headers and/or first 2 Lines",salmon,xpos = 2,styled = {})
+   for hxx in 0.. < headers.len:
+      printLn(headers[hxx],xpos = 2)
    echo()
    
    
@@ -293,7 +318,7 @@ proc showMaxColWidths*(df:nimdf) =
     decho(1)
     printLn("Column Widths Total",salmon,xpos = 2,styled = {})
     var sumwd = 0
-    var headers = getcolheaders(df)
+    var headers = getcolhdx(df)
     for y in 0.. <dfcolwd.len:
           printLnBiCol(fmtx(["<17","",""],headers[y],"--> ",dfcolwd[y]),sep="--> ",xpos = 2,false,{})
           sumwd = sumwd + dfcolwd[y]
@@ -531,7 +556,7 @@ proc showDf*(df:nimdf,rows:int = 10,cols:nimis = @[],colwd:nimis = @[], colcolor
                                     echo()  
                         
            
-                elif frame == false and header == true and headertext != @[]:
+                elif frame == false and header == true and headertext.len > 0:
                             
                             #print the header first
                             
@@ -609,7 +634,7 @@ proc showDf*(df:nimdf,rows:int = 10,cols:nimis = @[],colwd:nimis = @[], colcolor
                                   if col == okcols.len - 1: echo()  
                   
                 
-              if frame == true and header == true and headertext != @[]:
+              if frame == true and header == true and headertext.len > 0:
                   
                             # set up topline of frame
                             if toplineflag == false:
@@ -627,7 +652,7 @@ proc showDf*(df:nimdf,rows:int = 10,cols:nimis = @[],colwd:nimis = @[], colcolor
                                     
                                     var nhcol = okcols[hcol] - 1
                                     if nhcol == -1:
-                                      nhcol = 0
+                                         nhcol = 0
                                                                          
                                   
                                     var hcolfm = ""
@@ -646,8 +671,22 @@ proc showDf*(df:nimdf,rows:int = 10,cols:nimis = @[],colwd:nimis = @[], colcolor
                                           echo()    
                                           headerflagok = true 
                             
-                            if headerflagok == true:
-                                # all other rows data
+                            if headerflagok == true:   
+                               # all other rows data
+                              if header == true: 
+                                # hope to take care of header doubles when showing a sorted df
+                                # still not ok ... while sorted is fine original with header does not show first row
+                                # original with showheader == false is fine and shows the first row   see nimdfT6.nim
+                                # TODO: display bug here somewhere when headers are involved
+                                
+                                if col == 0 and row >= 0  :
+                                    print(framecolor & vfcs & okcolcolors[col] & fmtx(fma,displaystr,spaces(1) & framecolor & vfc & white),okcolcolors[col],styled = {},xpos = xpos) 
+                                elif col > 0 and row >= 1 :
+                                    print(fmtx(fma,displaystr,spaces(1) & framecolor & vfc & white),okcolcolors[col],styled = {})     
+                                    if col == okcols.len - 1: echo()  
+                              
+                              
+                              else:  
                                 if col == 0 and row >= 0  :
                                     print(framecolor & vfcs & okcolcolors[col] & fmtx(fma,displaystr,spaces(1) & framecolor & vfc & white),okcolcolors[col],styled = {},xpos = xpos) 
                                 elif col > 0 and row >= 0 :
@@ -875,6 +914,7 @@ proc sortdf*(df:nimdf,sortcol:int = 1,sortorder = ""):nimdf =
         
             if col < getColCount(df) - 1:
               vals = vals & dbQuote(df[row][col]) & ","
+              
             else:   
               vals = vals & dbQuote(df[row][col])
               
@@ -896,11 +936,18 @@ proc sortdf*(df:nimdf,sortcol:int = 1,sortorder = ""):nimdf =
               printLn("Error : Sorting of dataframe with columns of different row count currently only possible",red)
               printLn("        if the column with the least rows is the first column of the dataframe",red)
               echo()
-              raise
+              discard
+              #raise
+              
        
       insql = insql & tabl & ") VALUES (" & vals & ")"   # the insert sql
       #echo insql
-      db.exec(sql(insql))
+      try:
+        db.exec(sql(insql))
+      except DbError,IndexError:
+        #echo insql
+        discard
+        
       insql = "INSERT INTO dfTable (" 
       vals = ""  
    
@@ -908,7 +955,7 @@ proc sortdf*(df:nimdf,sortcol:int = 1,sortorder = ""):nimdf =
   
   var filename =  "nimDftempData.csv"
   var  data2 = newFileStream(filename, fmWrite) 
-  var hds = getcolheaders(df)   #after sorting the headers disappear so we need to put them back in this would be the place
+  var hds = getcolhdx(df)   #after sorting the headers disappear so we need to put them back in this would be the place
   if hds.len > 1:  # only do this if any headers are here
     for x in 0.. <hds.len-1:
        data2.write(hds[x] & ", ")
@@ -1038,3 +1085,17 @@ proc dfColumnStats*(df:nimdf,colseq:seq[int]): seq[Runningstat] =
            
         result = psdata
     
+proc dfSave*(df:nimdf,filename:string) = 
+     ## dfSave
+     ## 
+     ## save adataframe to a csv file
+     ## 
+     var  data = newFileStream(filename, fmWrite)
+     for row in 0 .. <getrowcount(df):
+        for col in  0.. <getcolcount(df): 
+           if col < getcolcount(df) - 1:  data.write(df[row][col] & ",")
+           else : data.write(df[row][col] & "\L")
+       
+     data.close
+     printLnBiCol("Dataframe saved into : " & filename)
+     echo()

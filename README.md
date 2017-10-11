@@ -10,7 +10,7 @@ Dataframe for Nim
 
 | Library      | Status      | Version | License        | OS     | Compiler       |
 |--------------|-------------|---------|----------------|--------|----------------|
-| nimdataframe | Development | 0.0.1.x | MIT opensource | Linux  | Nim >= 0.17.1  |
+| nimdataframe | Development | 0.0.1.x | MIT opensource | Linux  | Nim >= 0.17.2  |
 
 
  Attempt of using csv data from the net, locally or generated to implement
@@ -48,7 +48,7 @@ Example Code
 
 ## nimdfT1.nim
 ## Testing nimdataframe
-## compile with : nim c -d:ssl -d:release -r nimdfT1
+## compile with : nim c -d:release -d:ssl -r nimdfT1
 
 import nimcx , nimdataframe 
 
@@ -65,19 +65,13 @@ doFinish()
 
 
 ```
-Screenshot from nimdfT9.nim
-
-![Image](http://qqtop.github.io/d96data.png?raw=true)
-
 
 ![Image](http://qqtop.github.io/nimdataframe1.png?raw=true)
 
 
- Tests with StockData
+Screenshot from nimdfT9.nim
 
-![Image](http://qqtop.github.io/nimdataframe2a.png?raw=true)
-![Image](http://qqtop.github.io/nimdataframe3.png?raw=true)
-
+![Image](http://qqtop.github.io/d96data.png?raw=true)
 
 
 NOTE : 
