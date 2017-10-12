@@ -17,6 +17,9 @@ Dataframe for Nim
  display,handling,sorting and data extraction. 
  
  
+ Work in progress
+ 
+ 
 Requirements
 ------------
 ```nimrod

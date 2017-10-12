@@ -5,6 +5,7 @@ import nimcx , nimdataframe
 # Testing sorting dataframes and saving dataframes
 # 
 # 
+cleanscreen()
 converter dfc[T](s:T):nimss = 
       result = newnimss()
       for x in 0 .. <s.len: 

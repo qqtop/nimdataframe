@@ -82,36 +82,6 @@ showDf(ndf5, rows = 15,cols = colseq ,colwd = colwdseq , colcolors = colorsseq,s
 showDataframeInfo(ndf5)
 echo()
 
-proc dfColumnStats*(df:nimdf,colseq:seq[int]): seq[Runningstat] =
-        ## dfColumnStats
-        ## 
-        ## returns a seq[Runningstat] for all columns specified in colseq for dataframe df
-        ## 
-        ## so if colSeq = @[1,3,6] , we would get stats for cols 1,3,6
-        ## 
-        var dfColSums = newSeq[float]()
-        var psdata = newSeq[Runningstat]()
-        for x in colseq:
-           var coldata=getColData(df,x)
-           var coldatasum = 0.0
-        
-           var ps : Runningstat
-           ps.clear()
-           for xx in coldata:
-              #echo typetest(xx)
-              var xxx =  parsefloat(xx.strip())
-              coldatasum = coldatasum + xxx
-              ps.push(xxx)
-                    
-           dfColSums.add(coldatasum)
-           psdata.add(ps) 
-           
-           printLn("Sums for all rows")  
-           echo dfColSums
-           echo()
-           
-        result = psdata
-  
 
 printLn("Statistics")
 var desiredcols = @[2,3,6]

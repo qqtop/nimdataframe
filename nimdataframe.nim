@@ -6,13 +6,13 @@
 ##
 ##   License     : MIT opensource
 ##
-##   Version     : 0.0.1.6
+##   Version     : 0.0.1.7
 ##
 ##   ProjectStart: 2016-09-16
 ##   
-##   Latest      : 2017-10-11
+##   Latest      : 2017-10-12
 ##
-##   Compiler    : Nim >= 0.17.0
+##   Compiler    : Nim >= 0.17.2
 ##
 ##   OS          : Linux
 ##
@@ -37,9 +37,9 @@
 ## 
 ##   Todo        : additional  calculations on dataframes
 ##  
-##   Bugs        : in a df with showHeader === true and headertext.len > 0 the first data line is not shown in showDf()
-##                 redisplaying such a df will have the data in the second column shifted one space to the right ... 
-##                 the showDf() proc will be refactored soon ...
+##  
+##   Notes       : WORK IN PROGRESS  
+##  
 ##  
 import os
 import nimcx,httpclient,browsers
@@ -47,7 +47,7 @@ import parsecsv,streams,algorithm,stats
 import db_sqlite
 import typetraits,typeinfo
 
-let NIMDATAFRAMEVERSION* = "0.0.1.6"
+let NIMDATAFRAMEVERSION* = "0.0.1.7"
    
 type      
       
@@ -104,6 +104,35 @@ proc getData1*(url:string):auto =
        printLnBiCol("Error : " & url & " content could not be fetched . Retry with -d:ssl",red,bblack,":",0,true,{}) 
        printLn(getCurrentExceptionMsg(),red,xpos = 9)
        doFinish()
+
+
+        
+
+proc makeDf1*(ufo1:string):nimdf =
+   ## makeDf
+   ## 
+   ## used to create a dataframe with data string received from getData
+   ## 
+
+   var ufol = splitLines(ufo1)
+   var df = newNimDf()
+  
+   var ufos = ufol[0].split(",")
+   var ns = newNimSs()
+   # init the dfcolwd that is we put a 0 into all possible positions
+   for xx in 0.. <ufos.len: dfcolwd.add(0)
+   
+   for x in 0.. <ufol.len:
+      ufos = ufol[x].split(",")  # problems may arise if text has commas ... then need some preprocessing
+      ns = newNimSs()
+      var wdc = 0
+      for xx in 0.. <ufos.len:
+          ns.add(ufos[xx].strip(true,true))
+          if wdc == dfcolwd.len: wdc = 0
+          if dfcolwd[wdc] < ufos[xx].len: dfcolwd[wdc] = ufos[xx].strip(true,true).len
+          inc wdc     
+      df.add(ns)
+   result = df  
 
 
 proc getData2*(filename:string,cols:int = 2,rows:int = -1,sep:char = ','):auto = 
@@ -167,38 +196,11 @@ proc getData2*(filename:string,cols:int = 2,rows:int = -1,sep:char = ','):auto =
         okcsvrows = csvrows
         result = myseq    # this holds col data now
         
-
-proc makeDf1*(ufo1:string):nimdf =
-   ## makeDf
-   ## 
-   ## used to create a dataframe with data string received from getData
-   ## 
-
-   var ufol = splitLines(ufo1)
-   var df = newNimDf()
-  
-   var ufos = ufol[0].split(",")
-   var ns = newNimSs()
-   # init the dfcolwd that is we put a 0 into all possible positions
-   for xx in 0.. <ufos.len: dfcolwd.add(0)
-   
-   for x in 0.. <ufol.len:
-      ufos = ufol[x].split(",")  # problems may arise if text has commas ... then need some preprocessing
-      ns = newNimSs()
-      var wdc = 0
-      for xx in 0.. <ufos.len:
-          ns.add(ufos[xx].strip(true,true))
-          if wdc == dfcolwd.len: wdc = 0
-          if dfcolwd[wdc] < ufos[xx].len: dfcolwd[wdc] = ufos[xx].strip(true,true).len
-          inc wdc     
-      df.add(ns)
-   result = df  
-
-
+        
 proc makeDf2*(ufo1:nimdf,cols:int = 0):nimdf =
    ## makeDf2
    ## 
-   ## used to create a dataframe with nimdf object received from getData2
+   ## used to create a dataframe with nimdf object received from getData2  that is local csv
    ## note that overall it is better to preprocess data to check for row quality consistency
    ## which is not done here yet , so errors may show
 
@@ -210,7 +212,7 @@ proc makeDf2*(ufo1:nimdf,cols:int = 0):nimdf =
    var dfrows = 0
    try:
        dfcols = ufo1.len  
-       dfrows = ufo1[0].len  # this assumes all cols have same number of rows maybe shud check this
+       dfrows = ufo1[0].len  # this assumes all cols have same number of rows maybe should check this
    except IndexError:
        printLn("dfcols = " & $dfcols,red)
        printLn("dfrows = " & $dfrows,red)
@@ -223,8 +225,7 @@ proc makeDf2*(ufo1:nimdf,cols:int = 0):nimdf =
      for cls  in 0.. <dfcols:  # cols count  
        # now build our row for df
        try:
-           if rws == dfrows - 1:  arow.add(ufo1[cls][rws])  
-           else:  arow.add(ufo1[cls][rws])  
+            arow.add(ufo1[cls][rws])      
        except IndexError:
             printLn("Error row :  " & $arow,red)
             try:
@@ -380,7 +381,7 @@ proc showDf*(df:nimdf,rows:int = 10,cols:nimis = @[],colwd:nimis = @[], colcolor
     ## 
     ## with cols from left to right according to cols default = 2
     ## 
-    ## column width default = 18
+    ## column width default = 15
     ## 
     ## an equal columnwidth can be achieved with colwd = colfitmax(df,0) the second param is to nudge the width a bit if required
     ## 
@@ -402,7 +403,7 @@ proc showDf*(df:nimdf,rows:int = 10,cols:nimis = @[],colwd:nimis = @[], colcolor
     var header = showHeader
     var frame  = showFrame
     let vfc  = "|"               # vertical frame char for column separation
-    let vfcs = "|"    # efs2 or efb2   # vertical frame char for left (and right side <--- needs to be implemented )
+    let vfcs = "|"               # efs2 or efb2   # vertical frame char for left (and right side <--- needs to be implemented )
     let hfct = efs2   # "_"      # horizontal framechar top of frame
     let hfcb = efs2              # horizontal framechar for bottom of frame
     if cols.len == 1:
@@ -486,8 +487,8 @@ proc showDf*(df:nimdf,rows:int = 10,cols:nimis = @[],colwd:nimis = @[], colcolor
     var bottomrowflag = false 
     var ncol = 0 
      
-    for row in 0.. <okrows:   # note we get okrows data rows back and the header
-             
+    for brow in 0.. <okrows:   # note we get okrows data rows back and the header
+      var row = brow       
       for col in 0.. <okcols.len:
           #var zcol = col
           #if col < 1: zcol = 0
@@ -507,7 +508,8 @@ proc showDf*(df:nimdf,rows:int = 10,cols:nimis = @[],colwd:nimis = @[], colcolor
                 #echo row,"  ",ncol
                 #raise
                 
-                
+         
+          
           var colfm = ""
           var fma   = newSeq[string]()
           if leftalignflag == true:
@@ -519,25 +521,25 @@ proc showDf*(df:nimdf,rows:int = 10,cols:nimis = @[],colwd:nimis = @[], colcolor
           # new setup 6 options
           
           #noframe noheader           1 ok
-          #noframe firstlineheader    2 ok
+          #noframe firstlineheader    2 ok   
           #noframe headertextheader   3 ok
           
           # ok for more than 1 col  
           #frame   noheader           4 ok
-          #frame   firstlineheader    5 ok
+          #frame   firstlineheader    5 ok   
           #frame   headertextheader   6 ok
           
           if frame == false:
           
-                if frame == false and header == false:
+                if header == false and headertext == @[]:
                             if col == 0 :
                                 print(fmtx(fma,displaystr,spaces(2)),okcolcolors[col],styled = {},xpos = xpos) 
                             elif col > 0:
                                 print(fmtx(fma,displaystr,spaces(2)),okcolcolors[col],styled = {})
                                 if col == okcols.len - 1: echo()  
-                        
+                            else: discard
                   
-                elif frame == false and header == true and headertext == @[]:
+                elif header == true and headertext == @[]:
                             
                             if col == 0 and row == 0:
                                 print(fmtx(fma,displaystr,spaces(2)),yellowgreen,styled = {styleunderscore},xpos = xpos)  
@@ -547,20 +549,18 @@ proc showDf*(df:nimdf,rows:int = 10,cols:nimis = @[],colwd:nimis = @[], colcolor
                                 if col == okcols.len - 1: echo()                      
                                 
                             # all other rows data
-                            if col == 0 and row > 0:
+                            elif col == 0 and row > 0:
                                 print(fmtx(fma,displaystr,spaces(2)),okcolcolors[col],styled = {},xpos = xpos) 
                             elif col > 0 and row > 0:
                                 print(fmtx(fma,displaystr,spaces(2)),okcolcolors[col],styled = {})
                                       
                                 if col == okcols.len - 1:          
                                     echo()  
-                        
+                            else: discard
            
-                elif frame == false and header == true and headertext.len > 0:
+                elif  header == true and headertext != @[] :
                             
-                            #print the header first
-                            
-                            if headerflagok == false:
+                            if headerflagok == false:                   # print the header first    
                               
                                 for hcol in 0.. <okcols.len:
                                     var nhcol = okcols[hcol] - 1
@@ -574,32 +574,31 @@ proc showDf*(df:nimdf,rows:int = 10,cols:nimis = @[],colwd:nimis = @[], colcolor
                                     hfma = @[hcolfm,""]   
                                                                   
                                     if hcol == 0:
-                                      print(fmtx(hfma,headertext[nhcol],spaces(2)),yellowgreen,styled = {styleunderscore},xpos = xpos) 
+                                         print(fmtx(hfma,headertext[nhcol],spaces(2)),yellowgreen,styled = {styleunderscore},xpos = xpos) 
                                     elif hcol > 0:
-                                      print(fmtx(hfma,headertext[nhcol],spaces(2)),yellowgreen,styled = {styleunderscore}) 
-                                      if hcol == okcols.len - 1: 
-                                          echo()    
-                                          headerflagok = true 
+                                         print(fmtx(hfma,headertext[nhcol],spaces(2)),yellowgreen,styled = {styleunderscore}) 
+                                         if hcol == okcols.len - 1: 
+                                            echo()    
+                                            headerflagok = true            # set the flag as all headertext items printed
                             
-                            if headerflagok == true:
-                                # all other rows data
+                            if headerflagok == true:                       # all other rows data
                                 if col == 0 and row >= 0  :
-                                    print(fmtx(fma,displaystr,spaces(2)),okcolcolors[col],styled = {},xpos = xpos) 
+                                      print(fmtx(fma,displaystr,spaces(2)),okcolcolors[col],styled = {},xpos = xpos) 
                                 elif col > 0 and row >= 0 :
-                                    print(fmtx(fma,displaystr,spaces(2)),okcolcolors[col],styled = {})     
-                                    if col == okcols.len - 1: echo()           
+                                      print(fmtx(fma,displaystr,spaces(2)),okcolcolors[col],styled = {})     
+                                      if col == okcols.len - 1: echo()           
                                 
                     
-                      
+                       
           if frame == true:            
               
-              if frame == true and header == false:
-                      # set up topline of frame
-                      if toplineflag == false:
-                          print(".",lime,xpos = xpos)
+              if  header == false and headertext == @[] or headertext != @[]:
+                      
+                      if toplineflag == false:                              # set up topline of frame
+                          print(".",yellow,xpos = xpos)
                           hline(frametoplinelen - 2 ,framecolor,xpos = xpos + 1,lt = hfct) 
                           printLn(".",lime)
-                          toplineflag = true 
+                          toplineflag = true                                # set toplineflag , topline of frame ok
                       
                       if col == 0: 
                             print(framecolor & vfcs & okcolcolors[col] & fmtx(fma,displaystr,spaces(1) & framecolor & vfc & white),okcolcolors[col],styled = {},xpos = xpos)
@@ -608,7 +607,7 @@ proc showDf*(df:nimdf,rows:int = 10,cols:nimis = @[],colwd:nimis = @[], colcolor
                             print(fmtx(fma,displaystr,spaces(1) & framecolor & vfc & white),okcolcolors[col],styled = {})  
                             if col == okcols.len - 1: echo() 
                 
-              if frame == true and header == true and headertext == @[]: # first line will be used as header
+              elif  header == true and headertext == @[]:                  # first line will be used as header
                       # set up topline of frame
                       if toplineflag == false:
                           print(".",magenta,xpos = xpos)
@@ -626,22 +625,22 @@ proc showDf*(df:nimdf,rows:int = 10,cols:nimis = @[],colwd:nimis = @[], colcolor
                                   if col == okcols.len - 1: echo()                      
                                 
                       # all other rows data
-                      if col == 0 and row > 0:
+                      elif col == 0 and row > 0:
                                   print(framecolor & vfcs & okcolcolors[col] & fmtx(fma,displaystr,spaces(1) & framecolor & vfc & white),okcolcolors[col],styled = {},xpos = xpos)
                               
                       elif col > 0 and row > 0:
                                   print(fmtx(fma,displaystr,spaces(1) & framecolor & vfc & white),okcolcolors[col],styled = {}) 
                                   if col == okcols.len - 1: echo()  
-                  
+                      else: discard
                 
-              if frame == true and header == true and headertext.len > 0:
+              elif  header == true and headertext != @[] :
                   
-                            # set up topline of frame
-                            if toplineflag == false:
-                              print(".",magenta,xpos = xpos)
-                              hline(frametoplinelen - 2 ,framecolor,xpos = xpos + 1,lt = hfct) 
-                              printLn(".",lime)
-                              toplineflag = true   
+                            
+                            if toplineflag == false:                            # set up topline of frame
+                                print(".",magenta,xpos = xpos)
+                                hline(frametoplinelen - 2 ,framecolor,xpos = xpos + 1,lt = hfct) 
+                                printLn(".",lime)
+                                toplineflag = true   
                         
                   
                             #print the header first
@@ -669,30 +668,22 @@ proc showDf*(df:nimdf,rows:int = 10,cols:nimis = @[],colwd:nimis = @[], colcolor
                                       print(fmtx(hfma,headertext[nhcol],spaces(1) & framecolor & vfc & white),yellowgreen,styled = {styleunderscore}) 
                                       if hcol == okcols.len - 1: 
                                           echo()    
-                                          headerflagok = true 
+                                          headerflagok = true
+                                          
                             
                             if headerflagok == true:   
                                # all other rows data
+                              
                               if header == true: 
-                                # hope to take care of header doubles when showing a sorted df
-                                # still not ok ... while sorted is fine original with header does not show first row
-                                # original with showheader == false is fine and shows the first row   see nimdfT6.nim
-                                # TODO: display bug here somewhere when headers are involved
-                                
+                                                              
                                 if col == 0 and row >= 0  :
-                                    print(framecolor & vfcs & okcolcolors[col] & fmtx(fma,displaystr,spaces(1) & framecolor & vfc & white),okcolcolors[col],styled = {},xpos = xpos) 
-                                elif col > 0 and row >= 1 :
-                                    print(fmtx(fma,displaystr,spaces(1) & framecolor & vfc & white),okcolcolors[col],styled = {})     
-                                    if col == okcols.len - 1: echo()  
-                              
-                              
-                              else:  
-                                if col == 0 and row >= 0  :
-                                    print(framecolor & vfcs & okcolcolors[col] & fmtx(fma,displaystr,spaces(1) & framecolor & vfc & white),okcolcolors[col],styled = {},xpos = xpos) 
+                                     print(framecolor & vfcs & okcolcolors[col] & fmtx(fma,displaystr,spaces(1) & framecolor & vfc & white),okcolcolors[col],styled = {},xpos = xpos) 
                                 elif col > 0 and row >= 0 :
-                                    print(fmtx(fma,displaystr,spaces(1) & framecolor & vfc & white),okcolcolors[col],styled = {})     
-                                    if col == okcols.len - 1: echo()           
-
+                                     print(fmtx(fma,displaystr,spaces(1) & framecolor & vfc & white),okcolcolors[col],styled = {})     
+                                     if col == okcols.len - 1: echo()  
+                              
+        
+          
 
           if row + 1 == okrows and col == okcols.len - 1  and bottomrowflag == false and frame == true:
                           # draw a bottom frame line  
@@ -852,7 +843,7 @@ proc typetest[T](x:T): T =
   result = $type(x)   
 
 
-proc sortdf*(df:nimdf,sortcol:int = 1,sortorder = ""):nimdf =
+proc sortdf*(df:nimdf,sortcol:int = 1,sortorder = "asc"):nimdf =
   ## sortdf
   ## 
   ## sorts a dataframe asc or desc 
@@ -867,6 +858,9 @@ proc sortdf*(df:nimdf,sortcol:int = 1,sortorder = ""):nimdf =
   ##  .. code-block:: nim
   ##  
   ##     var ndf2 = sortdf(ndf,5,"asc")  $ sort a dataframe on the fifth col ascending
+  ##  
+  ## Note : data columns passed in must be correct for all rows , that is rows with different column count will result in errors
+  ##        this will be addressed in future versions
   ##     
 
   var asortcol = sortcol
@@ -907,7 +901,7 @@ proc sortdf*(df:nimdf,sortcol:int = 1,sortorder = ""):nimdf =
           
 
   # set up the values of the insert sql   
-  for row in 1.. <getRowCount(df):
+  for row in 0.. <getRowCount(df) :
       for col in 0.. <getColCount(df):
        try: 
          if typetest(df[row][col]) == "string":
@@ -942,6 +936,7 @@ proc sortdf*(df:nimdf,sortcol:int = 1,sortorder = ""):nimdf =
        
       insql = insql & tabl & ") VALUES (" & vals & ")"   # the insert sql
       #echo insql
+      
       try:
         db.exec(sql(insql))
       except DbError,IndexError:
@@ -955,11 +950,13 @@ proc sortdf*(df:nimdf,sortcol:int = 1,sortorder = ""):nimdf =
   
   var filename =  "nimDftempData.csv"
   var  data2 = newFileStream(filename, fmWrite) 
-  var hds = getcolhdx(df)   #after sorting the headers disappear so we need to put them back in this would be the place
-  if hds.len > 1:  # only do this if any headers are here
-    for x in 0.. <hds.len-1:
-       data2.write(hds[x] & ", ")
-    data2.writeLine(hds[hds.len - 1])   # the rightmost header item/column name
+  #var hds = getcolhdx(df)   #after sorting the headers disappear so we need to put them back in this would be the place
+  
+# this messed up the sorted display  
+#   if hds.len > 1:  # only do this if any headers are here
+#     for x in 0.. <hds.len-1:
+#        data2.write(hds[x] & ", ")
+#     data2.writeLine(hds[hds.len - 1])   # the rightmost header item/column name
   if asortcol - 1 < 1: asortcol = 1
   var sortcolname = $chr(64 + asortcol) 
   var selsql = "select * from dfTable ORDER BY" & spaces(1) & sortcolname & spaces(1) & sortorder 
@@ -982,9 +979,7 @@ proc makeNimDf*(dfcols : varargs[nimss]):nimdf =
   ## 
   ## creates a nimdf with passed in col data which is of type nimss
   ## 
-  # still will need to check if all cols are same length otherwise append 
-  # 
-  # NaN etc
+  # still will need to check if all cols are same length otherwise append  NaN etc
   # 
   var df = newNimDf()
   for x in dfcols: df.add(x)
@@ -1015,7 +1010,7 @@ proc createDataFrame*(filename:string,cols:int = 2,rows:int = -1,sep:char = ',')
   printLn(clearline)
   
 
-proc createRandomTestData*(filename:string = "nimDfTestData.csv",datarows:int = 2000) =
+proc createRandomTestData*(filename:string = "nimDfTestData.csv",datarows:int = 2000,withHeaders:bool = false) =
   ## createRandomTestData
   ##
   ## a file will be created in current working directory
@@ -1023,21 +1018,20 @@ proc createRandomTestData*(filename:string = "nimDfTestData.csv",datarows:int = 
   ## default name nimDfTestData.csv or as given
   ##
   
-  # cols,colwd,colcolors parameters seqs must be of equal length
-  var headers   = @["A"]
-  for x in 66.. 90: headers.add($char(x))  
-  var cols      = @[1,2,3,4,5,6,7]
-  var colwd     = @[10,10,10,10,10,10,14]
-  var colcolors = @[yellow,pastelyellowgreen,palegreen,pastelpink,pastelblue,pastelwhite,violet]
   
-  var cs = newWord(3,8)
-  var ci = getRndInt(0,100000)
-  var cf = getRndFloat() * 2345243.132310 * getRandomSignF()
-
   var  data = newFileStream(filename, fmWrite)
   
-  for dx in 0.. <cols.len - 1: data.write(headers[dx] & ",")  
-  data.writeLine(headers[cols.len - 1])
+  # cols,colwd parameters seqs must be of equal length
+  var cols      = @[1,2,3,4,5,6,7,8]
+  var colwd     = @[10,10,10,10,10,10,14,10]
+  
+  
+  if withHeaders == true:
+     var headers   = @["A"]
+     for x in 66.. 90: headers.add($char(x)) 
+     for dx in 0.. <cols.len - 1: data.write(headers[dx] & ",")  
+     data.writeLine(headers[cols.len - 1])
+  
   
   for dx in 0.. <datarows:
        
@@ -1047,7 +1041,8 @@ proc createRandomTestData*(filename:string = "nimDfTestData.csv",datarows:int = 
       data.write(newWord(3,8) & ",")
       data.write(ff(getRndFloat() * 345243.132310 * getRandomSignF(),2) & ",")
       data.write(newWord(3,8) & ",")
-      data.writeLine(newWord(3,8))
+      data.write(newWord(3,8) & ",")
+      data.writeLine($getRndInt(0,100))
   
   data.close()
     
@@ -1090,12 +1085,18 @@ proc dfSave*(df:nimdf,filename:string) =
      ## 
      ## save adataframe to a csv file
      ## 
+     var errCount = 0
      var  data = newFileStream(filename, fmWrite)
      for row in 0 .. <getrowcount(df):
-        for col in  0.. <getcolcount(df): 
-           if col < getcolcount(df) - 1:  data.write(df[row][col] & ",")
-           else : data.write(df[row][col] & "\L")
+        for col in  0.. <getcolcount(df):
+           try:
+             if col < getcolcount(df) - 1:  data.write(df[row][col] & ",")
+             else : data.write(df[row][col] & "\L")
+           except IndexError  :
+             inc errCount
+             discard
        
-     data.close
-     printLnBiCol("Dataframe saved into : " & filename)
+     data.close()
+     printLnBiCol("Dataframe saved to : " & filename)
+     printLnBiCol("Error count        : " & $errCount)  
      echo()

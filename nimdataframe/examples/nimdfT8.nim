@@ -20,12 +20,12 @@ ndf = createDataFrame(data,cols = 6)  # specify desired cols as per data file , 
 printLnBiCol("Data Source : " & data)
 
 # display various configurations of this df
-showDf(ndf, rows = displayrows,cols = @[1,2,3,4,5,6],colwd = @[10,10,10,8,10,10], colcolors = @[pastelgreen,pastelpink],showframe = true,framecolor = goldenrod,showHeader = true,leftalignflag = false) 
+showDf(ndf, rows = displayrows,cols = @[1,2,3,4,5,6],colwd = @[10,10,10,8,10,10], colcolors = @[goldenrod,pastelpink],showframe = true,framecolor = goldenrod,showHeader = true,leftalignflag = false) 
 echo()
 showDataframeInfo(ndf)
 
 var ndf2 = sortdf(ndf,5,"asc")   #<--- note the actual header disappears this needs to be considered
-showDf(ndf2, rows = displayrows,cols = @[1,2,3,4,5,6],colwd = @[10,10,10,8,10,10], colcolors = @[pastelgreen,pastelpink],showframe = true,framecolor = goldenrod,showHeader = true,leftalignflag = false) 
+showDf(ndf2, rows = displayrows,cols = @[1,2,3,4,5,6],colwd = @[10,10,10,8,10,10], colcolors = @[goldenrod,lightblue,lightgrey,lightgreen],showframe = true,framecolor = darkgray,showHeader = true,leftalignflag = false) 
 echo()
 showDataframeInfo(ndf2)
 
