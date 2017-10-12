@@ -1098,5 +1098,5 @@ proc dfSave*(df:nimdf,filename:string) =
        
      data.close()
      printLnBiCol("Dataframe saved to : " & filename)
-     printLnBiCol("Error count        : " & $errCount)  
+     printLnBiCol("Errors count       : " & $errCount)  
      echo()
