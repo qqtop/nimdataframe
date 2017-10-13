@@ -9,7 +9,7 @@ import nimcx,nimdataframe,algorithm,stats
 #  
 #  
 #  
-#  2017-10-05
+#  2017-10-13
 #  
 
 var maxrows = 3000   # 300000
@@ -39,13 +39,21 @@ ndf3 = createDataFrame(data,cols = 4,rows=maxrows)  # specify desired cols as pe
 printLnBiCol("Data Source : " & data)
 
 # display various configurations of this df
-showDf(ndf3, rows = 15,cols = @[1,2,3,4],colwd = @[10,10,10,10], colcolors = @[pastelgreen,pastelpink],showframe = true,framecolor = dodgerblue,showHeader = false,leftalignflag = false) 
+showDf(ndf3,
+       rows = 15,
+       cols = @[1,2,3,4],
+       colwd = @[10,10,10,10],
+       colcolors = @[pastelgreen,pastelpink],
+       showframe = true,
+       framecolor = dodgerblue,
+       showHeader = true) 
 echo()
+
 
 
 #var colAs = sortcoldata(colA,true,Descending)  # we can sort a single col 
 
-# lets try to simpy join test-02_a and test_02_b regardless of sort order
+# lets try to simply join test-02_a and test_02_b regardless of sort order
 
 var colA  = getColdata(ndf2,1)  # get 1st col of ndf2
 var colB  = getColdata(ndf2,2)  # get 2nd col
@@ -53,26 +61,24 @@ var colC  = getColdata(ndf2,3)  # get 3rd col
 var colD  = getColdata(ndf2,4)  # get 4th col
 
 
-var colE  = getColdata(ndf3,1)  # get 1nd col of ndf3
+var colE  = getColdata(ndf3,1)  # get 1st col of ndf3
 var colF  = getColdata(ndf3,2)  
 var colG  = getColdata(ndf3,3) 
 var colH  = getColdata(ndf3,4) 
 
 var ndf4  = makeNimDf(colA,colB,colC,colD,colE,colF,colG,colH) # combine into new df
 currentLine()
-showDf(ndf4, rows = 15,cols = @[1,2,3,4,5,6,7,8],colwd = @[10,10,10,10,10,10,10,10], colcolors = @[pastelgreen,pastelpink],showframe = true,framecolor = dodgerblue,showHeader = true,headertext = @["Date 1","B","C","D","Date 2","B","C","D"],leftalignflag = false) 
+showDf(ndf4, rows = 15,cols = @[1,2,3,4,5,6,7,8],colwd = @[10,10,10,10,10,10,10,10], colcolors = @[pastelgreen,pastelpink],showframe = true,framecolor = dodgerblue,showHeader = true,headertext = @["df 1","B","C","D","df 2","B","C","D"],leftalignflag = false) 
 echo()
 
 
 # lets try to join ndf2 and ndf3 based on the date fields
 # what happens if there are no matching fields ?
 # so basically we do a join on some condition like in sql and show the resulting dataframe
-
 # further we want to have sum,mean of the numeric columns etc
 
-
 # experiment
-# sort on col Date 1
+# sort on col df 1
 var colseq = @[1,2,3,4,5,6,7,8]
 var colwdseq = @[10,10,10,10,10,10,10,10]
 var colorsseq = newSeq[string]()
@@ -82,37 +88,6 @@ showDf(ndf5, rows = 15,cols = colseq ,colwd = colwdseq , colcolors = colorsseq,s
 showDataframeInfo(ndf5)
 echo()
 
-
-printLn("Statistics")
-var desiredcols = @[2,3,6]
-var mydfstats = dfColumnStats(ndf5,desiredcols)
-for x in 0..<mydfstats.len:
-   printLnBiCol("Column : " & $(desiredcols[x]) & " Statistics")
-   showStats(mydfstats[x],xpos = 30) 
-
+dfShowColumnStats(ndf5,colseq,colspace = 30)
    
-   
-decho(5)
-var dmaxrows = 3000   # 300000
-var ddata = "d96data.csv"       
-var dndf:nimdf                    # define a nim dataframe
-dndf = createDataFrame(ddata,cols = 5,rows=maxrows)  # specify desired cols as per data file , default = 2 
-printLnBiCol("Data Source : " & ddata)
-# display various configurations of this df
-showDf(dndf, rows = 15,cols = @[1,2,3,4,5],colwd = @[10,10,10,10,10], colcolors = @[pastelgreen,pastelpink],showframe = true,framecolor = goldenrod,showHeader = false,leftalignflag = false) 
-echo()
-showDataframeInfo(dndf)
-
-printLn("Statistics  ",peru)
-desiredcols = @[1,2,3,4,5]
-mydfstats = dfColumnStats(dndf,desiredcols)
-var xpos = 1
-for x in 0..<mydfstats.len:
-   
-   printLnBiCol("Column : " & $(desiredcols[x]) & " Statistics",xpos = xpos,styled={styleUnderscore})
-   showStats(mydfstats[x],xpos = xpos) 
-   xpos += 25
-   curup(15)
-curdn(20)   
-printLnBiCol("Statistics -> Rows processed: " & $getRowcount(dndf))
-printLnBiCol("Statistics -> Cols processed: " & $desiredcols.len & " of " & $getColcount(dndf))   
+doFinish()

@@ -25,9 +25,9 @@ var colCI = dfc(createSeqFloat(10,3))
 
 var ndf2  = makeNimDf(colAI,colBI,colCI)       # this will use makedDf2 internally
 var headertext =  @["Date","Integer","Float"]  
-printlnBiCol("Original as created") 
+printlnBiCol("Original as created w/header") 
 
-showDf(ndf2,
+showDf2(ndf2,
        rows = rows,
        cols = @[1,2,3],
        colwd = @[10,10,10],
@@ -39,7 +39,7 @@ showDf(ndf2,
        
 curup(rows + 3)
 printlnBiCol("Original as created with showHeader = false",xpos = 40) 
-showDf(ndf2,
+showDf2(ndf2,
        rows = rows,
        cols = @[1,2,3],
        colwd = @[10,10,10],
@@ -50,9 +50,11 @@ showDf(ndf2,
        leftalignflag = true,
        xpos = 40)          
 
-curdn(rows + 7)       
+curdn(rows + 7)  
+
 showDataframeInfo(ndf2)
 
+### --- lower 3----
 
 var asortcol = 1
 var sortcolname = headertext[asortcol - 1]
@@ -60,7 +62,7 @@ printlnBiCol("Sorted asc on Col : " & $asortcol & " Name : " & sortcolname,xpos 
 
 var ndf3 = sortdf(ndf2,asortcol,"asc")
 
-showDf(ndf3,
+showDf2(ndf3,
        rows = rows,
        cols = @[1,2,3],
        colwd = @[10,8,8],
@@ -72,7 +74,7 @@ showDf(ndf3,
        xpos = 1)    
 
        
-curup(14)
+curup(rows + 5)
 
 asortcol = 2
 sortcolname = headertext[asortcol - 1]
@@ -80,7 +82,7 @@ printlnBiCol("Sorted on Col : " & $asortcol & " Name : " & sortcolname,brightyel
 
 var ndf4 = sortdf(ndf2,asortcol,"asc")
 
-showDf(ndf4,
+showDf2(ndf4,
        rows = rows,
        cols = @[1,2,3],
        colwd = @[10,8,8],
@@ -93,21 +95,34 @@ showDf(ndf4,
 
 
 
-curup(14)
+curup(rows + 5)
 asortcol = 3
 sortcolname = headertext[asortcol - 1]
 printlnBiCol("Sorted on Col : " & $asortcol & " Name : " & sortcolname,lime,bblack,":",73,false,{}) 
 var ndf5 = sortdf(ndf2,asortcol,"asc")
-showDf(ndf5,rows = rows ,cols = @[1,2,3],colwd = @[10,8,8],showFrame = true,showHeader = true,
-       colcolors = @[pastelgreen,pastelgreen,lime],
-       headertext = headertext,leftalignflag = false,xpos = 73)    
+showDf2(ndf5,
+        rows = rows,
+        cols = @[1,2,3],
+        colwd = @[10,8,8],
+        showFrame = true,
+        showHeader = true,
+        colcolors = @[pastelgreen,pastelgreen,lime],
+        headertext = headertext,
+        leftalignflag = false,
+        xpos = 73)    
 
 decho(3)
 printlnBiCol("New df: with selected rows and cols stipulated via getRowDataRange from sorted df ndf5")
 var ndf6 = getRowDataRange(ndf5,rows = @[1,2,4,6],cols = @[1,2,3])
-showDf(ndf6,rows = rows ,cols = @[1,2,3],colwd = @[10,8,8],showFrame = true,showHeader = true,
-       colcolors = @[pastelgreen,pastelgreen,pastelgreen],
-       headertext = headertext,leftalignflag = false)    
+showDf2(ndf6,
+        rows = rows,
+        cols = @[1,2,3],
+        colwd = @[10,8,8],
+        showFrame = true,
+        showHeader = false,
+        colcolors = @[pastelgreen,pastelgreen,pastelgreen],
+        headertext = headertext,
+        leftalignflag = false)    
 
 
 doFinish()
