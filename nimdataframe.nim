@@ -1075,11 +1075,11 @@ proc createRandomTestData*(filename:string = "nimDfTestData.csv",datarows:int = 
       data.write(newWord(3,8) & ",")
       data.write(ff(getRndFloat() * 345243.132310 * getRandomSignF(),2) & ",")
       data.write(newWord(3,8) & ",")
-      data.write(newWord(3,8) & ",")
+      data.write($getRndBool() & ",")
       data.writeLine($getRndInt(0,100))
   
   data.close()
-    
+  printLn("Created test data file : " & filename )  
   
 
 proc dfColumnStats*(df:nimdf,colseq:seq[int]): seq[Runningstat] =
@@ -1124,7 +1124,7 @@ proc dfShowColumnStats*(df:nimdf,desiredcols:seq[int],colspace:int = 25,xpos:int
   ## xpos the starting display position
   ## colspace allows to nudge the distance between the displayed column statistics
   ## 
-  printLn("Statistics \n",peru)
+  printLn("Statistics\n",peru,xpos = 2)
   
   # check that desiredcols is not more than available in df to avoid indexerrors etc later
   # we just cut off the right most entry of desiredcols until it fits
@@ -1140,15 +1140,15 @@ proc dfShowColumnStats*(df:nimdf,desiredcols:seq[int],colspace:int = 25,xpos:int
       # if there are many columns we try to display grid wise
       if nxpos > tw - 22:
         curdn(20)
-        nxpos = 1
+        nxpos = xpos
   
       printLnBiCol("Column : " & $(ddesiredcols[x]) & " Statistics",xpos = nxpos,styled={styleUnderscore})
       showStats(mydfstats[x],xpos = nxpos) 
       nxpos += colspace
       curup(15)
   curdn(20)   
-  printLnBiCol("Statistics -> Rows processed: " & $getRowcount(df))
-  printLnBiCol("Statistics -> Cols processed: " & $ddesiredcols.len & " of " & $getColcount(df))          
+  printLnBiCol("Statistics -> Rows processed: " & $getRowcount(df),xpos = 2)
+  printLnBiCol("Statistics -> Cols processed: " & $ddesiredcols.len & " of " & $getColcount(df),xpos = 2)          
         
         
 proc dfSave*(df:nimdf,filename:string) = 
@@ -1181,13 +1181,13 @@ proc dfSave*(df:nimdf,filename:string) =
         
      data.close()
      echo()
-     printLnBiCol("Dataframe saved to   : " & filename)
-     printLnBiCol("Rows written         : " & $rowcounter1.value)
-     printLnBiCol("Errors count         : " & $errorcounter1.value)  
-     printLnBiCol("Expected Total Cells : " & $(cc * rc))     # cell is on data element of a row
-     printLnBiCol("Actual Total Cells   : " & $totalcolscounter1.value)
+     printLnBiCol("Dataframe saved to   : " & filename,xpos = 2)
+     printLnBiCol("Rows written         : " & $rowcounter1.value,xpos = 2)
+     printLnBiCol("Errors count         : " & $errorcounter1.value,xpos = 2)  
+     printLnBiCol("Expected Total Cells : " & $(cc * rc),xpos = 2)     # cell is on data element of a row
+     printLnBiCol("Actual Total Cells   : " & $totalcolscounter1.value,xpos = 2)
      if cc * rc <> totalcolscounter1.value:
-       printLnBiCol("Saved status         : saved with row errors. Original data may need preprocessing",yellowgreen,red,":",0,false,{})
+       printLnBiCol("Saved status         : saved with row errors. Original data may need preprocessing",yellowgreen,red,":",2,false,{})
      else:
-       printLnBiCol("Saved status         : ok")
+       printLnBiCol("Saved status         : ok",xpos = 2)
      echo()
