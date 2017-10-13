@@ -1155,19 +1155,39 @@ proc dfSave*(df:nimdf,filename:string) =
      ## dfSave
      ## 
      ## save adataframe to a csv file
-     ## 
+     ##
+  
+     let cc = getColCount(df)
+     let rc = getrowcount(df)
+     var rowcounter1 = newCxcounter()
+     var totalcolscounter1 = newCxcounter()
+     var errorcounter1 = newCxcounter()
      var errCount = 0
-     var  data = newFileStream(filename, fmWrite)
-     for row in 0 .. <getrowcount(df):
-        for col in  0.. <getcolcount(df):
-           try:
-             if col < getcolcount(df) - 1:  data.write(df[row][col] & ",")
-             else : data.write(df[row][col] & "\L")
-           except IndexError  :
-             inc errCount
-             discard
-       
+     var errFlag:bool = false
+     var data = newFileStream(filename, fmWrite)
+     for row in 0 .. <rc:
+        for col in  0.. <cc:
+             try:
+                if col <= cc - 2 : 
+                    data.write(df[row][col] & ",")
+                else : 
+                    data.writeLine(df[row][col])
+                totalcolscounter1.add
+             except IndexError  :
+                errorcounter1.add
+                discard
+      
+        rowcounter1.add
+        
      data.close()
-     printLnBiCol("Dataframe saved to : " & filename)
-     printLnBiCol("Errors count       : " & $errCount)  
+     echo()
+     printLnBiCol("Dataframe saved to   : " & filename)
+     printLnBiCol("Rows written         : " & $rowcounter1.value)
+     printLnBiCol("Errors count         : " & $errorcounter1.value)  
+     printLnBiCol("Expected Total Cells : " & $(cc * rc))     # cell is on data element of a row
+     printLnBiCol("Actual Total Cells   : " & $totalcolscounter1.value)
+     if cc * rc <> totalcolscounter1.value:
+       printLnBiCol("Saved status         : saved with row errors. Original data may need preprocessing",yellowgreen,red,":",0,false,{})
+     else:
+       printLnBiCol("Saved status         : ok")
      echo()

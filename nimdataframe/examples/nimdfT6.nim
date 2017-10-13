@@ -27,7 +27,7 @@ var ndf2  = makeNimDf(colAI,colBI,colCI)       # this will use makedDf2 internal
 var headertext =  @["Date","Integer","Float"]  
 printlnBiCol("Original as created w/header") 
 
-showDf2(ndf2,
+showDf(ndf2,
        rows = rows,
        cols = @[1,2,3],
        colwd = @[10,10,10],
@@ -39,7 +39,7 @@ showDf2(ndf2,
        
 curup(rows + 3)
 printlnBiCol("Original as created with showHeader = false",xpos = 40) 
-showDf2(ndf2,
+showDf(ndf2,
        rows = rows,
        cols = @[1,2,3],
        colwd = @[10,10,10],
@@ -62,7 +62,7 @@ printlnBiCol("Sorted asc on Col : " & $asortcol & " Name : " & sortcolname,xpos 
 
 var ndf3 = sortdf(ndf2,asortcol,"asc")
 
-showDf2(ndf3,
+showDf(ndf3,
        rows = rows,
        cols = @[1,2,3],
        colwd = @[10,8,8],
@@ -82,7 +82,7 @@ printlnBiCol("Sorted on Col : " & $asortcol & " Name : " & sortcolname,brightyel
 
 var ndf4 = sortdf(ndf2,asortcol,"asc")
 
-showDf2(ndf4,
+showDf(ndf4,
        rows = rows,
        cols = @[1,2,3],
        colwd = @[10,8,8],
@@ -100,7 +100,7 @@ asortcol = 3
 sortcolname = headertext[asortcol - 1]
 printlnBiCol("Sorted on Col : " & $asortcol & " Name : " & sortcolname,lime,bblack,":",73,false,{}) 
 var ndf5 = sortdf(ndf2,asortcol,"asc")
-showDf2(ndf5,
+showDf(ndf5,
         rows = rows,
         cols = @[1,2,3],
         colwd = @[10,8,8],
@@ -110,11 +110,11 @@ showDf2(ndf5,
         headertext = headertext,
         leftalignflag = false,
         xpos = 73)    
-
+dfSave(ndf5,"ndf5.csv")
 decho(3)
 printlnBiCol("New df: with selected rows and cols stipulated via getRowDataRange from sorted df ndf5")
 var ndf6 = getRowDataRange(ndf5,rows = @[1,2,4,6],cols = @[1,2,3])
-showDf2(ndf6,
+showDf(ndf6,
         rows = rows,
         cols = @[1,2,3],
         colwd = @[10,8,8],

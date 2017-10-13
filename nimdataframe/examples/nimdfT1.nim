@@ -2,7 +2,7 @@ import nimcx , nimdataframe
 
 ## nimdfT1.nim
 ## Testing nimdataframe
-## compile with : nim c  -d:ssl -r nimdfT1
+## compile with : nim c  -d:ssl -r -d:release nimdfT1
 
 import nimcx , nimdataframe 
 
