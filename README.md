@@ -80,7 +80,7 @@ doFinish()
 ![Image](http://qqtop.github.io/nimdataframe1.png?raw=true)
 
 
-Screenshot from nimdfT9.nim
+Example view
 
 ![Image](http://qqtop.github.io/nimdataframe3.png?raw=true)
 
