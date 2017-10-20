@@ -1,4 +1,4 @@
-import nimcx,nimdataframe,algorithm
+import nimcx,nimdataframe
 
 #  nimdfT4.nim
 #  
@@ -36,7 +36,7 @@ var colA  = getColdata(ndf,1)  # get first col
 #var colAs = sortcoldata(colA,true,Descending)  # we can sort a single col 
 
 var colB  = getColdata(ndf,2)  # get 2nd col
-var ndf2  = makeNimDf(colA,colB) # combine into new df
+var ndf2  = makeNimDf(colA,colB,hasHeader=false) # combine into new df
 
 # display the new ndf2 
 # Note if only 1 column is to be displayed frame and header will not be shown even if true

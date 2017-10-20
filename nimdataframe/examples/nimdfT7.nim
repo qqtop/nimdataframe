@@ -1,4 +1,4 @@
-import nimcx,nimdataframe,algorithm,stats
+import nimcx,nimdataframe
 
 #  nimdfT7.nim
 #  
@@ -13,27 +13,43 @@ import nimcx,nimdataframe,algorithm,stats
 #  
 
 var maxrows = 3000   # 300000
-var data = "test_01.csv"         # 4 numeric cols  1M rows
-var ndf:nimdf                    # define a nim dataframe
+var data = "test_01.csv"                           # 4 numeric cols  
+var ndf:nimdf                                      # define a nim dataframe
 ndf = createDataFrame(data,cols = 4,rows=maxrows)  # specify desired cols as per data file , default = 2 
 printLnBiCol("Data Source : " & data)
 # display various configurations of this df
-showDf(ndf, rows = 15,cols = @[1,2,3,4],colwd = @[10,10,10,10], colcolors = @[pastelgreen,pastelpink],showframe = true,framecolor = goldenrod,showHeader = true,leftalignflag = false) 
+showDf(ndf,
+      rows = 15,
+      cols = @[1,2,3,4],
+      colwd = @[10,10,10,10],
+      colcolors = @[pastelgreen,pastelpink],
+      showframe = true,
+      framecolor = goldenrod,
+      showHeader = true,
+      leftalignflag = false) 
 echo()
 showDataframeInfo(ndf)
 
 
 
-data = "test_02_a.csv"            # 4 numeric cols  8M rows
-var ndf2:nimdf                    # define a nim dataframe
+data = "test_02_a.csv"                              # 4 numeric cols 
+var ndf2:nimdf                                      # define a nim dataframe
 ndf2 = createDataFrame(data,cols = 4,rows=maxrows)  # specify desired cols as per data file , default = 2 
 printLnBiCol("Data Source : " & data)
 # display various configurations of this df
-showDf(ndf2, rows = 15,cols = @[1,2,3,4],colwd = @[10,10,10,10], colcolors = @[pastelgreen,pastelpink],showframe = true,framecolor = dodgerblue,showHeader = false,leftalignflag = false) 
+showDf(ndf2,
+       rows = 15,
+       cols = @[1,2,3,4],
+       colwd = @[10,10,10,10],
+       colcolors = @[pastelgreen,pastelpink],
+       showframe = true,
+       framecolor = dodgerblue,
+       showHeader = false,
+       leftalignflag = false) 
 echo()
 
-data = "test_02_b.csv"           # 4 numeric cols   8M rows
-var ndf3:nimdf                    # define a nim dataframe
+data = "test_02_b.csv"           # 4 numeric cols   
+var ndf3:nimdf                   # define a nim dataframe
  
 ndf3 = createDataFrame(data,cols = 4,rows=maxrows)  # specify desired cols as per data file , default = 2 
 printLnBiCol("Data Source : " & data)
@@ -66,9 +82,18 @@ var colF  = getColdata(ndf3,2)
 var colG  = getColdata(ndf3,3) 
 var colH  = getColdata(ndf3,4) 
 
-var ndf4  = makeNimDf(colA,colB,colC,colD,colE,colF,colG,colH) # combine into new df
+var ndf4  = makeNimDf(colA,colB,colC,colD,colE,colF,colG,colH,hasHeader=true) # combine into new df
 currentLine()
-showDf(ndf4, rows = 15,cols = @[1,2,3,4,5,6,7,8],colwd = @[10,10,10,10,10,10,10,10], colcolors = @[pastelgreen,pastelpink],showframe = true,framecolor = dodgerblue,showHeader = true,headertext = @["df 1","B","C","D","df 2","B","C","D"],leftalignflag = false) 
+showDf(ndf4,
+       rows = 15,
+       cols = @[1,2,3,4,5,6,7,8],
+       colwd = @[10,10,10,10,10,10,10,10],
+       colcolors = @[pastelgreen,pastelpink],
+       showframe = true,
+       framecolor = dodgerblue,
+       showHeader = true,
+       headertext = @["df 1","B","C","D","df 2","B","C","D"],
+       leftalignflag = false) 
 echo()
 
 
@@ -84,10 +109,22 @@ var colwdseq = @[10,10,10,10,10,10,10,10]
 var colorsseq = newSeq[string]()
 for x in 0.. <colseq.len: colorsseq.add(randcol())
 var ndf5 = sortdf(ndf4,1,"desc")
-showDf(ndf5, rows = 15,cols = colseq ,colwd = colwdseq , colcolors = colorsseq,showframe = true,framecolor = dodgerblue,showHeader = true,headertext = @["Date 1","B","C","D","Date 2","B","C","D"],leftalignflag = false) 
-showDataframeInfo(ndf5)
+echo()
+println("Two dataframes joint into one",peru)
+showDf(ndf5,
+       rows = 15,
+       cols = colseq,
+       colwd = colwdseq,
+       colcolors = colorsseq,
+       showframe = true,
+       framecolor = dodgerblue,
+       showHeader = true,
+       headertext = @["Df 1","B","C","D","Df 2","B","C","D"],
+       xpos = 2) 
+#showDataframeInfo(ndf5)
 echo()
 
-dfShowColumnStats(ndf5,colseq,colspace = 30)
+dfShowColumnStats(ndf5,colseq,colspace = 30,xpos = 2)
+dfSave(ndf5,"jointdataframe.csv")
    
 doFinish()

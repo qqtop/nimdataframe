@@ -69,7 +69,7 @@ converter finlibadjc(astock:Stocks):nimss =
 var myD2 = getSymbol2(mystock,minusdays(getDateStr(),365),getDateStr())   
 decho(3)
 
-var ndf = makeNimDf(finlibdate(myD2),finlibopen(myD2),finliblow(myD2),finlibhigh(myD2),finlibclose(myD2),finlibadjc(myD2),finlibvolume(myD2))
+var ndf = makeNimDf(finlibdate(myD2),finlibopen(myD2),finliblow(myD2),finlibhigh(myD2),finlibclose(myD2),finlibadjc(myD2),finlibvolume(myD2),hasheader = true)
 
 var headertext = @["Date","Open","Low","High","Close","Adj.Close","Volume"]  # custom header text for each col in dataframe
 var rows = 3  # data rows to display

@@ -18,13 +18,13 @@ var data = "nimDfTestData.csv"   # change name as desired
 createRandomTestData(data,datarows = 5000)       # creates a data file with random data 7 columns and 2000 rows
  
 var ndf:nimdf                    # define a nim dataframe
-ndf = createDataFrame(data,cols = 8)  # specify desired cols as per data file , default = 2 
+ndf = createDataFrame(data,cols = 8,hasHeader = true)  # specify desired cols as per data file , default = 2 
 
 printLnBiCol("Data Source : " & data)
 
 var rows = 10
 var cols  =  @[1,2,3,4,5,6,7,8]
-var colwd =  @[12,10,10,10,10,10,14,4]   # column width must be specified for all cols 
+var colwd =  @[12,10,10,10,10,10,14,4]   # column width 
 
 showDf(ndf,
        rows = rows,

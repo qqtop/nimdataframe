@@ -19,7 +19,7 @@ var colB = dfc(createSeqInt(10,0,1000))
 var colC = dfc(createSeqFloat(10,3))
 
 
-var ndf2  = makeNimDf(colA,colB,colC)
+var ndf2  = makeNimDf(colA,colB,colC,hasHeader=true)
 printlnBiCol("Original as created") 
 
 showDf(ndf2,
@@ -36,8 +36,8 @@ dfsave(ndf2,"testdata_nimdfT10.csv")
 showDataframeInfo(ndf2)
 
 
-var ndf3 = sortdf(ndf2,2,"asc")
-
+var ndf3 = sortdf(ndf2,2,desc)
+printLn(" dataframe sorted on Integer column descending")
 showDf(ndf3,
        rows = displayrows,
        cols = @[1,2,3],
@@ -50,3 +50,22 @@ showDf(ndf3,
 
 dfsave(ndf3,"testdatasorted_nimdfT10.csv")       
 showDataframeInfo(ndf3)
+
+
+
+
+
+var ndf4 = sortdf(ndf2,2,asc)
+printLn(" dataframe sorted on Integer column ascending")
+showDf(ndf4,
+       rows = displayrows,
+       cols = @[1,2,3],
+       colwd = @[10,10,10],
+       showFrame = true,
+       showHeader = false,                         
+       colcolors = @[violet,pastelgreen],
+       headertext = @["Date","Integer","Float"] ,
+       leftalignflag = true)    
+
+     
+showDataframeInfo(ndf4)

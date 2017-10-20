@@ -1,4 +1,4 @@
-import nimcx , nimdataframe 
+import nimcx , nimdataframe
 
 # nimdfT6
 # 
@@ -7,6 +7,9 @@ import nimcx , nimdataframe
 # for best display run in full terminal
 # 
 # dates > 2099-12 will throw errors
+# 
+# 
+# status ok
 # 
 converter dfc[T](s:T):nimss = 
       result = newnimss()
@@ -20,10 +23,7 @@ var colAI = dfc(createSeqDate(frmd,10))
 var colBI = dfc(createSeqInt(10,0,1000))
 var colCI = dfc(createSeqFloat(10,3))
 
- 
-
-
-var ndf2  = makeNimDf(colAI,colBI,colCI)       # this will use makedDf2 internally
+var ndf2  = makeNimDf(colAI,colBI,colCI,hasHeader=true)       # this will use makedDf2 internally
 var headertext =  @["Date","Integer","Float"]  
 printlnBiCol("Original as created w/header") 
 
