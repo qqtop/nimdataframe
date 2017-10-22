@@ -125,10 +125,11 @@ Example screenshots of nimdfT13
 
 NOTE : 
   
-     Improvements may be made at any time.              
-     Forking ,testing, suggestions , ideas are welcome.
-     This is development code , hence use at your own risk.
+     Improvements may be made at any time and without warning.
+     Examples may break occasionally ... nevertheless we hope you have a nice day !
      
-     Tested on  openSuse TumbleWeed
-              
+     Forking , testing,suggestions , ideas are welcome.
+     This is development code hence use at your own risk.
+     
+                   
 ![Image](http://qqtop.github.io/qqtop-small.png?raw=true)
