@@ -49,6 +49,7 @@ import nimcx,httpclient,browsers
 import parsecsv,streams,algorithm,stats
 import db_sqlite
 import typetraits,typeinfo
+export stats
 
 let NIMDATAFRAMEVERSION* = "0.0.2"
 
@@ -63,22 +64,28 @@ type
     nimbs* = seq[bool]           # nim bool seq
     
 type
-    nimdf* = object          
+    nimdf* =  ref object         
            df* : seq[nimss]     # nim data frame 
            hasHeader* : bool
            colcount*  : int
            rowcount*  : int
-           colcolors* : seq[nimss]
-           colwidths* : seq[nimis]
+           colcolors* : nimss
+           colwidths* : nimis
+           colHeaders*: nimss
+           rowHeaders*: nimss
     
 proc newNimDf*():nimdf = 
+           new(result)            # needed for ref object  gc managed
            result.df = @[]
-           result.hasHeader = false
-           result.colcount  = 0
-           result.rowcount  = 0
-           result.colcolors = @[]
-           result.colwidths = @[]
-
+           result.hasHeader  = false
+           result.colcount   = 0
+           result.rowcount   = 0
+           result.colcolors  = @[]
+           result.colwidths  = @[]
+           result.colHeaders = @[]
+           result.rowHeaders = @[]  # not yet in use
+           
+           
            
 proc newNimSs*():nimss = @[]
 proc newNimIs*():nimis = @[]
@@ -106,10 +113,9 @@ proc getData1*(url:string):auto =
        printLn(getCurrentExceptionMsg(),red,xpos = 9)
        doFinish()
 
-converter toNimis(s:seq[int]):nimis = 
+converter toNimis*(s:seq[int]):nimis = 
          var z = newNimIs()
-         for x in 0.. <s.len:
-            z.add(s[x])
+         for x in 0.. <s.len: z.add(s[x])
          return z   
         
 
@@ -126,18 +132,22 @@ proc makeDf1*(ufo1:string,hasHeader:bool = false):nimdf =
    var ufos = ufol[0].split(",")
    var ns = newNimSs()
            
-   df.colwidths = @[toNimis(toSeq(0..<ufos.len))]
+   #df.colwidths = @[toNimis(toSeq(0..<ufos.len))]
+   df.colwidths = toNimis(toSeq(0..<ufos.len))
    
    for x in 0.. <ufol.len:
       ufos = ufol[x].split(",")  # problems may arise if text has commas ... then need some preprocessing
       ns = newNimSs()
-      var wdc = 0
+      #var wdc = 0
       for xx in 0.. <ufos.len:
           ns.add(ufos[xx].strip(true,true))
-          if wdc == df.colwidths.len: wdc = 0
-          if df.colwidths[wdc][xx] < ufos[xx].len: 
-             df.colwidths[wdc].add(ufos[xx].strip(true,true).len)
-          inc wdc     
+          #if wdc == df.colwidths.len: wdc = 0
+          #if df.colwidths[wdc][xx] < ufos[xx].len: 
+          #   df.colwidths[wdc].add(ufos[xx].strip(true,true).len)
+          #inc wdc     
+          if df.colwidths[xx] < ufos[xx].len: 
+             df.colwidths.add(ufos[xx].strip(true,true).len)
+          
       df.df.add(ns)
    
    df.rowcount = df.df.len
@@ -237,7 +247,8 @@ proc makeDf2*(ufo1:nimdf,cols:int = 0,hasHeader:bool = false):nimdf =
      var olderrorrow = 0            # so we only display errors once per row
      for cls  in 0.. <df.colcount:  # cols count  
        # now build our row 
-       try:
+       try: 
+            
             arow.add(ufo1.df[cls][rws])      
        except IndexError:
             printLn("Error row :  " & $arow,red)
@@ -922,9 +933,20 @@ proc showDataframeInfo*(df:nimdf) =
    hdx(printLn("Dataframe Inspection ",peru,styled = {}))
    showHeader(df)
    showCounts(df)
+   echo()
+   printLn("Display parameters   ",peru,xpos = 2)
+   printLn("Colors         ( if any ) :",salmon,xpos = 2)
+   printLn(df.colcolors,xpos = 2)
+   printLn("Column Headers ( if any ) :",salmon,xpos = 2)
+   printLn(df.colheaders,xpos = 2)
+   printLn("Row Headers    ( if any ) :",salmon,xpos = 2)
+   printLn(df.rowheaders,xpos = 2)
+   printLn("Column widths  ( if any ) :",salmon,xpos = 2)
+   printLn(df.colwidths,xpos = 2)
+   
    echo()    
-   printLn("End of Dataframe Inspection",xpos = 2,lightskyblue)
-   hlineln(tw,lightgrey)
+   
+   hdx(printLn("End of dataframe inspection ", zippi,styled = {}))
    decho(1)
 
 
@@ -1267,6 +1289,25 @@ proc createRandomTestData*(filename:string = "nimDfTestData.csv",datarows:int = 
   printLn("Created test data file : " & filename )  
   
 
+proc dfRowStats*(df:nimdf,row:int):Runningstat =
+   # sumStats
+   # 
+   # calculates statistics for numeric rows and returns a Runningstat instance
+   # 
+   
+   var psdata = newSeq[Runningstat]()
+   var ps : Runningstat
+   for col in 0 .. <toNimis(toSeq(0 .. <df.colcount)).len:
+           try:
+              ps.push(parsefloat(df.df[row][col]))
+              psdata.add(ps)
+           except:
+              discard   # rough, we discard any parsefloat errors due to na or text column etc
+   result = ps
+  
+  
+  
+  
 proc dfColumnStats*(df:nimdf,colseq:seq[int]): seq[Runningstat] =
         ## dfColumnStats
         ## 
@@ -1387,7 +1428,11 @@ proc dfSave*(df:nimdf,filename:string) =
      var errCount = 0
      var errFlag:bool = false
      var data = newFileStream(filename, fmWrite)
+     var errorrows = newNimIs()
+     
      for row in 0 .. <df.rowcount:
+        if df.df[row].len < df.colcount:
+              errorrows.add(row)
         for col in  0.. <df.colcount:
              try:
                 if col <= df.colcount - 2 : 
@@ -1405,8 +1450,9 @@ proc dfSave*(df:nimdf,filename:string) =
      echo()
      printLnBiCol("Dataframe saved to   : " & filename,xpos = 2)
      printLnBiCol("Rows written         : " & $rowcounter1.value,xpos = 2)
-     printLnBiCol("Errors count         : " & $errorcounter1.value,xpos = 2)  
-     printLnBiCol("Expected Total Cells : " & $(df.colcount * df.rowcount),xpos = 2)     # cell is on data element of a row
+     printLnBiCol("Errors count         : " & $errorcounter1.value,xpos = 2) 
+     printLnBiCol("Error rows           : " & wordwrap($errorrows,newLine = "\x0D\x0A" & spaces(25)),xpos = 2)  # align seq printout
+     printLnBiCol("Expected Total Cells : " & $(df.colcount * df.rowcount),xpos = 2)     # cell is one data element of a row
      printLnBiCol("Actual Total Cells   : " & $totalcolscounter1.value,xpos = 2)
      if  df.colcount * df.rowcount <> totalcolscounter1.value:
          printLnBiCol("Saved status         : Saved with row errors. Original data may need preprocessing",yellowgreen,red,":",2,false,{})
