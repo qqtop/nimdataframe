@@ -48,37 +48,73 @@ Installation
 Example Code 
  
 ```nimrod
+## nimdfT13.nim
+## 
+## Testing nimdataframe
+## 
+## 
+#  October data from http://www.imf.org/external/np/fin/data/rms_mth.aspx?reportType=CVSDR 
+#  slightly processed to shorten header (only data of first table imported here) and saved into file rms.csv
 
-## compile with : nim c  -d:ssl -r nimdfT1
 
-import nimcx , nimdataframe 
+import nimcx , nimdataframe
 
-let ufo =  "http://bit.ly/uforeports"    # data used in pandas documentation
- 
-var ndf = createDataFrame(ufo)
-printLnBiCol("Data Source : " & ufo)
+let ufo = "rms.csv"                                                   
+var ndf9 = createDataFrame(ufo,cols = 12,sep = ',',hasHeader = true)  # load locally from rms.csv also give state the number of cols in csv
+
+if ndf9.hasHeader == true:
+   for x in 0 .. <ndf9.colcount: ndf9.colheaders.add(ndf9.df[0][x])   # row 0 col x
+for x in 0 .. <ndf9.colcount: ndf9.colcolors.add(rndcol())            # create some fun colors and add to df
+for x in 0 .. <ndf9.colcount: ndf9.colwidths.add(9)                   # create a colwidths for each column default here is 9
+ndf9.colwidths[0] = 15                                                # change first column width to 15
+
+printLnBiCol("Data Source : " & ufo,xpos = 2)
 echo()
-showDf(ndf,
-   rows = 15,
-   cols = @[1,2,3,4,5],
-   colwd = @[15,7,14,6,15],
-   colcolors = @[pastelgreen,pastelpink,peru,gold],
+showDf(ndf9,                                                          # display df
+   rows = 1500,     
+   cols = toNimis(toSeq(1..ndf9.colCount)),                           
+   colwd = ndf9.colwidths,
+   colcolors = ndf9.colcolors,
    showFrame = true,
    framecolor = dodgerblue,
    showHeader = true,
    xpos = 3) 
 decho(3)
 
-showDataframeInfo(ndf)
-dfSave(ndf,"uforeports.csv")
+echo()
 
+# now we want to display row statistics on this df
+  
+var xpos = 2   
+var startrow = 0
+if ndf9.hasHeader == true :  # donot read to run stats on the header
+       startrow = 1
+else : startrow = 0
+for row in startrow..<ndf9.rowcount:
+    printLn(fmtx(["<15"],$(ndf9.df[row][0])),zippi,styled={stylereverse},xpos = xpos)
+    
+    var x = dfRowStats(ndf9,row)   # x now contains a runningstats instance for one row
+    # display stats for all rows
+    let n = 3       # decimals
+    let sep = ":"
+    
+    printLnBiCol("Mean    : " & ff(x.mean,n),yellowgreen,white,sep,xpos = xpos,false,{})
+    printLnBiCol("Var     : " & ff(x.variance,n),yellowgreen,white,sep,xpos = xpos,false,{})
+    printLnBiCol("Min     : " & ff(x.min,n),yellowgreen,white,sep,xpos = xpos,false,{})
+    printLnBiCol("Max     : " & ff(x.max,n),yellowgreen,white,sep,xpos = xpos,false,{})
+    curup(5)
+    xpos += 21
+    if xpos > tw - 30:
+       curdn(13)
+       xpos = 2
+       echo()
+
+decho(10)
 doFinish()
 
 
+
 ```
-
-![Image](http://qqtop.github.io/nimdataframe1.png?raw=true)
-
 
 Example screenshots of nimdfT13 
 

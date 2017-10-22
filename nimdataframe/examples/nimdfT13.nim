@@ -1,4 +1,5 @@
-## nimdfT1.nim
+## nimdfT13.nim
+## 
 ## Testing nimdataframe
 ## 
 ## 
@@ -10,6 +11,7 @@ import nimcx , nimdataframe
 
 let ufo = "rms.csv"                                                   
 var ndf9 = createDataFrame(ufo,cols = 12,sep = ',',hasHeader = true)  # load locally from rms.csv also give state the number of cols in csv
+
 if ndf9.hasHeader == true:
    for x in 0 .. <ndf9.colcount: ndf9.colheaders.add(ndf9.df[0][x])   # row 0 col x
 for x in 0 .. <ndf9.colcount: ndf9.colcolors.add(rndcol())            # create some fun colors and add to df
@@ -30,9 +32,6 @@ showDf(ndf9,                                                          # display 
 decho(3)
 
 echo()
-#showDataframeInfo(ndf9)
-
-# dfSave(ndf9,"rmsreport.csv")  # save the df to some file if needed
 
 # now we want to display row statistics on this df
   
