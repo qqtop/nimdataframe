@@ -14,18 +14,23 @@ import nimcx , nimdataframe
 let ufo =  "http://bit.ly/uforeports"    # data used in pandas documentation
 var ndf9 = createDataFrame(ufo,hasHeader = true)
 
+ndf9 = dfDefaultSetup(ndf9)              # basic setup
+ndf9.colwidths = @[15,7,14,6,15]         # change the default columnwidths created in dfDefaultSetup
+ndf9.colcolors = @[pastelgreen,pastelpink,peru,gold]
+
 printLnBiCol("Data Source : " & ufo)
 echo()
 showDf(ndf9,
    rows = 25,
-   cols = @[1,2,3,4,5],
-   colwd = @[15,7,14,6,15],
+   cols =  toNimis(toSeq(1..ndf9.colcount)),                       
+   colwd = ndf9.colwidths,
    colcolors = @[pastelgreen,pastelpink,peru,gold],
    showFrame = true,
    framecolor = dodgerblue,
    showHeader = true,
+   leftalignflag = true,
    xpos = 3) 
 decho(3)
-
+showDataframeInfo(ndf9)
 doFinish()
 

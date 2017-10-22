@@ -10,7 +10,7 @@
 ##
 ##   ProjectStart: 2016-09-16
 ##   
-##   Latest      : 2017-10-20
+##   Latest      : 2017-10-22
 ##
 ##   Compiler    : Nim >= 0.17.2
 ##
@@ -302,21 +302,23 @@ proc showHeader*(df:nimdf) =
    ## shows first 2 lines of df incl. headers if any of dataframe
    ## 
 
-   printLnBiCol("hasHeader :  " & $df.hasHeader,xpos = 2)
-   printLn("Dataframe first 2 rows :",yellowgreen,xpos = 2,styled = {})
+   printLn("First 2 rows :",yellowgreen,xpos = 2,styled = {})
    printLn(df.df[0],xpos = 2)
    printLn(df.df[1],xpos = 2)
    echo()
-   
+   printLnBiCol("hasHeader    :  " & $df.hasHeader,xpos = 2)
+   echo()
    
 proc showCounts*(df:nimdf) =    
    printLnBiCol("Columns   :  " & $df.colcount & spaces(3),xpos = 2)
    printLnBiCol("Data Rows :  " & $df.rowcount,xpos = 2)
-   printLn("Row count includes header in data source",xpos=2)
-    
+   printLn("Row count includes header if in data source only",xpos=2)
+   echo() 
 
 proc colFitMax*(df:nimdf,cols:int = 0,adjustwd:int = 0):nimis =
   ## colFitMax
+  ## 
+  ## # TODO : provide better fit tw as basis is to wide for df with few cols
   ## 
   ## calculates best column width to fit into terminal width
   ## 
@@ -332,9 +334,7 @@ proc colFitMax*(df:nimdf,cols:int = 0,adjustwd:int = 0):nimis =
   ## 
   
   var ccols = cols
-  if ccols == 0:
-     ccols = df.colcount
-  
+  if ccols == 0:  ccols = df.colcount
   var optcolwd = tw div ccols - ccols + adjustwd  
   var cwd = newNimIs()
   for x in 0.. <ccols: cwd.add(optcolwd)
@@ -931,21 +931,30 @@ proc showDataframeInfo*(df:nimdf) =
    ## 
    echo()
    hdx(printLn("Dataframe Inspection ",peru,styled = {}))
-   showHeader(df)
+  
    showCounts(df)
+   showHeader(df)
+   printLn("Display parameters if available inside the df object ",sandybrown,xpos = 2)
    echo()
-   printLn("Display parameters   ",peru,xpos = 2)
-   printLn("Colors         ( if any ) :",salmon,xpos = 2)
-   printLn(df.colcolors,xpos = 2)
-   printLn("Column Headers ( if any ) :",salmon,xpos = 2)
+   
+   printLn("Column Headers ( if any ) :",greenyellow,xpos = 2)
    printLn(df.colheaders,xpos = 2)
-   printLn("Row Headers    ( if any ) :",salmon,xpos = 2)
-   printLn(df.rowheaders,xpos = 2)
-   printLn("Column widths  ( if any ) :",salmon,xpos = 2)
-   printLn(df.colwidths,xpos = 2)
-   
+   echo()
+   #printLn("Row Headers    ( if any ) :",greenyellow,xpos = 2)   # not in use yet
+   #printLn(df.rowheaders,xpos = 2)
+   #printLn("Column Widths  ( if any ) :",greenyellow,xpos = 2)   # not in use here as 
+   #printLn(df.colwidths,xpos = 2)
+   printLn("Colors         ( if any ) :",greenyellow,xpos = 2)
+   for x in 0.. <df.colcolors.len:
+      if x == 0:
+         print("col" & $(x + 1) & ", ",df.colcolors[x],xpos = 2)
+      else:
+        if x == df.colcolors.len - 1:
+           print("col" & $(x + 1),df.colcolors[x])
+        else:
+           print("col" & $(x + 1) & ", ",df.colcolors[x])
    echo()    
-   
+   echo()
    hdx(printLn("End of dataframe inspection ", zippi,styled = {}))
    decho(1)
 
@@ -998,10 +1007,8 @@ proc getRowDataRange*(df:nimdf,rows:nimis = @[] , cols:nimis = @[]) : nimdf =
   aresult.hasHeader = df.hasHeader
   aresult.colcount = cols.len
   aresult.rowcount = rows.len
-  
-  
+
   var b = newNimSs()
-  
   var arows = rows
   var acols = cols
   
@@ -1198,6 +1205,36 @@ proc makeNimDf*(dfcols : varargs[nimss],hasHeader:bool = false):nimdf =
   result = makeDf2(df,hasheader = hasHeader)
 
 
+
+proc dfDefaultSetup*(df:nimdf,headertext:nimss = @[]):nimdf =    # does not work yet ??
+   ## dfDefaultSetup
+   ## 
+   ## quick default setup , which can be adjusted later during showDf if needed
+   ## 
+   ## column colors : white
+   ## column widths : 10
+   ## header text   : pass in or auto column name will be generated 
+   ## 
+   if headertext != @[] :
+      if headertext.len >= df.colcount:  # make sure its the same or add some headers
+         df.colheaders = headertext[0..df.colcount]
+      else:
+         for x in headertext.len + 1 .. <df.colcount:
+             df.colheaders.add("col" & $x)
+    
+   elif df.hasHeader == true:
+   
+        if headertext == @[]:             # hasHeader and headertext is empty we provide a autoheader
+            for x in 0 .. <df.colcount:
+                df.colheaders.add("col" & $(x + 1))    # auto col starts from 1 
+        else:                             # use the first row as header and hope there is actually a header there
+            for x in 0 .. <df.colcount: df.colheaders.add(df.df[0][x])    # row 0 col x
+   for x in 0 .. <df.colcount: df.colcolors.add(termwhite)                # default colors for columns
+   for x in 0 .. <df.colcount: df.colwidths.add(10)                       # create a colwidths for each column default here is 10
+   result = df
+  
+  
+  
 proc createDataFrame*(filename:string,cols:int = 2,rows:int = -1,sep:char = ',',hasHeader:bool = false):nimdf = 
   ## createDataFrame
   ## 

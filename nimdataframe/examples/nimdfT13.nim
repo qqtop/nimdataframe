@@ -58,6 +58,9 @@ for row in startrow..<ndf9.rowcount:
        curdn(13)
        xpos = 2
        echo()
+       
+decho(6)
+showDataframeInfo(ndf9)
 
-decho(10)
+
 doFinish()
