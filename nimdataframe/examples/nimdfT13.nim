@@ -9,18 +9,18 @@
 
 import nimcx , nimdataframe
 
-let ufo = "rms.csv"                                                   
+let ufo = "rms.csv"   
+
 var ndf9 = createDataFrame(ufo,cols = 12,sep = ',',hasHeader = true)  # load locally from rms.csv also give state the number of cols in csv
 
 if ndf9.hasHeader == true:
-   for x in 0 .. <ndf9.colcount: ndf9.colheaders.add(ndf9.df[0][x])   # row 0 col x
-for x in 0 .. <ndf9.colcount: ndf9.colcolors.add(rndcol())            # create some fun colors and add to df
-for x in 0 .. <ndf9.colcount: ndf9.colwidths.add(9)                   # create a colwidths for each column default here is 9
-ndf9.colwidths[0] = 15                                                # change first column width to 15
-
-printLnBiCol("Data Source : " & ufo,xpos = 2)
+   for x in 0..<ndf9.colcount: ndf9.colheaders.add(ndf9.df[0][x])   # row 0 col x
+for x in 0..<ndf9.colcount: ndf9.colcolors.add(rndcol())            # create some fun colors and add to df
+for x in 0..<ndf9.colcount: ndf9.colwidths.add(9)                   # create a colwidths for each column default here is 9
+ndf9.colwidths[0] = 15                                              # change first column width to 15
+printLnBiCol("Data Source : " & ufo,xpos = 3)
 echo()
-showDf(ndf9,                                                          # display df
+showDf(ndf9,                                                        # display df
    rows = 1500,     
    cols = toNimis(toSeq(1..ndf9.colCount)),                           
    colwd = ndf9.colwidths,
@@ -41,17 +41,17 @@ if ndf9.hasHeader == true :  # donot read to run stats on the header
        startrow = 1
 else : startrow = 0
 for row in startrow..<ndf9.rowcount:
-    printLn(fmtx(["<15"],$(ndf9.df[row][0])),zippi,styled={stylereverse},xpos = xpos)
+    printLn(fmtx(["<20"],$(ndf9.df[row][0])),zippi,styled={stylereverse},xpos = xpos)
     
     var x = dfRowStats(ndf9,row)   # x now contains a runningstats instance for one row
     # display stats for all rows
     let n = 3       # decimals
     let sep = ":"
     
-    printLnBiCol("Mean    : " & ff(x.mean,n),yellowgreen,white,sep,xpos = xpos,false,{})
-    printLnBiCol("Var     : " & ff(x.variance,n),yellowgreen,white,sep,xpos = xpos,false,{})
-    printLnBiCol("Min     : " & ff(x.min,n),yellowgreen,white,sep,xpos = xpos,false,{})
-    printLnBiCol("Max     : " & ff(x.max,n),yellowgreen,white,sep,xpos = xpos,false,{})
+    printLnBiCol("Mean  : " & ff(x.mean,n),yellowgreen,white,sep,xpos = xpos,false,{})
+    printLnBiCol("Var   : " & ff(x.variance,n),yellowgreen,white,sep,xpos = xpos,false,{})
+    printLnBiCol("Min   : " & ff(x.min,n),yellowgreen,white,sep,xpos = xpos,false,{})
+    printLnBiCol("Max   : " & ff(x.max,n),yellowgreen,white,sep,xpos = xpos,false,{})
     curup(5)
     xpos += 21
     if xpos > tw - 30:
@@ -61,6 +61,4 @@ for row in startrow..<ndf9.rowcount:
        
 decho(6)
 showDataframeInfo(ndf9)
-
-
 doFinish()
