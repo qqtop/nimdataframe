@@ -10,7 +10,7 @@
 ##
 ##   ProjectStart: 2016-09-16
 ##   
-##   Latest      : 2017-10-22
+##   Latest      : 2017-10-23
 ##
 ##   Compiler    : Nim >= 0.17.2
 ##
@@ -39,9 +39,9 @@
 ##                 allow right or left align for each column
 ##                 improve tests and example
 ##                 dataframe names
-##                 
+##                 trying to handle json data
 ##  
-##   Notes       :   trying to handle json data
+##   Install     : nimble install https://github.com/qqtop/nimdataframe.git
 ##  
 ##  
 import os
@@ -230,8 +230,7 @@ proc makeDf2*(ufo1:nimdf,cols:int = 0,hasHeader:bool = false):nimdf =
    ## which also may come handy
    ## note that overall it is better to preprocess data to check for row quality consistency
    ## which is not done here yet , so errors may show
-   #printLn("Executing makeDf2",peru)
-
+   
    var df = newNimDf()       # new dataframe to be returned
    var arow = newNimSs()     # one row of the data frame
    
@@ -411,7 +410,7 @@ proc showDf*(df:nimdf,rows:int = 10,cols:nimis = @[],colwd:nimis = @[], colcolor
     
     if cols.len != okcolwd.len: okcolwd = colfitmax(df,cols.len)   # try to best fit rather than to throw error
           
-    # turn this one if you want this info
+    # uncomment if required
     #if cols.len != colcolors.len:
     #   printLnBiCol("NOTE  : Dataframe columns cols and colcolors parameter are of different length",":",red,peru)
      
@@ -1431,23 +1430,26 @@ proc dfShowColumnStats*(df:nimdf,desiredcols:seq[int],colspace:int = 25,xpos:int
   let cc = df.colcount
   var ddesiredcols = desiredcols
   while  ddesiredcols.len > cc:  ddesiredcols.delete(ddesiredcols.len - 1)
-    
+  echo ddesiredcols
+  echo df.colheaders
       
   var mydfstats = dfColumnStats(df,ddesiredcols)
   var nxpos = xpos
 
-     
-  for x in 0..<mydfstats.len:
+  var colhitem = -1   
+  for mx in 0..<mydfstats.len:
       # if there are many columns we try to display grid wise
       if nxpos > tw - 22:
         curdn(20)
         nxpos = xpos
-  
+      
       if df.colHeaders.len > 0:
-           printLnBiCol("Column " & $(ddesiredcols[x]) & " - " & df.colHeaders[ddesiredcols[x]],xpos = nxpos,styled={styleUnderscore})
+           inc colhitem
+           var zz = ddesiredcols[colhitem] - 1
+           printLnBiCol("Column " & $(ddesiredcols[mx]) &  " - " & df.colheaders[zz],xpos = nxpos,styled={styleUnderscore})
       else:
-           printLnBiCol("Column : " & $(ddesiredcols[x]) & " Statistics",xpos = nxpos,styled={styleUnderscore})
-      showStats(mydfstats[x],xpos = nxpos) 
+           printLnBiCol("Column " & $(ddesiredcols[mx]) & " Statistics",xpos = nxpos,styled={styleUnderscore})
+      showStats(mydfstats[mx],xpos = nxpos) 
       nxpos += colspace
       curup(15)
       
