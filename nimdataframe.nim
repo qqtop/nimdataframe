@@ -6,11 +6,11 @@
 ##
 ##   License     : MIT opensource
 ##
-##   Version     : 0.0.2
+##   Version     : 0.0.3
 ##
 ##   ProjectStart: 2016-09-16
 ##   
-##   Latest      : 2017-10-23
+##   Latest      : 2017-10-24
 ##
 ##   Compiler    : Nim >= 0.17.2
 ##
@@ -37,6 +37,7 @@
 ## 
 ##   Todo        : additional calculations on dataframes
 ##                 allow right or left align for each column
+##                 fullRotate df
 ##                 improve tests and example
 ##                 dataframe names
 ##                 trying to handle json data
@@ -51,7 +52,7 @@ import db_sqlite
 import typetraits,typeinfo
 export stats
 
-let NIMDATAFRAMEVERSION* = "0.0.2"
+let NIMDATAFRAMEVERSION* = "0.0.3"
 
 const 
       asc*  = "asc"
@@ -100,7 +101,6 @@ converter toNimFs*(aseq:seq[float]):nimfs =
 converter toNimBs*(aseq:seq[bool]):nimbs = 
           result = aseq
 
-          
           
           
 proc createDataFrame*(filename:string,cols:int = 2,rows:int = -1,sep:char = ',',hasHeader:bool = false):nimdf 
@@ -165,7 +165,7 @@ proc getData2*(filename:string,cols:int = 2,rows:int = -1,sep:char = ','):auto =
     ## 
  
     # we read by row but add to col seqs --> so myseq contains seqs of col data 
-    var csvrows = -1                # in case of getdata2 csv files we may get processed rowcount back
+    var csvrows = -1    # in case of getdata2 csv files we may get processed rowcount back
     var ccols = cols 
     var rrows = rows
     if rrows == -1 : rrows = 50000  # limit any dataframe to 50000 rows if no rows param given
@@ -325,29 +325,29 @@ proc showCounts*(df:nimdf) =
    echo() 
 
 proc colFitMax*(df:nimdf,cols:int = 0,adjustwd:int = 0):nimis =
-  ## colFitMax
-  ## 
-  ## # TODO : provide better fit tw as basis is to wide for df with few cols
-  ## 
-  ## calculates best column width to fit into terminal width
-  ## 
-  ## all column widths will be same size
-  ## 
-  ## cols parameter must state number of cols to be shown default = all cols
-  ## 
-  ## if the cols parameter in showDf is different an error will be thrown
-  ## 
-  ## adjustwd allows to nudge the column width if a few column chars are not shown
-  ## 
-  ## which may happen if no frame is shown
-  ## 
-  
-  var ccols = cols
-  if ccols == 0:  ccols = df.colcount
-  var optcolwd = tw div ccols - ccols + adjustwd  
-  var cwd = newNimIs()
-  for x in 0..<ccols: cwd.add(optcolwd)
-  result = cwd
+   ## colFitMax
+   ## 
+   ## # TODO : provide better fit tw as basis is to wide for df with few cols
+   ## 
+   ## calculates best column width to fit into terminal width
+   ## 
+   ## all column widths will be same size
+   ## 
+   ## cols parameter must state number of cols to be shown default = all cols
+   ## 
+   ## if the cols parameter in showDf is different an error will be thrown
+   ## 
+   ## adjustwd allows to nudge the column width if a few column chars are not shown
+   ## 
+   ## which may happen if no frame is shown
+   ## 
+    
+   var ccols = cols
+   if ccols == 0:  ccols = df.colcount
+   var optcolwd = tw div ccols - ccols + adjustwd  
+   var cwd = newNimIs()
+   for x in 0..<ccols: cwd.add(optcolwd)
+   result = cwd
   
   
 proc checkDfOk(df:nimdf):bool =
@@ -440,7 +440,6 @@ proc showDf*(df:nimdf,rows:int = 10,cols:nimis = @[],colwd:nimis = @[], colcolor
       except IndexError:
              currentLine()
              raise
-   
     
     #  need a check to see if request cols actually exist
     for col in okcols:
@@ -454,16 +453,14 @@ proc showDf*(df:nimdf,rows:int = 10,cols:nimis = @[],colwd:nimis = @[], colcolor
     
     if okcolcolors == @[]: # default lightgrey on black
         var tmpcols = newNimSs()
-        for col in 0..<okcols.len:
-            tmpcols.add(lightgrey)
+        for col in 0..<okcols.len: tmpcols.add(lightgrey)
         okcolcolors = tmpcols   
            
     else: # we get some colors passed in but not for all columns  , unspecified colors are set to lightgrey    
       
         var tmpcols = newNimSs()
         tmpcols = okcolcolors
-        while tmpcols.len < okcols.len  :
-                 tmpcols.add(lightgrey)
+        while tmpcols.len < okcols.len: tmpcols.add(lightgrey)
         okcolcolors = tmpcols         
                    
    
@@ -944,27 +941,35 @@ proc showDataframeInfo*(df:nimdf) =
    showHeader(df)
    printLn("Display parameters if available inside the df object ",sandybrown,xpos = 2)
    echo()
-   
    printLn("Column Headers ( if any ) :",greenyellow,xpos = 2)
    printLn(df.colheaders,xpos = 2)
    echo()
-   #printLn("Row Headers    ( if any ) :",greenyellow,xpos = 2)   # not in use yet
-   #printLn(df.rowheaders,xpos = 2)
-   #printLn("Column Widths  ( if any ) :",greenyellow,xpos = 2)   # not in use here 
-   #printLn(df.colwidths,xpos = 2)
-   printLn("Colors         ( if any ) :",greenyellow,xpos = 2)
+ 
+   printLn("Column Widths  ( if any ) :",greenyellow,xpos = 2)   # not in use here 
+   printLn(df.colwidths,xpos = 2)
+   echo()
+   
+   printLn("Column Colors  ( if any ) :",greenyellow,xpos = 2)
    for x in 0..<df.colcolors.len:
       if x == 0:
-         print("col" & $(x + 1) & ", ",df.colcolors[x],xpos = 2)
+           #print("col" & $(x + 1) & "-" getColorName(df.colcolors[x]) & ", ",df.colcolors[x],xpos = 2)
+           print(getColorName(df.colcolors[x]) & ", ",df.colcolors[x],xpos = 2)
       else:
-        if x == df.colcolors.len - 1:
-           print("col" & $(x + 1),df.colcolors[x])
+        if x == df.colcolors.len - 1:   # the last entry
+           #print("col" & $(x + 1) &  getColorName(df.colcolors[x]),df.colcolors[x])
+           printLn(getColorName(df.colcolors[x]),df.colcolors[x])
         else:
-           print("col" & $(x + 1) & ", ",df.colcolors[x])
-   echo()    
-   echo()
+           #print("col" & $(x + 1) &  getColorName(df.colcolors[x]) & ", ",df.colcolors[x])
+           print(getColorName(df.colcolors[x]) & ", ",df.colcolors[x])
+   echo() 
+   
+   printLn("Row Headers    ( if any ) :",greenyellow,xpos = 2)   # not in use yet
+   printLn(df.rowheaders,xpos = 2)
+         
+   decho(2)    
    hdx(printLn("End of dataframe inspection ", zippi,styled = {}))
    decho(1)
+   
 
 proc showDfInfo*(df:nimdf) = showDataframeInfo(df)   # convenience function same as showDataframeInfo
 
@@ -1425,13 +1430,13 @@ proc dfShowColumnStats*(df:nimdf,desiredcols:seq[int],colspace:int = 25,xpos:int
   ## 
   printLn("Dataframe Column Statistics\n",peru,xpos = 2)
   
-  # check that desiredcols is not more than available in df to avoid indexerrors etc later
+  # check that desiredcols is not more than available in df.colcount to avoid indexerrors etc later
   # we just cut off the right most entry of desiredcols until it fits
   let cc = df.colcount
   var ddesiredcols = desiredcols
   while  ddesiredcols.len > cc:  ddesiredcols.delete(ddesiredcols.len - 1)
-  echo ddesiredcols
-  echo df.colheaders
+  #echo ddesiredcols
+  #echo df.colheaders
       
   var mydfstats = dfColumnStats(df,ddesiredcols)
   var nxpos = xpos
@@ -1455,11 +1460,11 @@ proc dfShowColumnStats*(df:nimdf,desiredcols:seq[int],colspace:int = 25,xpos:int
       
   curdn(20) 
   if df.hasheader == true:
-    printLnBiCol(" hasHeader : " & $df.hasHeader,xpos = 1)
-    printLnBiCol(" Processed " & dodgerblue & "->" & yellowgreen & " Rows : " & $(df.rowcount - 1),xpos = 1)
+      printLnBiCol(" hasHeader : " & $df.hasHeader,xpos = 1)
+      printLnBiCol(" Processed " & dodgerblue & "->" & yellowgreen & " Rows : " & $(df.rowcount - 1),xpos = 1)
   else: 
-    printLnBiCol(" hasHeader :" & $df.hasHeader,xpos = 1)
-    printLnBiCol(" Processed " & dodgerblue & "->" & yellowgreen & " Rows : " & $df.rowcount,xpos = 1)
+      printLnBiCol(" hasHeader :" & $df.hasHeader,xpos = 1)
+      printLnBiCol(" Processed " & dodgerblue & "->" & yellowgreen & " Rows : " & $df.rowcount,xpos = 1)
     
   printLnBiCol(" Processed " & dodgerblue & "->" & yellowgreen & " Cols : " & $ddesiredcols.len & " of " & $df.colcount,xpos = 1)
 
@@ -1495,13 +1500,87 @@ proc dfShowSumStats*(df:nimdf,numericCols:nimis,xpos = 2) =
      printLnBiCol(" Processed      " & dodgerblue & "->" & yellowgreen & " Cols : " & $numericCols.len & " of " & $df.colcount,xpos = 1)
      echo()  
   
+
   
+proc dfLoad*(filename:string):nimdf = 
+     ## dfLoad
+     ## 
+     ## dfLoad creates a new df from a file created with dfSave
+     ## 
+     var tresult = newNimDf()
+     
+     withFile(fs, filename, fmRead):
+        var line = ""
+        var lc = 0
+        while fs.readLine(line):
+            inc lc
+            case lc 
+              of 1 :  
+                      if strip(line) == "true"  : tresult.hasHeader = true
+                      elif strip(line) == "false" : tresult.hasHeader = false
+                      else : tresult.hasHeader = false
+              of 2 :
+                     if line.len > 0:
+                        tresult.colcount = parseInt(strip(line))
+                     else:
+                        tresult.colcount = 0
+              of 3 :
+                     if line.len > 0:
+                        tresult.rowcount = parseInt(strip(line))
+                     else:
+                        tresult.rowcount = 0
+              
+              of 4 : 
+                     if line.len > 0:
+                                       var cccols = split(strip(line),sep = ',')
+                                       for acolor in cccols:
+                                           tresult.colcolors.add(getColorConst(acolor))  
+                     else:
+                        tresult.colcolors = @[]
+                        
+              of 5 :           
+                       
+                     if line.len > 0:
+                     
+                                       var ccwds = split(strip(line),sep = ',')
+                                       for n in ccwds:
+                                           tresult.colwidths.add(parseInt(n))
+                     else:
+                        tresult.colwidths = @[]
+                        
+              of 6 :           
+                       
+                     if line.len > 0:
+                     
+                                       var cchds = split(strip(line),sep = ',')
+                                       tresult.colHeaders = cchds
+                     else:
+                        tresult.colHeaders = @[]     
+                        
+              of 7 :           
+                       
+                     if line.len > 0:
+                     
+                                       var ccrds = split(strip(line),sep = ',')
+                                       tresult.rowHeaders = ccrds
+                     else:
+                        tresult.rowHeaders = @[]          
+                        
+              of 8 :
+                      doAssert(strip(line) == "DATA")
+                      
+              else:
+                    var ccdds = split(strip(line),sep = ',')
+                    tresult.df.add(ccdds) 
+                    
+     result = tresult                  
   
-  
-proc dfSave*(df:nimdf,filename:string) = 
+proc dfSave*(df:nimdf,filename:string,quiet:bool = false) = 
      ## dfSave
      ## 
-     ## save a dataframe to a csv file 
+     ## save a dataframe data to a csv file 
+     ## 
+     ## quiet = true will show no feedback
      ## 
      ## Note if data is not clean crashes may occure if compiled with  -d:release 
      ##
@@ -1513,6 +1592,47 @@ proc dfSave*(df:nimdf,filename:string) =
      var errFlag:bool = false
      var data = newFileStream(filename, fmWrite)
      var errorrows = newNimIs()
+     
+     data.writeLine(df.hasHeader)
+     data.writeLine(df.colcount)
+     data.writeLine(df.rowcount)
+     if df.colcolors.len >= 2:
+        for cn in 0..df.colcolors.len-2:
+            data.write(getColorName(df.colcolors[cn]) & ",")
+        data.writeLine(getColorName(df.colcolors[df.colcolors.high]))
+     elif df.colcolors.len == 1:    
+        data.writeLine(getColorName(df.colcolors[df.colcolors.high]))
+     else:
+        data.writeLine("")  
+       
+     if df.colwidths.len >= 2:
+        for cn in 0..df.colwidths.len-2:
+            data.write($df.colwidths[cn] & ",")
+        data.writeLine($df.colwidths[df.colwidths.high])
+     elif df.colwidths.len == 1:    
+        data.writeLine($df.colwidths[df.colwidths.high])
+     else:
+        data.writeLine("")  
+     
+     if df.colHeaders.len >= 2:
+        for cn in 0..df.colHeaders.len-2:
+            data.write(df.colHeaders[cn] & ",")
+        data.writeLine(df.colHeaders[df.colHeaders.high])
+     elif df.colHeaders.len == 1:    
+        data.writeLine(df.colHeaders[df.colHeaders.high])
+     else:
+        data.writeLine("")  
+     
+     if df.rowHeaders.len >= 2:
+        for cn in 0..df.rowHeaders.len-2:
+            data.write(df.rowHeaders[cn] & ",")
+        data.writeLine(df.rowHeaders[df.rowHeaders.high])
+     elif df.rowHeaders.len == 1:    
+        data.writeLine(df.rowHeaders[df.rowHeaders.high])
+     else:
+        data.writeLine("")  
+   
+     data.writeLine("DATA")    # to have a nmarker for parsing
      
      for row in 0..<df.rowcount:
         if df.df[row].len < df.colcount:
@@ -1532,14 +1652,16 @@ proc dfSave*(df:nimdf,filename:string) =
         
      data.close()
      echo()
-     printLnBiCol("Dataframe saved to   : " & filename,xpos = 2)
-     printLnBiCol("Rows written         : " & $rowcounter1.value,xpos = 2)
-     printLnBiCol("Errors count         : " & $errorcounter1.value,xpos = 2) 
-     printLnBiCol("Error rows           : " & wordwrap($errorrows,newLine = "\x0D\x0A" & spaces(25)),xpos = 2)  # align seq printout
-     printLnBiCol("Expected Total Cells : " & $(df.colcount * df.rowcount),xpos = 2)     # cell is one data element of a row
-     printLnBiCol("Actual Total Cells   : " & $totalcolscounter1.value,xpos = 2)
-     if  df.colcount * df.rowcount <> totalcolscounter1.value:
-         printLnBiCol("Saved status         : Saved with row errors. Original data may need preprocessing",yellowgreen,red,":",2,false,{})
-     else:
-         printLnBiCol("Saved status         : ok",xpos = 2)
-     echo()
+     
+     if quiet == false:
+        printLnBiCol("Dataframe saved to   : " & filename,xpos = 2)
+        printLnBiCol("Rows written         : " & $rowcounter1.value,xpos = 2)
+        printLnBiCol("Errors count         : " & $errorcounter1.value,xpos = 2) 
+        printLnBiCol("Error rows           : " & wordwrap($errorrows,newLine = "\x0D\x0A" & spaces(25)),xpos = 2)  # align seq printout
+        printLnBiCol("Expected Total Cells : " & $(df.colcount * df.rowcount),xpos = 2)     # cell is one data element of a row
+        printLnBiCol("Actual Total Cells   : " & $totalcolscounter1.value,xpos = 2)
+        if  df.colcount * df.rowcount <> totalcolscounter1.value:
+            printLnBiCol("Saved status         : Saved with row errors. Original data may need preprocessing",yellowgreen,red,":",2,false,{})
+        else:
+            printLnBiCol("Saved status         : ok",xpos = 2)
+        echo()
