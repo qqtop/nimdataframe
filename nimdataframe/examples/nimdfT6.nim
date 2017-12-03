@@ -23,7 +23,7 @@ var colAI = dfc(createSeqDate(frmd,10))
 var colBI = dfc(createSeqInt(10,0,1000))
 var colCI = dfc(createSeqFloat(10,3))
 
-var ndf2  = makeNimDf(colAI,colBI,colCI,hasHeader=true)       # this will use makedDf2 internally
+var ndf2  = makeNimDf(colAI,colBI,colCI,status = true,hasHeader=true)       # this will use makedDf2 internally
 var headertext =  @["Date","Integer","Float"]  
 printlnBiCol("Original as created w/header") 
 

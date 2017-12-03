@@ -1,6 +1,6 @@
 [Package]
 name          = "nimdataframe"
-version       = "0.0.3"
+version       = "0.0.4"
 author        = "qqTop"
 description   = "Dataframe for Nim"
 license       = "MIT"

@@ -6,11 +6,11 @@
 ##
 ##   License     : MIT opensource
 ##
-##   Version     : 0.0.3
+##   Version     : 0.0.4
 ##
 ##   ProjectStart: 2016-09-16
 ##   
-##   Latest      : 2017-10-24
+##   Latest      : 2017-12-03
 ##
 ##   Compiler    : Nim >= 0.17.2
 ##
@@ -52,7 +52,7 @@ import db_sqlite
 import typetraits,typeinfo
 export stats
 
-let NIMDATAFRAMEVERSION* = "0.0.3"
+let NIMDATAFRAMEVERSION* = "0.0.4"
 
 const 
       asc*  = "asc"
@@ -74,6 +74,7 @@ type
            colwidths* : nimis
            colHeaders*: nimss
            rowHeaders*: nimss
+           status*    : bool
     
 proc newNimDf*():nimdf = 
            new(result)            # needed for ref object  gc managed
@@ -85,8 +86,14 @@ proc newNimDf*():nimdf =
            result.colwidths  = @[]
            result.colHeaders = @[]
            result.rowHeaders = @[]  # not yet in use
+           result.status     = true  
+# # Dfobject 
+# type      
+#     Dfobject* = object {.inheritable}     # using ref object here would throw errors as the gc would remove this ref object
+#          df*     : nimdf
+#          status* : bool             
+#                       
              
-           
 proc newNimSs*():nimss = @[]
 proc newNimIs*():nimis = @[]
 proc newNimFs*():nimfs = @[]
@@ -318,11 +325,15 @@ proc showHeader*(df:nimdf) =
    printLnBiCol("hasHeader    :  " & $df.hasHeader,xpos = 2)
    echo()
    
-proc showCounts*(df:nimdf) =    
-   printLnBiCol("Columns   :  " & $df.colcount & spaces(3),xpos = 2)
-   printLnBiCol("Data Rows :  " & $df.rowcount,xpos = 2)
-   printLn("Row count includes header if in data source only",xpos=2)
-   echo() 
+proc showCounts*(df:nimdf) = 
+   if df.status == true:  
+       printLnBiCol("Columns   :  " & $df.colcount & spaces(3),xpos = 2)
+       printLnBiCol("Data Rows :  " & $df.rowcount,xpos = 2)
+       printLn("Row count includes header if in data source only",xpos=2)
+       echo() 
+   else:   
+       printLnBiCol("[NIMDF  Message   ] : Data not available in dataframe", colLeft = red,xpos = 3)
+       decho(2)   
 
 proc colFitMax*(df:nimdf,cols:int = 0,adjustwd:int = 0):nimis =
    ## colFitMax
@@ -402,6 +413,7 @@ proc showDf*(df:nimdf,rows:int = 10,cols:nimis = @[],colwd:nimis = @[], colcolor
     let vfcs = "|"               # efs2 or efb2   # vertical frame char for left (and right side <--- needs to be implemented )
     let hfct = efs2   # "_"      # horizontal framechar top of frame
     let hfcb = efs2              # horizontal framechar for bottom of frame
+    
     if cols.len == 1:
         # to display one column data showheader and showFrame must be false
         # to avoid messed up display , Todo: take care of this eventually 
@@ -933,6 +945,7 @@ proc showDataframeInfo*(df:nimdf) =
    ## showDataframeInfo
    ## 
    ## some basic information of the dataframe
+   ## mainly usefull during during debugging.
    ## 
    echo()
    hdx(printLn("Dataframe Inspection ",peru,styled = {}))
@@ -986,29 +999,30 @@ proc getColData*(df:nimdf,col:int):nimss =
      
      # currently we quit if data is not good to meed df specifications maybe we should be more lenient here ??
      var zcol = col - 1
-     if zcol < 0 or zcol > df.colcount :
-        printLn("Error : Wrong column number specified or incorrect data received",red)
-        dprint("[nimdataframe] Error : Wrong column number specified or incorrect data received")
-        doByeBye()
-        quit(0)
-     
-     result = newNimSs()
-     if df.hasHeader == false:
-        for x in 0..<df.df.len:
-            try:
-                result.add(df.df[x][zcol])    
-            except IndexError:
-                discard
+     if df.colcount > 0:
+        if zcol < 0 or zcol > df.colcount :
+            printLn("Error : Wrong column number specified or incorrect data received",red)
+            dprint("[nimdataframe] Error : Wrong column number specified or incorrect data received")
+            echo "zcol/dfcol: ",zcol,"  /  ",df.colcount
+            doByeBye()
+            quit(0)
+        
+        result = newNimSs()
+        if df.hasHeader == false:
+            for x in 0..<df.df.len:
+                try:
+                    result.add(df.df[x][zcol])    
+                except IndexError:
+                    discard
 
-     else:   # so there is a header in the first row
-            
-        for x in 1..<df.df.len:     
-            try:
-                result.add(df.df[x][zcol])    
-            except IndexError:
-                discard
+        else:   # so there is a header in the first row            
+            for x in 1..<df.df.len:     
+                try:
+                    result.add(df.df[x][zcol])    
+                except IndexError:
+                    discard
 
-                
+                    
 proc getRowDataRange*(df:nimdf,rows:nimis = @[] , cols:nimis = @[]) : nimdf =
   ## getRowDataRange
   ## 
@@ -1211,7 +1225,7 @@ proc sortdf*(df:nimdf,sortcol:int = 1,sortorder = asc):nimdf =
   result = df2
 
 
-proc makeNimDf*(dfcols : varargs[nimss],hasHeader:bool = false):nimdf = 
+proc makeNimDf*(dfcols : varargs[nimss],status:bool = true,hasHeader:bool = false):nimdf = 
   ## makeNimDf
   ## 
   ## creates a nimdf with passed in col data which is of type nimss

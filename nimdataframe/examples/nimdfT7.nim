@@ -82,7 +82,7 @@ var colF  = getColdata(ndf3,2)
 var colG  = getColdata(ndf3,3) 
 var colH  = getColdata(ndf3,4) 
 
-var ndf4  = makeNimDf(colA,colB,colC,colD,colE,colF,colG,colH,hasHeader=true) # combine into new df
+var ndf4  = makeNimDf(colA,colB,colC,colD,colE,colF,colG,colH,status = true,hasHeader=true) # combine into new df
 currentLine()
 showDf(ndf4,
        rows = 15,

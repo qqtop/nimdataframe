@@ -19,7 +19,7 @@ var colB = dfc(createSeqInt(10,0,1000))
 var colC = dfc(createSeqFloat(10,3))
 
 
-var ndf2  = makeNimDf(colA,colB,colC,hasHeader=true)
+var ndf2  = makeNimDf(colA,colB,colC,status = true,hasHeader=true)
 printlnBiCol("Original as created") 
 
 showDf(ndf2,
