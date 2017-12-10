@@ -31,7 +31,9 @@
 ##
 ##   Project     : https://github.com/qqtop/NimDataFrame
 ##
-##   Docs        : http://qqtop.github.io/nimdataframe.html
+##   Docs        : http://qqtop.github.io/nimdataframeindex.html
+##   
+##                 http://qqtop.github.io/nimdataframe.html
 ##
 ##   Tested      : OpenSuse Tumbleweed 
 ## 
@@ -57,12 +59,27 @@ let NIMDATAFRAMEVERSION* = "0.0.4"
 const 
       asc*  = "asc"
       desc* = "desc"
+      
+# dfcellobject related code is experimental and still may be changed in the near future      
+type      
+    dfcellobject* =   object {.inheritable.} 
+         cellrow*   : int
+         cellcol*   : int
+         cellcolor* : string
+
+proc newdfcellobject*():dfcellobject =
+      #new(result)
+      result.cellrow = -1
+      result.cellcol = -1
+      result.cellcolor = ""
          
 type        
     nimss* = seq[string]         # nim string seq
     nimis* = seq[int]            # nim integer seq
     nimfs* = seq[float]          # nim float seq
     nimbs* = seq[bool]           # nim bool seq
+    nimcells* = seq[dfcellobject]       # dataframe cell sequence
+    
     
 type
     nimdf* =  ref object  {.inheritable.}       
@@ -74,6 +91,8 @@ type
            colwidths* : nimis
            colHeaders*: nimss
            rowHeaders*: nimss
+           # how about individual cell properties
+           dfcells*   : nimcells
            status*    : bool
     
 proc newNimDf*():nimdf = 
@@ -85,8 +104,10 @@ proc newNimDf*():nimdf =
            result.colcolors  = @[]
            result.colwidths  = @[]
            result.colHeaders = @[]
-           result.rowHeaders = @[]  # not yet in use
+           result.rowHeaders = @[]  
+           result.dfcells    = @[]
            result.status     = true  
+           
 # # Dfobject 
 # type      
 #     Dfobject* = object {.inheritable}     # using ref object here would throw errors as the gc would remove this ref object
@@ -118,20 +139,19 @@ var floatflag:bool = false
 var stringflag:bool = false
 
 
-proc getData1*(url:string):auto =
+proc getData1*(url:string,timeout:int = 12000):string =
   ## getData
   ## 
   ## used for internet based data in csv format
   ## 
   try:
-       var zcli = newHttpClient()
-       result  = zcli.getcontent(url)   # orig test data
+       var zcli = newHttpClient(timeout=timeout)
+       result  = zcli.getContent(url)   # orig data   
   except :
        printLnBiCol("Error : " & url & " content could not be fetched . Retry with -d:ssl",red,bblack,":",0,true,{}) 
        printLn(getCurrentExceptionMsg(),red,xpos = 9)
        doFinish()
 
-      
 
 proc makeDf1*(ufo1:string,hasHeader:bool = false):nimdf =
    ## makeDf
@@ -247,6 +267,7 @@ proc makeDf2*(ufo1:nimdf,cols:int = 0,hasHeader:bool = false):nimdf =
        df.colcount  = ufo1.df.len  
        df.rowcount  = ufo1.df[0].len  # this assumes all cols have same number of rows maybe should check this
        df.hasHeader = ufo1.hasHeader
+       df.status    = ufo1.status
    except IndexError:
        printLn("df.colscount = " & $df.colcount,red)
        printLn("df.rowscount = " & $df.rowcount,red)
@@ -259,7 +280,6 @@ proc makeDf2*(ufo1:nimdf,cols:int = 0,hasHeader:bool = false):nimdf =
      for cls  in 0..<df.colcount:   # cols count  
        # now build our row 
        try: 
-            
             arow.add(ufo1.df[cls][rws])      
        except IndexError:
             printLn("Error row :  " & $arow,red)
@@ -361,47 +381,63 @@ proc colFitMax*(df:nimdf,cols:int = 0,adjustwd:int = 0):nimis =
    result = cwd
   
   
-proc checkDfOk(df:nimdf):bool =
+proc checkDfOk(df:nimdf,xpos:int = 3):bool =
      if df.df.len > 0:  result = true
      else:
-        printLnBiCol("ERROR  : Dataframe has no data. Exiting .. ",red,red,":",0,false,{})
+        printLnBiCol("ERROR  : Dataframe has no data... ",red,red,":",xpos=xpos,false,{})
         result = false
 
        
-proc showDf*(df:nimdf,rows:int = 10,cols:nimis = @[],colwd:nimis = @[], colcolors:nimss = @[], showframe:bool = false,
-             framecolor:string = white,showHeader:bool = false,headertext:nimss = @[],leftalignflag:bool = false,xpos:int = 1) =
-    ## showDf
-    ## 
-    ## Displays a dataframe 
-    ## 
-    ## allows selective display of columns , with column numbers passed in as a seq
-    ## 
-    ## Convention :  the first column = 1 
-    ## 
-    ## 
-    ## number of rows default =  10
-    ## 
-    ## with cols from left to right according to cols default = 2
-    ## 
-    ## column width default = 15
-    ## 
-    ## an equal columnwidth can be achieved with colwd = colfitmax(df,0) the second param is to nudge the width a bit if required
-    ## 
-    ## showFrame  default = off
-    ## 
-    ## showHeader indicates if an actual header is available
-    ## 
-    ## frame character can be shown in selectable color
-    ## 
-    ## headerless data can be show with headertext supplied
-    ##
-    ## cols,colwd,colcolors parameters seqs must be of equal length and corresponding to each other
-    ## 
-    #
-    
+proc showDf*(df:nimdf,
+             rows:int = 10,
+             cols:nimis = @[],
+             colwd:nimis = @[],
+             colcolors:nimss = @[],
+             showframe:bool = false,
+             framecolor:string = white,
+             showHeader:bool = false,
+             headertext:nimss = @[],
+             leftalignflag:bool = false,
+             cellcolors:nimss = @[],    # cell features for coloring individual cells to be implemented
+             cellrows:nimis = @[],
+             cellcols:nimis = @[],
+             cellcalc:nimss = @[], # placeholder for some sort of plugin feature to pass in manipulations/calculations on cells
+             xpos:int = 1) =
+             
+  ## showDf
+  ## 
+  ## Displays a dataframe 
+  ## 
+  ## allows selective display of columns , with column numbers passed in as a seq
+  ## 
+  ## Convention :  the first column = 1 
+  ## 
+  ## 
+  ## number of rows default =  10
+  ## 
+  ## with cols from left to right according to cols default = 2
+  ## 
+  ## column width default = 15
+  ## 
+  ## an equal columnwidth can be achieved with colwd = colfitmax(df,0) the second param is to nudge the width a bit if required
+  ## 
+  ## showFrame  default = off
+  ## 
+  ## showHeader indicates if an actual header is available
+  ## 
+  ## frame character can be shown in selectable color
+  ## 
+  ## headerless data can be show with headertext supplied
+  ##
+  ## cols,colwd,colcolors parameters seqs must be of equal length and corresponding to each other
+  ## 
+  #
+  if checkDfok(df) == true: 
     var okcolwd = colwd 
     var nofirstrowflag = false    
-    if checkDfok(df) == false:  doFinish()
+    
+    
+       
       
     var header = showHeader
     if header == true and df.hasHeader == false: header = false   # this hopefully avoids first line is header display
@@ -876,7 +912,27 @@ proc showDf*(df:nimdf,rows:int = 10,cols:nimis = @[],colwd:nimis = @[], colcolor
                                   print(framecolor & vfcs & okcolcolors[col] & fmtx(fma,displaystr,spaces(1) & framecolor & vfc & white),okcolcolors[col],styled = {},xpos = xpos)
                               
                       elif col > 0 and row > 0:
-                                  print(fmtx(fma,displaystr,spaces(1) & framecolor & vfc & white),okcolcolors[col],styled = {}) 
+#                                   #experimental cell stuff
+#                                   var currentcellcolor = okcolcolors[col]
+#                                   # we need to check the df.dfcells seq and every object there if we need to change the color
+#                                   # this looks rather inefficientr so what to do ?
+#                                   
+#                                   for xcell in 0..<df.dfcells.len:
+#                                       if df.dfcells[xcell].cellrow == row and df.dfcells[xcell].cellcoll == col:
+#                                          var ccc1 = parsefloat(df.df[df.dfcells[xcell].cellrow][df.dfcells[xcell].cellcol]
+                                     
+                                         #var ccc2 =  ???
+#                                           
+#                                          if ccc1 < ccc2 : currentcellcolor = lime
+#                                          elif ccc1  > ccc2 : currentcellcolor = truetomato 
+#                                          elif ccc1 == ccc2 : currentcellcolor = lightcyan                                                              
+#                                          print(fmtx(fma,displaystr,spaces(1) & framecolor & vfc & white),currentcellcolor,styled = {})
+#                                       else: 
+#                                           
+#                                           print(fmtx(fma,displaystr,spaces(1) & framecolor & vfc & white),currentcellcolor,styled = {}) 
+#                                   # end experimental -- unintend line below  if not used   
+#                                   
+                                  print(fmtx(fma,displaystr,spaces(1) & framecolor & vfc & white), okcolcolors[col],styled = {}) 
                                   if col == okcols.len - 1: echo()  
                       else: discard
                 
@@ -1228,9 +1284,10 @@ proc sortdf*(df:nimdf,sortcol:int = 1,sortorder = asc):nimdf =
 proc makeNimDf*(dfcols : varargs[nimss],status:bool = true,hasHeader:bool = false):nimdf = 
   ## makeNimDf
   ## 
-  ## creates a nimdf with passed in col data which is of type nimss
+  ## creates a nimdf with passed in col data which should be of type nimss
   ## 
   #  TODO  will need to check if all cols are same length otherwise append  NaN etc
+  #        and put in the status check
   # 
   var df = newNimDf()
   for x in dfcols: df.df.add(x)
@@ -1238,8 +1295,9 @@ proc makeNimDf*(dfcols : varargs[nimss],status:bool = true,hasHeader:bool = fals
 
 
 
-proc dfDefaultSetup*(df:nimdf,headertext:nimss = @[]):nimdf =    # does not work yet ??
-   ## dfDefaultSetup
+proc dfDefaultSetup*(df:nimdf,headertext:nimss = @[]):nimdf =    
+   ## dfDefaultSetup  
+   ## WIP , needs more testing
    ## 
    ## quick default setup , which can be adjusted later during showDf if needed
    ## 
@@ -1290,29 +1348,7 @@ proc createDataFrame*(filename:string,cols:int = 2,rows:int = -1,sep:char = ',',
 
   printLn(clearline)
   
-proc createDataframeJson*(filename:string,sep:char = ':'):nimdf = 
-    ## createDataFrame   (WIP)
-    ## 
-    ## attempts to create a nimdf dataframe from url or local path where data is inside a json object
-    ## 
-     
-#     printLn("Processing json data...",skyblue) 
-#     curup(1)
-#     
-#     if filename.startswith("http") == true:
-#         #var data1 = getData1(filename)
-#         var data1 = parseJson(filename)
-#         
-#         result = makeDf1(data1,hasHeader = hasHeader)
-# #     else:
-# #         var data2 = getdata2(filename = filename,cols = cols,rows = rows,sep = sep)  
-# #         result = makeDf2(data2,cols,hasHeader)
-
-    printLn(clearline)
-    
-     
-     
-  
+ 
 proc createBinaryTestData*(filename:string = "nimDfBinaryTestData.csv",datarows:int = 2000,withHeaders:bool = false) = 
 
   var  data = newFileStream(filename, fmWrite)
@@ -1320,13 +1356,11 @@ proc createBinaryTestData*(filename:string = "nimDfBinaryTestData.csv",datarows:
   var cols      = @[1,2,3,4,5,6,7,8]
   var colwd     = @[2,2,2,2,2,2,2,2]
   
-  
   if withHeaders == true:
      var headers   = @["A"]
      for x in 66.. 90: headers.add($char(x)) 
      for dx in 0..<cols.len - 1: data.write(headers[dx] & ",")  
      data.writeLine(headers[cols.len - 1])
-  
   
   for dx in 0..<datarows:
       for cy in 0..<cols.len - 1:
@@ -1349,14 +1383,12 @@ proc createRandomTestData*(filename:string = "nimDfTestData.csv",datarows:int = 
   ## 
   ## 
   
-  
   var  data = newFileStream(filename, fmWrite)
   
   # cols,colwd parameters seqs must be of equal length
   var cols      = @[1,2,3,4,5,6,7,8]
   var colwd     = @[10,10,10,10,10,10,14,10]
-  
-  
+
   if withHeaders == true:
      var headers = @["A"]
      for x in 66 .. 90: headers.add($char(x)) 
@@ -1383,7 +1415,7 @@ proc dfRowStats*(df:nimdf,row:int,exceptCols:seq[int] = @[]):Runningstat =
    # sumStats
    # 
    # calculates statistics for numeric rows and returns a Runningstat instance
-   # cols in exceptCols will not be included
+   # columns in exceptCols will not be included
    # 
    
    var psdata = newSeq[Runningstat]()
@@ -1399,7 +1431,7 @@ proc dfRowStats*(df:nimdf,row:int,exceptCols:seq[int] = @[]):Runningstat =
                  ps.push(parsefloat(df.df[row][col]))
                  psdata.add(ps)
            except:
-              discard   # rough, we discard any parsefloat errors due to na or text column etc
+              discard   # rough error handling ,discarding any parsefloat errors due to na or text column etc
    result = ps
   
   
@@ -1679,3 +1711,6 @@ proc dfSave*(df:nimdf,filename:string,quiet:bool = false) =
         else:
             printLnBiCol("Saved status         : ok",xpos = 2)
         echo()
+
+        
+### end of nimdataframe.nim ###############################################################################################        
