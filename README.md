@@ -33,6 +33,7 @@ API Docs
 --------
 ```nimrod
 
+        http://qqtop.github.io/nimdataframeindex.html
         http://qqtop.github.io/nimdataframe.html
 
 ```
@@ -125,7 +126,7 @@ Example screenshots of nimdfT13
 
 NOTE : 
   
-     Improvements may be made at any time and without warning.
+     Improvements (hopefully) may be made at any time and without advance warning.
      Examples may break occasionally ... nevertheless we hope you have a nice day !
      
      Forking , testing,suggestions , ideas are welcome.
