@@ -43,6 +43,8 @@
 ##                 improve tests and example
 ##                 dataframe names
 ##                 trying to handle json data
+##                 future filterDf(df:nimdf,cols:nimis,operator:nimss,vals:nimss)
+##                 var ndf11 = filterDf(ndf9,@[3,5],@[">","=="],@["Borussia Dortmund","4"]
 ##  
 ##   Install     : nimble install https://github.com/qqtop/nimdataframe.git
 ##  
@@ -1026,7 +1028,7 @@ proc showDataframeInfo*(df:nimdf) =
    ## showDataframeInfo
    ## 
    ## some basic information of the dataframe
-   ## mainly usefull during during debugging.
+   ## mainly usefull during debugging.
    ## 
    echo()
    hdx(printLn("Dataframe Inspection ",peru,styled = {}))

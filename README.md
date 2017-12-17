@@ -45,7 +45,12 @@ Installation
         nimble install https://github.com/qqtop/nimdataframe.git
 
 ```
-     
+
+![Image](http://qqtop.github.io/nimdataframebundesliga.png?raw=true)
+
+Screenshot of nimdfT19 showing bluenote10 / bundesliga.csv with nimdataframe
+
+
 Example Code 
  
 ```nimrod
@@ -66,7 +71,7 @@ var ndf9 = createDataFrame(ufo,cols = 12,sep = ',',hasHeader = true)  # load loc
 
 if ndf9.hasHeader == true:
    for x in 0..<ndf9.colcount: ndf9.colheaders.add(ndf9.df[0][x])   # row 0 col x
-for x in 0..<ndf9.colcount: ndf9.colcolors.add(rndcol())            # create some fun colors and add to df
+for x in 0..<ndf9.colcount: ndf9.colcolors.add(randcol())           # create some fun colors and add to df
 for x in 0..<ndf9.colcount: ndf9.colwidths.add(9)                   # create a colwidths for each column default here is 9
 ndf9.colwidths[0] = 15                                              # change first column width to 15
 printLnBiCol("Data Source : " & ufo,xpos = 3)
