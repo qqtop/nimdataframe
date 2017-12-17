@@ -10,9 +10,9 @@
 ##
 ##   ProjectStart: 2016-09-16
 ##   
-##   Latest      : 2017-12-03
+##   Latest      : 2017-12-17
 ##
-##   Compiler    : Nim >= 0.17.2
+##   Compiler    : Nim >= 0.17.3
 ##
 ##   OS          : Linux
 ##
@@ -248,7 +248,7 @@ proc getData2*(filename:string,cols:int = 2,rows:int = -1,sep:char = ','):auto =
         result = myseq    # this holds col data now
         
         
-proc makeDf2*(ufo1:nimdf,cols:int = 0,hasHeader:bool = false):nimdf =
+proc makeDf2*(ufo1:nimdf,cols:int = 0,rows:int = -1,hasHeader:bool = false):nimdf =
    ## makeDf2
    ## 
    ## used to create a dataframe with nimdf object received from getData2  that is local csv
@@ -332,25 +332,54 @@ proc getTotalHeaderColsWitdh*(df:nimdf):int =
      for x in 0..<ch.len:
          result = result + ch[x].strip(true,true).len
 
-proc showHeader*(df:nimdf) = 
-   ## showHeader
+proc showRaw*[T](df:nimdf,rrows:openarray[T]) =
+   ## showRaw
    ## 
-   ## shows first 2 lines of df incl. headers if any of dataframe
+   ## needs a df object and a seq with two values the first being the startrow the second the end row to show
+   ## if you need to return rows see getRowDataRange()
    ## 
-
-   printLn("First 2 rows :",yellowgreen,xpos = 2,styled = {})
-   printLn(df.df[0],xpos = 2)
-   printLn(df.df[1],xpos = 2)
+   ## 
+   for x in rrows[0]..rrows[1]:
+      printLn(df.df[x],xpos = 2) 
+      
+proc showFirstLast*(df:nimdf,nrows:int = 5) =
+   ## shows first and last n lines of df incl. headers if any of dataframe
+   ## 
+   ## 
+   if df.hasHeader == true:
+      printLn("Header and First " & $nrows & " rows :",yellowgreen,xpos = 2,styled = {})
+      if df.colHeaders.len > 0:
+        printLn(df.colHeaders,xpos = 2)
+        showRaw(df,@[0,nrows])
+      else:
+        showRaw(df,@[0,nrows])
+   else:
+      printLn("First " & $nrows & " rows :",yellowgreen,xpos = 2,styled = {})
+      showRaw(df,@[0,nrows - 1])
+      
    echo()
-   printLnBiCol("hasHeader    :  " & $df.hasHeader,xpos = 2)
-   echo()
+   printLn("Last  " & $nrows & " rows :",yellowgreen,xpos = 2,styled = {})
+   showRaw(df,@[df.rowcount - nrows,df.rowcount - 1])
+   echo() 
+         
+proc showHeaderStatus*(df:nimdf) = 
+   ## showHeaderStatus
+   ##  
+   printLnBiCol("hasHeader :  " & $df.hasHeader,xpos = 2)
+   
    
 proc showCounts*(df:nimdf) = 
    if df.status == true:  
        printLnBiCol("Columns   :  " & $df.colcount & spaces(3),xpos = 2)
-       printLnBiCol("Data Rows :  " & $df.rowcount,xpos = 2)
-       printLn("Row count includes header if in data source only",xpos=2)
-       echo() 
+       if df.hasHeader == true:
+          if df.colHeaders.len() > 0 :
+             printLnBiCol("Data Rows :  " & $(df.rowcount ),xpos = 2)
+          else:
+             printLnBiCol("Data Rows :  " & $(df.rowcount - 1),xpos = 2)
+       else:
+          printLnBiCol("Data Rows :  " & $df.rowcount,xpos = 2)
+       printLn(dodgerblue & rightarrow & sandybrown & " Row count does not include header row if hasHeader == true",sandybrown,xpos=2)
+       
    else:   
        printLnBiCol("[NIMDF  Message   ] : Data not available in dataframe", colLeft = red,xpos = 3)
        decho(2)   
@@ -435,10 +464,6 @@ proc showDf*(df:nimdf,
   if checkDfok(df) == true: 
     var okcolwd = colwd 
     var nofirstrowflag = false    
-    
-    
-       
-      
     var header = showHeader
     if header == true and df.hasHeader == false: header = false   # this hopefully avoids first line is header display
     if header == false and df.hasHeader == true: nofirstrowflag = true
@@ -1005,36 +1030,56 @@ proc showDataframeInfo*(df:nimdf) =
    ## 
    echo()
    hdx(printLn("Dataframe Inspection ",peru,styled = {}))
-  
+   showHeaderStatus(df)
    showCounts(df)
-   showHeader(df)
-   printLn("Display parameters if available inside the df object ",sandybrown,xpos = 2)
+   echo()
+   showFirstLast(df,5)
+   echo()
+   printLn(dodgerblue & rightarrow & sandybrown & " Display parameters if available inside the df object ",sandybrown,xpos = 2)
+   printLn(dodgerblue & rightarrow & sandybrown & " Column headers / first row will be shown if hasHeader == true ",sandybrown,xpos = 2)
    echo()
    printLn("Column Headers ( if any ) :",greenyellow,xpos = 2)
-   printLn(df.colheaders,xpos = 2)
+   if df.hasHeader == true:
+      if df.colHeaders.len > 0 :
+          printLn(df.colHeaders,xpos = 2)
+      else:    
+          #try first row as hasHeader == true
+          printLn(df.df[0],xpos = 2)
+      
+   else :
+        printLn("none",xpos = 2)
    echo()
  
-   printLn("Column Widths  ( if any ) :",greenyellow,xpos = 2)   # not in use here 
-   printLn(df.colwidths,xpos = 2)
+   printLn("Column Widths  ( if any ) :",greenyellow,xpos = 2)   
+   if df.colwidths.len > 0:
+      printLn(df.colwidths,xpos = 2)
+   else:
+      printLn("none",xpos = 2)   
    echo()
    
    printLn("Column Colors  ( if any ) :",greenyellow,xpos = 2)
-   for x in 0..<df.colcolors.len:
-      if x == 0:
-           #print("col" & $(x + 1) & "-" getColorName(df.colcolors[x]) & ", ",df.colcolors[x],xpos = 2)
-           print(getColorName(df.colcolors[x]) & ", ",df.colcolors[x],xpos = 2)
-      else:
-        if x == df.colcolors.len - 1:   # the last entry
-           #print("col" & $(x + 1) &  getColorName(df.colcolors[x]),df.colcolors[x])
-           printLn(getColorName(df.colcolors[x]),df.colcolors[x])
+   if df.colcolors.len > 0:
+     for x in 0..<df.colcolors.len:
+        if x == 0:
+             #print("col" & $(x + 1) & "-" getColorName(df.colcolors[x]) & ", ",df.colcolors[x],xpos = 2)
+              print(getColorName(df.colcolors[x]) & ", ",df.colcolors[x],xpos = 2)
         else:
-           #print("col" & $(x + 1) &  getColorName(df.colcolors[x]) & ", ",df.colcolors[x])
-           print(getColorName(df.colcolors[x]) & ", ",df.colcolors[x])
+           if x == df.colcolors.len - 1:   # the last entry
+              #print("col" & $(x + 1) &  getColorName(df.colcolors[x]),df.colcolors[x])
+              printLn(getColorName(df.colcolors[x]),df.colcolors[x])
+           else:
+               #print("col" & $(x + 1) &  getColorName(df.colcolors[x]) & ", ",df.colcolors[x])
+               print(getColorName(df.colcolors[x]) & ", ",df.colcolors[x])
+   else:
+      printLn("none",xpos = 2)
    echo() 
    
    printLn("Row Headers    ( if any ) :",greenyellow,xpos = 2)   # not in use yet
-   printLn(df.rowheaders,xpos = 2)
-         
+   if df.rowheaders.len > 0:
+      printLn(df.rowheaders,xpos = 2)
+   else:
+      printLn("none",xpos = 2)      
+      
    decho(2)    
    hdx(printLn("End of dataframe inspection ", zippi,styled = {}))
    decho(1)
@@ -1119,7 +1164,7 @@ proc getRowDataRange*(df:nimdf,rows:nimis = @[] , cols:nimis = @[]) : nimdf =
 proc `$`[T](some:typedesc[T]): string = name(T)
 proc typetest[T](x:T): T =
   # used to determine the field types in the temp sqllite table used for sorting
-  # note these procs are used only locally a generic typetest exists in cx
+  # note these procs are used only locally , a generic typetest exists in cx
   
   #echo "type: ", type(x), ", value: ", x
   var cvflag = false
@@ -1216,7 +1261,14 @@ proc sortdf*(df:nimdf,sortcol:int = 1,sortorder = asc):nimdf =
           tabl = tabl & $char(col + 65)
 
   # set up the values of the insert sql   
-  for row in 0..<df.rowcount :
+  var startrow = 0
+  var orgheader:nimss = @[]
+  if df.hasHeader == true: 
+     startrow = 1 
+     for x in 0..<df.colcount:
+        orgheader.add(df.df[0][x])
+  
+  for row in startrow..<df.rowcount :
       for col in 0..<df.colcount:
        try: 
          if typetest(df.df[row][col]) == "string":
@@ -1276,7 +1328,8 @@ proc sortdf*(df:nimdf,sortcol:int = 1,sortorder = asc):nimdf =
   db.exec(sql"DROP TABLE IF EXISTS dfTable")
   db.close()
   #prepare for output
-  var df2 =  createDataFrame(filename = filename,cols = df.df[0].len,hasHeader = df.hasHeader)
+  var df2 =  createDataFrame(filename = filename,cols = df.df[0].len,rows = df.rowcount,hasHeader = df.hasHeader)
+  df2.colHeaders = orgheader
   removeFile(filename)
   result = df2
 
@@ -1344,7 +1397,7 @@ proc createDataFrame*(filename:string,cols:int = 2,rows:int = -1,sep:char = ',',
       result = makeDf1(data1,hasHeader = hasHeader)
   else:
       var data2 = getdata2(filename = filename,cols = cols,rows = rows,sep = sep)  
-      result = makeDf2(data2,cols,hasHeader)
+      result = makeDf2(data2,cols,rows,hasHeader)
 
   printLn(clearline)
   
