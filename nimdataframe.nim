@@ -10,7 +10,7 @@
 ##
 ##   ProjectStart: 2016-09-16
 ##   
-##   Latest      : 2017-12-17
+##   Latest      : 2017-12-18
 ##
 ##   Compiler    : Nim >= 0.17.3
 ##
@@ -1060,7 +1060,7 @@ proc showDataframeInfo*(df:nimdf) =
    echo()
    
    printLn("Column Colors  ( if any ) :",greenyellow,xpos = 2)
-   if df.colcolors.len > 0:
+   if df.colColors.len > 0:
      for x in 0..<df.colcolors.len:
         if x == 0:
              #print("col" & $(x + 1) & "-" getColorName(df.colcolors[x]) & ", ",df.colcolors[x],xpos = 2)

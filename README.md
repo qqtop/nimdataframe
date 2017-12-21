@@ -19,6 +19,8 @@ Dataframe for Nim
  
  Work in progress
  
+ used with https://github.com/qqtop/NimFinLib
+ 
  
 Requirements
 ------------
