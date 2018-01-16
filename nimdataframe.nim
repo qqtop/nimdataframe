@@ -10,7 +10,7 @@
 ##
 ##   ProjectStart: 2016-09-16
 ##   
-##   Latest      : 2017-12-18
+##   Latest      : 2018-01-15
 ##
 ##   Compiler    : Nim >= 0.17.3
 ##
@@ -96,6 +96,8 @@ type
            # how about individual cell properties
            dfcells*   : nimcells
            status*    : bool
+           frtexttop* : nimss   # write text into the top frame line
+           frtextbot* : nimss   # write text into the bottom frame line
     
 proc newNimDf*():nimdf = 
            new(result)            # needed for ref object  gc managed
@@ -107,8 +109,11 @@ proc newNimDf*():nimdf =
            result.colwidths  = @[]
            result.colHeaders = @[]
            result.rowHeaders = @[]  
-           result.dfcells    = @[]
+           result.dfcells    = @[]     # not in use yet
            result.status     = true  
+           result.frtexttop  = @[""]   # experimental
+           result.frtextbot  = @[""]   # not in use yet
+           
            
 # # Dfobject 
 # type      
@@ -433,6 +438,8 @@ proc showDf*(df:nimdf,
              cellrows:nimis = @[],
              cellcols:nimis = @[],
              cellcalc:nimss = @[], # placeholder for some sort of plugin feature to pass in manipulations/calculations on cells
+             frtexttop:nimss = @[],
+             frtextbot:nimss = @[],
              xpos:int = 1) =
              
   ## showDf
@@ -664,7 +671,16 @@ proc showDf*(df:nimdf,
                       if toplineflag == false:                              # set up topline of frame
                           print(".",yellow,xpos = xpos)
                           hline(frametoplinelen - 2 ,framecolor,xpos = xpos + 1,lt = hfct) 
-                          printLn(".",lime)
+                          # experimental
+                          if frtexttop.len > 0:
+                             if frtexttop[0].len > 0:
+                                  print("[",dodgerblue,xpos = xpos + 3)
+                                  print(frtexttop[0])
+                                  print("]",dodgerblue)
+                                  printLn(".",lime,xpos = frametoplinelen + frtexttop[0].len - (frtexttop[0].len - 2))    # <<<----2
+                                  # end exp uncomm line below
+                          else:
+                                  printLn(".",lime)
                           toplineflag = true                                # set toplineflag , topline of frame ok
                       
                       if col == 0: 
@@ -680,7 +696,16 @@ proc showDf*(df:nimdf,
                       if toplineflag == false:                              # set up topline of frame
                           print(".",yellow,xpos = xpos)
                           hline(frametoplinelen - 2 ,framecolor,xpos = xpos + 1,lt = hfct) 
-                          printLn(".",lime)
+                          # experimental
+                          if frtexttop.len > 0:
+                            if frtexttop[0].len > 0:
+                                  print("[",dodgerblue,xpos = xpos + 3)
+                                  print(frtexttop[0])
+                                  print("]",dodgerblue)
+                                  printLn(".",lime,xpos = frametoplinelen + frtexttop[0].len - (frtexttop[0].len - 2))    # <<<----2
+                                  # end exp uncomm line below
+                          else:
+                                  printLn(".",lime)
                           toplineflag = true                                # set toplineflag , topline of frame ok
                       
                       if col == 0: 
@@ -697,7 +722,16 @@ proc showDf*(df:nimdf,
                       if toplineflag == false:
                           print(".",magenta,xpos = xpos)
                           hline(frametoplinelen - 2 ,framecolor,xpos = xpos + 1,lt = hfct) 
-                          printLn(".",lime)
+                          # experimental
+                          if frtexttop.len > 0:
+                            if frtexttop[0].len > 0:
+                                  print("[",dodgerblue,xpos = xpos + 3)
+                                  print(frtexttop[0])
+                                  print("]",dodgerblue)
+                                  printLn(".",lime,xpos = frametoplinelen + frtexttop[0].len - (frtexttop[0].len - 2))    # <<<----2
+                          # end exp uncomm line below
+                          else:
+                                  printLn(".",lime)
                           toplineflag = true   
                         
                                               
@@ -889,7 +923,16 @@ proc showDf*(df:nimdf,
                       if toplineflag == false:                              # set up topline of frame
                           print(".",yellow,xpos = xpos)
                           hline(frametoplinelen - 2 ,framecolor,xpos = xpos + 1,lt = hfct) 
-                          printLn(".",lime)
+                          # experimental
+                          if frtexttop.len > 0:
+                            if frtexttop[0].len > 0:
+                                  print("[",dodgerblue,xpos = xpos + 3)
+                                  print(frtexttop[0])
+                                  print("]",dodgerblue)
+                                  printLn(".",lime,xpos = frametoplinelen + frtexttop[0].len - (frtexttop[0].len - 2))    # <<<----2
+                                  # end exp uncomm line below
+                          else:                          
+                                  printLn(".",lime)
                           toplineflag = true                                # set toplineflag , topline of frame ok
                       
                       if col == 0: 
@@ -905,7 +948,16 @@ proc showDf*(df:nimdf,
                       if toplineflag == false:                              # set up topline of frame
                           print(".",yellow,xpos = xpos)
                           hline(frametoplinelen - 2 ,framecolor,xpos = xpos + 1,lt = hfct) 
-                          printLn(".",lime)
+                          # experimental
+                          if frtexttop.len > 0:
+                            if frtexttop[0].len > 0:
+                                  print("[",dodgerblue,xpos = xpos + 3)
+                                  print(frtexttop[0])
+                                  print("]",dodgerblue)
+                                  printLn(".",lime,xpos = frametoplinelen + frtexttop[0].len - (frtexttop[0].len - 2))    # <<<----2
+                                  # end exp uncomm line below
+                          else:   
+                                  printLn(".",lime)
                           toplineflag = true                                # set toplineflag , topline of frame ok
                       
                       if col == 0: 
@@ -922,7 +974,16 @@ proc showDf*(df:nimdf,
                       if toplineflag == false:
                           print(".",magenta,xpos = xpos)
                           hline(frametoplinelen - 2 ,framecolor,xpos = xpos + 1,lt = hfct) 
-                          printLn(".",lime)
+                          # experimental
+                          if frtexttop.len > 0:
+                            if frtexttop[0].len > 0:
+                                  print("[",dodgerblue,xpos = xpos + 3)
+                                  print(frtexttop[0])
+                                  print("]",dodgerblue)
+                                  printLn(".",lime,xpos = frametoplinelen + frtexttop[0].len - (frtexttop[0].len - 2))    # <<<----2
+                                  # end exp uncomm line below
+                          else:
+                                  printLn(".",lime)
                           toplineflag = true   
                         
                                               
@@ -965,11 +1026,19 @@ proc showDf*(df:nimdf,
                 
               elif  header == true and headertext != @[] :
                   
-                            
                             if toplineflag == false:                            # set up topline of frame
                                 print(".",magenta,xpos = xpos)
                                 hline(frametoplinelen - 2 ,framecolor,xpos = xpos + 1,lt = hfct) 
-                                printLn(".",lime)
+                                # experimental
+                                if frtexttop.len > 0:
+                                 if frtexttop[0].len > 0:
+                                   print("[",dodgerblue,xpos = xpos + 3)
+                                   print(frtexttop[0])
+                                   print("]",dodgerblue)
+                                   printLn(".",lime,xpos = frametoplinelen + frtexttop[0].len - (frtexttop[0].len - 2))    # <<<----2
+                                   # end exp uncomm line below
+                                else:
+                                  printLn(".",lime)
                                 toplineflag = true   
                         
                   
