@@ -10,7 +10,7 @@
 ##
 ##   ProjectStart: 2016-09-16
 ##   
-##   Latest      : 2018-01-15
+##   Latest      : 2018-01-25
 ##
 ##   Compiler    : Nim >= 0.17.3
 ##
@@ -50,13 +50,14 @@
 ##  
 ##  
 import os
-import nimcx,httpclient,browsers,json
+import nimcx
+import httpclient,browsers,json
 import parsecsv,streams,algorithm,stats
 import db_sqlite
 import typetraits,typeinfo
 export stats
 
-let NIMDATAFRAMEVERSION* = "0.0.4"
+let NIMDATAFRAMEVERSION* = "0.0.5"
 
 const 
       asc*  = "asc"
@@ -76,11 +77,11 @@ proc newdfcellobject*():dfcellobject =
       result.cellcolor = ""
          
 type        
-    nimss* = seq[string]         # nim string seq
-    nimis* = seq[int]            # nim integer seq
-    nimfs* = seq[float]          # nim float seq
-    nimbs* = seq[bool]           # nim bool seq
-    nimcells* = seq[dfcellobject]       # dataframe cell sequence
+    nimss*    = seq[string]         # nim string seq
+    nimis*    = seq[int]            # nim integer seq
+    nimfs*    = seq[float]          # nim float seq
+    nimbs*    = seq[bool]           # nim bool seq
+    nimcells* = seq[dfcellobject]   # dataframe cell sequence
     
     
 type
@@ -136,7 +137,12 @@ converter toNimFs*(aseq:seq[float]):nimfs =
 converter toNimBs*(aseq:seq[bool]):nimbs = 
           result = aseq
 
-          
+  
+proc cxpad(s:string,padlen:int):string =
+  result = s
+  if s.len < padlen : 
+     result = s & spaces(max(0, padlen - s.len)) 
+         
           
 proc createDataFrame*(filename:string,cols:int = 2,rows:int = -1,sep:char = ',',hasHeader:bool = false):nimdf 
 
@@ -147,16 +153,23 @@ var stringflag:bool = false
 
 
 proc getData1*(url:string,timeout:int = 12000):string =
-  ## getData
+  ## getData1
   ## 
-  ## used for internet based data in csv format
+  ## timeouts currently not set due to a bug https://github.com/nim-lang/Nim/issues/2753
+  ## 
+  ## used for internet based data in csv format 
   ## 
   try:
-       var zcli = newHttpClient(timeout=timeout)
-       result  = zcli.getContent(url)   # orig data   
+       var zcli = newHttpClient()
+       result  = zcli.getContent(url)   # orig data5   
   except :
-       printLnBiCol("Error : " & url & " content could not be fetched . Retry with -d:ssl",red,bblack,":",0,true,{}) 
-       printLn(getCurrentExceptionMsg(),red,xpos = 9)
+       printLnStatusMsg("nimdataframe getData1")
+       var a = url & " content could not be fetched  " 
+       printLnErrorMsg(a) 
+       printLnErrorMsg("Try with -d:ssl if not used or if terminal is sandboxed")
+       var b = getCurrentExceptionMsg().splitLines()
+       for x in b:
+          printLnErrorMsg(cxpad(x,a.len))
        doFinish()
 
 
@@ -176,7 +189,7 @@ proc makeDf1*(ufo1:string,hasHeader:bool = false):nimdf =
    df.colwidths = toNimis(toSeq(0..<ufos.len))
    
    for x in 0..<ufol.len:
-      ufos = ufol[x].split(",")  # problems may arise if text has commas ... then need some preprocessing
+      ufos = ufol[x].split(",")  # problems may arise if column data has commas ... then need some preprocessing
       ns = newNimSs()
       for xx in 0..<ufos.len:
           ns.add(ufos[xx].strip(true,true))
@@ -353,42 +366,51 @@ proc showFirstLast*(df:nimdf,nrows:int = 5) =
    ## shows first and last n lines of df incl. headers if any of dataframe
    ## 
    ## 
+   let leftfmt = "<18"
    if df.hasHeader == true:
-      printLn("Header and First " & $nrows & " rows :",yellowgreen,xpos = 2,styled = {})
+      printLnInfoMsg(fmtx([leftfmt],"Header and First") , $nrows & " rows ",yellowgreen,xpos = 2)
       if df.colHeaders.len > 0:
         printLn(df.colHeaders,xpos = 2)
         showRaw(df,@[0,nrows])
       else:
         showRaw(df,@[0,nrows])
    else:
-      printLn("First " & $nrows & " rows :",yellowgreen,xpos = 2,styled = {})
+      printLnInfoMsg(fmtx([leftfmt],"First") , $nrows & " rows ",yellowgreen,xpos = 2)
       showRaw(df,@[0,nrows - 1])
       
    echo()
-   printLn("Last  " & $nrows & " rows :",yellowgreen,xpos = 2,styled = {})
+   printLnInfoMsg(fmtx([leftfmt],"Last"), $nrows & " rows ",yellowgreen,xpos = 2)
    showRaw(df,@[df.rowcount - nrows,df.rowcount - 1])
    echo() 
          
 proc showHeaderStatus*(df:nimdf) = 
    ## showHeaderStatus
    ##  
-   printLnBiCol("hasHeader :  " & $df.hasHeader,xpos = 2)
+   var leftfmt = "<18"
+   printLnInfoMsg(fmtx([leftfmt],"hasHeader"),fmtx([">10"],$df.hasHeader),xpos = 2)
    
    
 proc showCounts*(df:nimdf) = 
+   var leftfmt = "<18"
+   var rightfmt = ">10"
    if df.status == true:  
-       printLnBiCol("Columns   :  " & $df.colcount & spaces(3),xpos = 2)
+       printLnInfoMsg(fmtx([leftfmt],"Columns"), fmtx([rightfmt],$df.colcount),xpos = 2)
        if df.hasHeader == true:
           if df.colHeaders.len() > 0 :
-             printLnBiCol("Data Rows :  " & $(df.rowcount ),xpos = 2)
+             printLnInfoMsg(fmtx([leftfmt],"Data Rows"),  fmtx([rightfmt],$(df.rowcount)),xpos = 2)
           else:
-             printLnBiCol("Data Rows :  " & $(df.rowcount - 1),xpos = 2)
+             printLnInfoMsg(fmtx([leftfmt],"Data Rows") ,  fmtx([rightfmt],$(df.rowcount - 1)),xpos = 2)
        else:
-          printLnBiCol("Data Rows :  " & $df.rowcount,xpos = 2)
-       printLn(dodgerblue & rightarrow & sandybrown & " Row count does not include header row if hasHeader == true",sandybrown,xpos=2)
+       
+         if df.colHeaders.len() > 0 :
+             printLnInfoMsg(fmtx([leftfmt],"Data Rows") , fmtx([rightfmt], $(df.rowcount)),xpos = 2)
+         else:
+             printLnInfomsg(fmtx([leftfmt],"Data Rows") ,  fmtx([rightfmt],$(df.rowcount - 1)),xpos = 2)
+          
+       #printLn(dodgerblue & rightarrow & sandybrown & " Row count does not include header row if hasHeader == true",sandybrown,xpos=2)
        
    else:   
-       printLnBiCol("[NIMDF  Message   ] : Data not available in dataframe", colLeft = red,xpos = 3)
+       printLnInfoMsg(fmtx([leftfmt],"NIMDF"), " Data not available in dataframe", red,xpos = 3)
        decho(2)   
 
 proc colFitMax*(df:nimdf,cols:int = 0,adjustwd:int = 0):nimis =
@@ -418,46 +440,55 @@ proc colFitMax*(df:nimdf,cols:int = 0,adjustwd:int = 0):nimis =
   
   
 proc checkDfOk(df:nimdf,xpos:int = 3):bool =
-     if df.df.len > 0:  result = true
-     else:
-        printLnBiCol("ERROR  : Dataframe has no data... ",red,red,":",xpos=xpos,false,{})
-        result = false
+     # checkdf checks if something can be displayed at all
+     var resultflag = true
+     if df.df.len == 0:
+        printLnErrorMsg("Dataframe has no data... ")
+        resultflag = false
+        
+     if df.rowcount == 0 and df.hasHeader == false:
+        printLnErrorMsg("Dataframe has no rows or headers specified")
+        resultflag = false
+            
+     if df.colcount == 0 :
+        printLnErrorMsg("Dataframe has no columns to show specified")
+        resultflag = false
 
-       
+     result = resultflag 
+      
+      
 proc showDf*(df:nimdf,
-             rows:int = 10,
-             cols:nimis = @[],
-             colwd:nimis = @[],
-             colcolors:nimss = @[],
-             showframe:bool = false,
-             framecolor:string = white,
-             showHeader:bool = false,
-             headertext:nimss = @[],
+             rows:int           = 10,
+             cols:nimis         = @[],   #@[1,2],
+             colwd:nimis        = @[],   #@[6,6],
+             colcolors:nimss    = @[white,white],
+             showframe:bool     = false,
+             framecolor:string  = palegreen,
+             showHeader:bool    = false,
+             headertext:nimss   = @[],
              leftalignflag:bool = false,
-             cellcolors:nimss = @[],    # cell features for coloring individual cells to be implemented
-             cellrows:nimis = @[],
-             cellcols:nimis = @[],
-             cellcalc:nimss = @[], # placeholder for some sort of plugin feature to pass in manipulations/calculations on cells
-             frtexttop:nimss = @[],
-             frtextbot:nimss = @[],
-             xpos:int = 1) =
+             cellcolors:nimss   = @[],    # cell features for coloring individual cells to be implemented
+             cellrows:nimis     = @[],
+             cellcols:nimis     = @[],
+             cellcalc:nimss     = @[], # placeholder for some sort of plugin feature to pass in manipulations/calculations on cells
+             frtexttop:nimss    = @[],
+             frtextbot:nimss    = @[],
+             xpos:int           = 2)  =
              
   ## showDf
   ## 
   ## Displays a dataframe 
   ## 
   ## allows selective display of columns , with column numbers passed in as a seq
-  ## 
+  ## https://github.com/amallia/GaussianNB
   ## Convention :  the first column = 1 
   ## 
+  ## number of rows    default = 10
+  ## number of columns default = all  if none given
+  ## columnwidth default       =  8   if none given
   ## 
-  ## number of rows default =  10
-  ## 
-  ## with cols from left to right according to cols default = 2
-  ## 
-  ## column width default = 15
-  ## 
-  ## an equal columnwidth can be achieved with colwd = colfitmax(df,0) the second param is to nudge the width a bit if required
+  ## an equal columnwidth can be achieved with colwd = colfitmax(df,0) 
+  ## the second param is to nudge the width a bit if required
   ## 
   ## showFrame  default = off
   ## 
@@ -469,11 +500,16 @@ proc showDf*(df:nimdf,
   ##
   ## cols,colwd,colcolors parameters seqs must be of equal length and corresponding to each other
   ## 
+  ## Note : best to fill in desired values , a quick showDf(mydf) will not always be satisfactory 
+  ## 
   #
   if checkDfok(df) == true: 
+    var okrows = rows
+    var okcols = cols
     var okcolwd = colwd 
     var nofirstrowflag = false    
     var header = showHeader
+    
     if header == true and df.hasHeader == false: header = false   # this hopefully avoids first line is header display
     if header == false and df.hasHeader == true: nofirstrowflag = true
     if header == false and df.hasHeader == true and headertext != @[] : nofirstrowflag = false
@@ -484,26 +520,27 @@ proc showDf*(df:nimdf,
     let hfct = efs2   # "_"      # horizontal framechar top of frame
     let hfcb = efs2              # horizontal framechar for bottom of frame
     
+    # try to setup automatic if no values in cols or colwd was passed in
+    if cols  == @[]: okcols  = toSeq(1..df.colcount)  # display all cols by default
+     
+    
     if cols.len == 1:
         # to display one column data showheader and showFrame must be false
         # to avoid messed up display , Todo: take care of this eventually 
         header = false
         frame = false
     
-    if cols.len != okcolwd.len: okcolwd = colfitmax(df,cols.len)   # try to best fit rather than to throw error
+    #if cols.len != okcolwd.len: okcolwd = colfitmax(df,cols.len)   # try to best fit rather than to throw error
           
     # uncomment if required
     #if cols.len != colcolors.len:
     #   printLnBiCol("NOTE  : Dataframe columns cols and colcolors parameter are of different length",":",red,peru)
      
     if df.df[0].len == 0: 
-       printLnBiCol("ERROR : Dataframe appears to have no columns. See showDf command. Exiting ..",red,truetomato,":",0,false,{})
+       printLnErrorMsg("Dataframe appears to have no columns. See showDf command. Exiting ..")
        quit(0)
     
-  
-    var okrows = rows
-    var okcols = cols
-     
+
     var toplineflag = false
     var displaystr = ""   
     var okcolcolors = colcolors
@@ -512,10 +549,10 @@ proc showDf*(df:nimdf,
          
     if okcolwd.len < okcols.len:
        # we are missing some colwd data we add default widths
-       while okcolwd.len < okcols.len: okcolwd.add(15)
+       while okcolwd.len < okcols.len: okcolwd.add(8)
       
     
-    # if not cols seq is specified we assume all cols
+    # if no cols seq is specified we assume all cols
     if okcols == @[] and df.colcount > 0:
       try:
              okcols = toSeq(0..<df.colcount)    # note column indexwise numbering starts at 0 , first col = 0             
@@ -526,8 +563,8 @@ proc showDf*(df:nimdf,
     #  need a check to see if request cols actually exist
     for col in okcols:
       if col > df.colcount:
-         printLn("Error : showDf needs correct column specification parameters",red) 
-         printLn("Error : Requested Column >= " & $col & " does not exist in dataframe , which has " & $df.colcount & " columns",red)
+         printLnErrorMsg("showDf needs correct column specification parameters")
+         printLnErrorMsg("Requested Column >= " & $col & " does not exist in dataframe , which has " & $df.colcount & " columns")
          # we exit
          doFinish()
    
@@ -548,7 +585,12 @@ proc showDf*(df:nimdf,
    
     # calculate length of topline of frame based on cols and colwd 
     var frametoplinelen = 0
-    assert okcols.len == okcolwd.len
+    if okcols.len <> okcolwd.len:
+       cxAlert(2)
+       printLnErrorMsg("Number of columns and column width in showDf imbalanced.")
+       printLnErrorMsg("Program will now exit with assertion error message")
+       echo()
+    doassert okcols.len == okcolwd.len # will display as out of memory error
     frametoplinelen = frametoplinelen + sum(okcolwd) +  (2 * okcols.len) + 1
     
     # take care of over lengths
@@ -1458,6 +1500,9 @@ proc createDataFrame*(filename:string,cols:int = 2,rows:int = -1,sep:char = ',',
   ## 
   ## other should be clean , preprocess as needed
   ## 
+  ## hasHeader refers to actual data having a header (true) or no header (false)
+  ## if data has no header but a header will be added in showdf set hasHeader to true
+  ## so showdfinfo will calculate the correct row count otherwise there may be an off by 1 error
   ## 
   
   printLn("Processing ...",skyblue) 

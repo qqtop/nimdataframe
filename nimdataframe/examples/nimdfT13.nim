@@ -7,7 +7,8 @@
 #  slightly processed to shorten header (only data of first table imported here) and saved into file rms.csv
 
 
-import nimcx , nimdataframe
+import nimcx, nimdataframe
+
 
 let ufo = "rms.csv"   
 
@@ -48,10 +49,10 @@ for row in startrow..<ndf9.rowcount:
     let n = 3       # decimals
     let sep = ":"
     
-    printLnBiCol("Mean  : " & ff(x.mean,n),yellowgreen,white,sep,xpos = xpos,false,{})
-    printLnBiCol("Var   : " & ff(x.variance,n),yellowgreen,white,sep,xpos = xpos,false,{})
-    printLnBiCol("Min   : " & ff(x.min,n),yellowgreen,white,sep,xpos = xpos,false,{})
-    printLnBiCol("Max   : " & ff(x.max,n),yellowgreen,white,sep,xpos = xpos,false,{})
+    printLnBiCol2("Mean  : " & ff(x.mean,n),yellowgreen,white,sep,xpos = xpos,false,{})
+    printLnBiCol2("Var   : " & ff(x.variance,n),yellowgreen,white,sep,xpos = xpos,false,{})
+    printLnBiCol2("Min   : " & ff(x.min,n),yellowgreen,white,sep,xpos = xpos,false,{})
+    printLnBiCol2("Max   : " & ff(x.max,n),yellowgreen,white,sep,xpos = xpos,false,{})
     curup(5)
     xpos += 21
     if xpos > tw - 30:

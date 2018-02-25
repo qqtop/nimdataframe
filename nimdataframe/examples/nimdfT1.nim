@@ -9,16 +9,17 @@
 ##  nim c  -d:ssl -d:release  -r nimdfT1
 ##
 
-import nimcx , nimdataframe
+import nimdataframe , nimcx
 
-let ufo =  "http://bit.ly/uforeports"    # data used in pandas documentation
+let ufo  ="http://bit.ly/uforeports"    # data used in pandas documentation
+#let ufo = """https://raw.githubusercontent.com/justmarkham/pandas-videos/master/data/ufo.csv"""
 var ndf9 = createDataFrame(ufo,hasHeader = true)
 
 ndf9 = dfDefaultSetup(ndf9)              # basic setup
 ndf9.colwidths = @[15,7,14,6,15]         # change the default columnwidths created in dfDefaultSetup
 ndf9.colcolors = @[pastelgreen,pastelpink,peru,gold]
 
-printLnBiCol("Data Source : " & ufo)
+printLnInfoMsg("Data Source", ufo)
 echo()
 showDf(ndf9,
    rows = 25,
