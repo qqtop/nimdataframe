@@ -10,7 +10,7 @@ Dataframe for Nim
 
 | Library      | Status      | Version | License        | OS     | Compiler       |
 |--------------|-------------|---------|----------------|--------|----------------|
-| nimdataframe | Development | 0.0.4.x | MIT opensource | Linux  | Nim >= 0.17.3  |
+| nimdataframe | Development | 0.0.5.x | MIT opensource | Linux  | Nim >= 0.17.3  |
 
 
  Attempt of using csv data from the net, locally or generated to implement
@@ -18,6 +18,8 @@ Dataframe for Nim
  
  
  Work in progress
+ 
+ version 0.0.5 has timeout in getData1 disabled due to bug https://github.com/nim-lang/Nim/issues/2753
  
  used with https://github.com/qqtop/NimFinLib
  
