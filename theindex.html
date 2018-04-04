@@ -57,7 +57,7 @@ body {
   line-height: 20px;
   color: #444;
   letter-spacing: 0.15px;
-  background-color: rgba(252, 248, 244, 0.45); }
+  background-color: #FDFBFA; }
 
 /* Skeleton grid */
 .container {
@@ -192,10 +192,10 @@ dd > pre {
   table-layout: fixed; }
 
 /* Nim search input */
-div#searchInput {
+div#searchInputDiv {
   margin-bottom: 8px;
 }
-div#searchInput input#searchInput {
+div#searchInputDiv input#searchInput {
   width: 10em;
 }
 div.search-groupby {
@@ -1143,7 +1143,7 @@ dt pre > span.Identifier ~ span.Identifier, dt pre > span.Operator ~ span.Identi
   color: inherit;
   font-weight: inherit; }
 
-dt pre > span.Operator ~ span.Identifier, dt pre > span.Operator ~ span.Operator {
+dt pre > span.Operator ~ span.Identifier {
   color: inherit;
   font-weight: inherit; }
 
@@ -1260,6 +1260,9 @@ function main() {
 <dt><a name="dfShowSumStats" href="#dfShowSumStats"><span>dfShowSumStats:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external" href="nimdataframe.html#dfShowSumStats,nimdf,nimis,int">nimdataframe : dfShowSumStats(df: nimdf; numericCols: nimis; xpos = 2)</a></li>
           </ul></dd>
+<dt><a name="fsToNimSs" href="#fsToNimSs"><span>fsToNimSs:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external" href="nimdataframe.html#fsToNimSs.c,seq%5Bfloat%5D">nimdataframe : fsToNimSs(aseq: seq[float]): nimss</a></li>
+          </ul></dd>
 <dt><a name="getColData" href="#getColData"><span>getColData:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external" href="nimdataframe.html#getColData,nimdf,int">nimdataframe : getColData(df: nimdf; col: int): nimss</a></li>
           </ul></dd>
@@ -1274,6 +1277,9 @@ function main() {
           </ul></dd>
 <dt><a name="getTotalHeaderColsWitdh" href="#getTotalHeaderColsWitdh"><span>getTotalHeaderColsWitdh:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external" href="nimdataframe.html#getTotalHeaderColsWitdh,nimdf">nimdataframe : getTotalHeaderColsWitdh(df: nimdf): int</a></li>
+          </ul></dd>
+<dt><a name="isToNimSs" href="#isToNimSs"><span>isToNimSs:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external" href="nimdataframe.html#isToNimSs.c,seq%5Bint%5D">nimdataframe : isToNimSs(aseq: seq[int]): nimss</a></li>
           </ul></dd>
 <dt><a name="makeDf1" href="#makeDf1"><span>makeDf1:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external" href="nimdataframe.html#makeDf1,string,bool">nimdataframe : makeDf1(ufo1: string; hasHeader: bool = false): nimdf</a></li>
@@ -1327,7 +1333,7 @@ function main() {
 <li><a class="reference external" href="nimdataframe.html#rotateDf,nimdf,int,bool">nimdataframe : rotateDf(ufo1: nimdf; cols: int = 0; hasHeader: bool = false): nimdf</a></li>
           </ul></dd>
 <dt><a name="showCounts" href="#showCounts"><span>showCounts:</span></a></dt><dd><ul class="simple">
-<li><a class="reference external" href="nimdataframe.html#showCounts,nimdf">nimdataframe : showCounts(df: nimdf)</a></li>
+<li><a class="reference external" href="nimdataframe.html#showCounts,nimdf,int">nimdataframe : showCounts(df: nimdf; xpos: int = 2)</a></li>
           </ul></dd>
 <dt><a name="showDataframeInfo" href="#showDataframeInfo"><span>showDataframeInfo:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external" href="nimdataframe.html#showDataframeInfo,nimdf">nimdataframe : showDataframeInfo(df: nimdf)</a></li>
@@ -1347,7 +1353,7 @@ function main() {
 <li><a class="reference external" href="nimdataframe.html#showFirstLast,nimdf,int">nimdataframe : showFirstLast(df: nimdf; nrows: int = 5)</a></li>
           </ul></dd>
 <dt><a name="showHeaderStatus" href="#showHeaderStatus"><span>showHeaderStatus:</span></a></dt><dd><ul class="simple">
-<li><a class="reference external" href="nimdataframe.html#showHeaderStatus,nimdf">nimdataframe : showHeaderStatus(df: nimdf)</a></li>
+<li><a class="reference external" href="nimdataframe.html#showHeaderStatus,nimdf,int">nimdataframe : showHeaderStatus(df: nimdf; xpos: int = 2)</a></li>
           </ul></dd>
 <dt><a name="showRaw" href="#showRaw"><span>showRaw:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external" href="nimdataframe.html#showRaw,nimdf,openArray%5BT%5D">nimdataframe : showRaw[T](df: nimdf; rrows: openArray[T])</a></li>
@@ -1375,7 +1381,7 @@ function main() {
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br/>
-        <small>Made with Nim. Generated: 2018-02-25 15:26:36 UTC</small>
+        <small>Made with Nim. Generated: 2018-04-04 14:18:27 UTC</small>
       </div>
     </div>
   </div>

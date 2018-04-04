@@ -10,9 +10,9 @@
 ##
 ##   ProjectStart: 2016-09-16
 ##   
-##   Latest      : 2018-01-25
+##   Latest      : 2018-04-04
 ##
-##   Compiler    : Nim >= 0.17.3
+##   Compiler    : Nim >= 0.18.0
 ##
 ##   OS          : Linux
 ##
@@ -136,20 +136,20 @@ converter toNimFs*(aseq:seq[float]):nimfs =
           result = aseq          
 converter toNimBs*(aseq:seq[bool]):nimbs = 
           result = aseq
-
-  
-proc cxpad(s:string,padlen:int):string =
-  result = s
-  if s.len < padlen : 
-     result = s & spaces(max(0, padlen - s.len)) 
-         
-          
+converter fsToNimSs*(aseq:seq[float]):nimss =
+          result = newNimSs()
+          for x in aseq: result.add($x)
+converter isToNimSs*(aseq:seq[int]):nimss =
+          result = newNimSs()
+          for x in aseq: result.add($x)            
+            
+# forward declaration          
 proc createDataFrame*(filename:string,cols:int = 2,rows:int = -1,sep:char = ',',hasHeader:bool = false):nimdf 
 
 # used in sortdf
-var intflag:bool = false
-var floatflag:bool = false
-var stringflag:bool = false
+var intflag    : bool = false
+var floatflag  : bool = false
+var stringflag : bool = false
 
 
 proc getData1*(url:string,timeout:int = 12000):string =
@@ -162,11 +162,11 @@ proc getData1*(url:string,timeout:int = 12000):string =
   try:
        var zcli = newHttpClient()
        result  = zcli.getContent(url)   # orig data5   
-  except :
-       printLnStatusMsg("nimdataframe getData1")
-       var a = url & " content could not be fetched  " 
+  except OsError:
+       printLnStatusMsg("nimdataframe ==> getData1")
+       var a = url & " content could not be fetched " 
        printLnErrorMsg(a) 
-       printLnErrorMsg("Try with -d:ssl if not used or if terminal is sandboxed")
+       printLnErrorMsg("Use -d:ssl or see check if terminal is sandboxed      ")
        var b = getCurrentExceptionMsg().splitLines()
        for x in b:
           printLnErrorMsg(cxpad(x,a.len))
@@ -383,34 +383,32 @@ proc showFirstLast*(df:nimdf,nrows:int = 5) =
    showRaw(df,@[df.rowcount - nrows,df.rowcount - 1])
    echo() 
          
-proc showHeaderStatus*(df:nimdf) = 
+proc showHeaderStatus*(df:nimdf,xpos:int = 2) = 
    ## showHeaderStatus
    ##  
    var leftfmt = "<18"
-   printLnInfoMsg(fmtx([leftfmt],"hasHeader"),fmtx([">10"],$df.hasHeader),xpos = 2)
+   printLnInfoMsg(fmtx([leftfmt],"hasHeader"),fmtx([">10"],$df.hasHeader),xpos = xpos)
    
    
-proc showCounts*(df:nimdf) = 
+proc showCounts*(df:nimdf,xpos:int = 2) = 
    var leftfmt = "<18"
    var rightfmt = ">10"
    if df.status == true:  
-       printLnInfoMsg(fmtx([leftfmt],"Columns"), fmtx([rightfmt],$df.colcount),xpos = 2)
+       printLnInfoMsg(fmtx([leftfmt],"Columns"), fmtx([rightfmt],$df.colcount),xpos = xpos)
        if df.hasHeader == true:
           if df.colHeaders.len() > 0 :
-             printLnInfoMsg(fmtx([leftfmt],"Data Rows"),  fmtx([rightfmt],$(df.rowcount)),xpos = 2)
+             printLnInfoMsg(fmtx([leftfmt],"Data Rows"),  fmtx([rightfmt],$(df.rowcount)),xpos = xpos)
           else:
-             printLnInfoMsg(fmtx([leftfmt],"Data Rows") ,  fmtx([rightfmt],$(df.rowcount - 1)),xpos = 2)
+             printLnInfoMsg(fmtx([leftfmt],"Data Rows") ,  fmtx([rightfmt],$(df.rowcount - 1)),xpos = xpos)
        else:
        
          if df.colHeaders.len() > 0 :
-             printLnInfoMsg(fmtx([leftfmt],"Data Rows") , fmtx([rightfmt], $(df.rowcount)),xpos = 2)
+             printLnInfoMsg(fmtx([leftfmt],"Data Rows") , fmtx([rightfmt], $(df.rowcount)),xpos = xpos)
          else:
-             printLnInfomsg(fmtx([leftfmt],"Data Rows") ,  fmtx([rightfmt],$(df.rowcount - 1)),xpos = 2)
-          
-       #printLn(dodgerblue & rightarrow & sandybrown & " Row count does not include header row if hasHeader == true",sandybrown,xpos=2)
-       
+             printLnInfomsg(fmtx([leftfmt],"Data Rows") ,  fmtx([rightfmt],$(df.rowcount - 1)),xpos = xpos)
+              
    else:   
-       printLnInfoMsg(fmtx([leftfmt],"NIMDF"), " Data not available in dataframe", red,xpos = 3)
+       printLnInfoMsg(fmtx([leftfmt],"NIMDF"), " Data not available in dataframe", red,xpos = xpos + 1)
        decho(2)   
 
 proc colFitMax*(df:nimdf,cols:int = 0,adjustwd:int = 0):nimis =
@@ -458,22 +456,22 @@ proc checkDfOk(df:nimdf,xpos:int = 3):bool =
       
       
 proc showDf*(df:nimdf,
-             rows:int           = 10,
-             cols:nimis         = @[],   #@[1,2],
-             colwd:nimis        = @[],   #@[6,6],
-             colcolors:nimss    = @[white,white],
-             showframe:bool     = false,
-             framecolor:string  = palegreen,
-             showHeader:bool    = false,
-             headertext:nimss   = @[],
-             leftalignflag:bool = false,
-             cellcolors:nimss   = @[],    # cell features for coloring individual cells to be implemented
-             cellrows:nimis     = @[],
-             cellcols:nimis     = @[],
-             cellcalc:nimss     = @[], # placeholder for some sort of plugin feature to pass in manipulations/calculations on cells
-             frtexttop:nimss    = @[],
-             frtextbot:nimss    = @[],
-             xpos:int           = 2)  =
+             rows          : int     = 10,
+             cols          : nimis   = @[],   #@[1,2],   # toSeq(1 .. df.colcount)
+             colwd         : nimis   = @[],   #@[6,6],   # nweSeqWidth(10,1 .. df.colcount)
+             colcolors     : nimss   = @[white,white],
+             showframe     : bool    = false,
+             framecolor    : string  = palegreen,
+             showHeader    : bool    = false,
+             headertext    : nimss   = @[],
+             leftalignflag : bool    = false,
+             cellcolors    : nimss   = @[],    # cell features for coloring individual cells to be implemented
+             cellrows      : nimis   = @[],
+             cellcols      : nimis   = @[],
+             cellcalc      : nimss   = @[],    # placeholder for some sort of plugin feature to pass in manipulations/calculations on cells
+             frtexttop     : nimss   = @[],
+             frtextbot     : nimss   = @[],
+             xpos          : int     = 2) =
              
   ## showDf
   ## 
@@ -1441,10 +1439,10 @@ proc sortdf*(df:nimdf,sortcol:int = 1,sortorder = asc):nimdf =
   db.exec(sql"DROP TABLE IF EXISTS dfTable")
   db.close()
   #prepare for output
-  var df2 =  createDataFrame(filename = filename,cols = df.df[0].len,rows = df.rowcount,hasHeader = df.hasHeader)
-  df2.colHeaders = orgheader
+  result =  createDataFrame(filename = filename,cols = df.df[0].len,rows = df.rowcount,hasHeader = df.hasHeader)
+  result.colHeaders = orgheader
   removeFile(filename)
-  result = df2
+  
 
 
 proc makeNimDf*(dfcols : varargs[nimss],status:bool = true,hasHeader:bool = false):nimdf = 
