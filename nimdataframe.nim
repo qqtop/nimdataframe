@@ -6,11 +6,11 @@
 ##
 ##   License     : MIT opensource
 ##
-##   Version     : 0.0.4
+##   Version     : 0.0.5
 ##
 ##   ProjectStart: 2016-09-16
 ##   
-##   Latest      : 2018-04-04
+##   Latest      : 2018-07-17
 ##
 ##   Compiler    : Nim >= 0.18.0
 ##
@@ -35,14 +35,15 @@
 ##   
 ##                 http://qqtop.github.io/nimdataframe.html
 ##
-##   Tested      : OpenSuse Tumbleweed 
+##   Tested      : OpenSuse Tumbleweed , Debian
 ## 
 ##   Todo        : additional calculations on dataframes
 ##                 allow right or left align for each column
 ##                 fullRotate df
 ##                 improve tests and example
 ##                 dataframe names
-##                 trying to handle json data
+##                 instead of col number use col names .. 
+##                 trying to better handle json data  see new json lib by araq
 ##                 future filterDf(df:nimdf,cols:nimis,operator:nimss,vals:nimss)
 ##                 var ndf11 = filterDf(ndf9,@[3,5],@[">","=="],@["Borussia Dortmund","4"]
 ##  
@@ -294,7 +295,7 @@ proc makeDf2*(ufo1:nimdf,cols:int = 0,rows:int = -1,hasHeader:bool = false):nimd
        printLn("IndexError raised . Exiting now...",red)
        doFinish()  
   
-   for rws in 0..<df.rowcount:     # rows count  
+   for rws in 0..<df.rowcount:      # rows count  
      arow = @[]
      var olderrorrow = 0            # so we only display errors once per row
      for cls  in 0..<df.colcount:   # cols count  
@@ -519,9 +520,8 @@ proc showDf*(df:nimdf,
     let hfcb = efs2              # horizontal framechar for bottom of frame
     
     # try to setup automatic if no values in cols or colwd was passed in
-    if cols  == @[]: okcols  = toSeq(1..df.colcount)  # display all cols by default
-     
-    
+    if cols == @[]: okcols = toSeq(1..df.colcount)  # display all cols by default
+        
     if cols.len == 1:
         # to display one column data showheader and showFrame must be false
         # to avoid messed up display , Todo: take care of this eventually 
@@ -589,7 +589,7 @@ proc showDf*(df:nimdf,
        printLnErrorMsg("Program will now exit with assertion error message")
        echo()
     doassert okcols.len == okcolwd.len # will display as out of memory error
-    frametoplinelen = frametoplinelen + sum(okcolwd) +  (2 * okcols.len) + 1
+    frametoplinelen = frametoplinelen + sum(okcolwd) + (2 * okcols.len) + 1
     
     # take care of over lengths
     if okrows == 0 or okrows > df.df.len: okrows = df.df.len
@@ -1443,7 +1443,15 @@ proc sortdf*(df:nimdf,sortcol:int = 1,sortorder = asc):nimdf =
   result.colHeaders = orgheader
   removeFile(filename)
   
-
+proc filterDf*(df:nimdf,cols:nimis,operator:nimss,vals:nimss) =
+     ## filterDf
+     ## 
+     ## TODO
+     ## 
+     ## show rows passing a condition
+     ## 
+     discard
+  
 
 proc makeNimDf*(dfcols : varargs[nimss],status:bool = true,hasHeader:bool = false):nimdf = 
   ## makeNimDf
@@ -1664,7 +1672,7 @@ proc dfShowColumnStats*(df:nimdf,desiredcols:seq[int],colspace:int = 25,xpos:int
       if df.colHeaders.len > 0:
            inc colhitem
            var zz = ddesiredcols[colhitem] - 1
-           printLnBiCol("Column " & $(ddesiredcols[mx]) &  " - " & df.colheaders[zz],xpos = nxpos,styled={styleUnderscore})
+           printLnBiCol("Column " & $(ddesiredcols[mx]) & " - " & df.colheaders[zz],xpos = nxpos,styled={styleUnderscore})
       else:
            printLnBiCol("Column " & $(ddesiredcols[mx]) & " Statistics",xpos = nxpos,styled={styleUnderscore})
       showStats(mydfstats[mx],xpos = nxpos) 
@@ -1787,7 +1795,8 @@ proc dfLoad*(filename:string):nimdf =
                     tresult.df.add(ccdds) 
                     
      result = tresult                  
-  
+ 
+ 
 proc dfSave*(df:nimdf,filename:string,quiet:bool = false) = 
      ## dfSave
      ## 
