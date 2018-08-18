@@ -10,9 +10,9 @@
 ##
 ##   ProjectStart: 2016-09-16
 ##   
-##   Latest      : 2018-07-17
+##   Latest      : 2018-08-18
 ##
-##   Compiler    : Nim >= 0.18.0
+##   Compiler    : Nim >= 0.18.x  devel branch
 ##
 ##   OS          : Linux
 ##
@@ -219,7 +219,8 @@ proc getData2*(filename:string,cols:int = 2,rows:int = -1,sep:char = ','):auto =
     if rrows == -1 : rrows = 50000  # limit any dataframe to 50000 rows if no rows param given
     var csvp: CsvParser
     var s = newFileStream(filename, fmRead)
-    if s == nil: 
+    
+    if isNil(s):
             printLnBiCol("Error : " & filename & " content could not be accessed.",red,bblack,":",0,true,{}) 
             printLn(getCurrentExceptionMsg(),red,xpos = 9)
             doFinish()
@@ -547,7 +548,7 @@ proc showDf*(df:nimdf,
          
     if okcolwd.len < okcols.len:
        # we are missing some colwd data we add default widths
-       while okcolwd.len < okcols.len: okcolwd.add(8)
+       for col in okcolwd.len .. okcols.len: okcolwd.add(8)
       
     
     # if no cols seq is specified we assume all cols
@@ -570,14 +571,14 @@ proc showDf*(df:nimdf,
     
     if okcolcolors == @[]: # default lightgrey on black
         var tmpcols = newNimSs()
-        for col in 0..<okcols.len: tmpcols.add(lightgrey)
+        for col in 0 ..< okcols.len: tmpcols.add(lightgrey)
         okcolcolors = tmpcols   
            
     else: # we get some colors passed in but not for all columns  , unspecified colors are set to lightgrey    
       
         var tmpcols = newNimSs()
         tmpcols = okcolcolors
-        while tmpcols.len < okcols.len: tmpcols.add(lightgrey)
+        for col in tmpcols.len .. okcols.len: tmpcols.add(lightgrey)
         okcolcolors = tmpcols         
                    
    
@@ -588,6 +589,11 @@ proc showDf*(df:nimdf,
        printLnErrorMsg("Number of columns and column width in showDf imbalanced.")
        printLnErrorMsg("Program will now exit with assertion error message")
        echo()
+       
+    # printLnInfoMsg("Debug","")
+    # echo okcols.len
+    # echo okcolwd.len   
+    
     doassert okcols.len == okcolwd.len # will display as out of memory error
     frametoplinelen = frametoplinelen + sum(okcolwd) + (2 * okcols.len) + 1
     
@@ -1168,7 +1174,7 @@ proc showDataframeInfo*(df:nimdf) =
       printLn("none",xpos = 2)   
    echo()
    
-   printLn("Column Colors  ( if any ) :",greenyellow,xpos = 2)
+   printLn("Column Colors  ( as specified , if any ) :",greenyellow,xpos = 2)
    if df.colColors.len > 0:
      for x in 0..<df.colcolors.len:
         if x == 0:
@@ -1284,7 +1290,7 @@ proc typetest[T](x:T): T =
   stringflag = false
     
   if cvflag == false and floatflag == false and intflag == false and stringflag == false:
-    try:
+    try:#let db = open(":memory:", nil, nil, nil)  # this now fails
        var i1 =  parseInt(x)
        if $type(i1) == "int":
           intflag = true
@@ -1340,7 +1346,8 @@ proc sortdf*(df:nimdf,sortcol:int = 1,sortorder = asc):nimdf =
 
   var asortcol = sortcol
   #let db = open("localhost", "user", "password", "dbname")
-  let db = open(":memory:", nil, nil, nil)
+  let db = open(":memory:", "", "", "")
+  
   db.exec(sql"DROP TABLE IF EXISTS dfTable")
   var createstring = "CREATE TABLE dfTable (Id INTEGER PRIMARY KEY "
   for x in 0..<df.colcount:

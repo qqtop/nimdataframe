@@ -8,10 +8,10 @@ import nimcx , nimdataframe
 cleanscreen()
 converter dfc[T](s:T):nimss = 
       result = newnimss()
-      for x in 0 .. <s.len: 
+      for x in 0 ..< s.len: 
            result.add($s[x])  
 
-var frmd = today
+var frmd = cxtoday()
 var displayrows = 10  # rows of data to display in dataframe
 
 var colA = dfc(createSeqDate(frmd,10))
