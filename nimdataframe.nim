@@ -10,9 +10,9 @@
 ##
 ##   ProjectStart: 2016-09-16
 ##   
-##   Latest      : 2018-08-18
+##   Latest      : 2018-10-05
 ##
-##   Compiler    : Nim >= 0.18.x  devel branch
+##   Compiler    : Nim >= 0.19.x  devel branch
 ##
 ##   OS          : Linux
 ##
@@ -46,16 +46,16 @@
 ##                 trying to better handle json data  see new json lib by araq
 ##                 future filterDf(df:nimdf,cols:nimis,operator:nimss,vals:nimss)
 ##                 var ndf11 = filterDf(ndf9,@[3,5],@[">","=="],@["Borussia Dortmund","4"]
-##  
+##                 strings with accents may mess up the frame alignment --> needs to be taken care off in showdf
+##                 directly use more datasources other than csv , eg: select query outputs etc.
+##
 ##   Install     : nimble install https://github.com/qqtop/nimdataframe.git
 ##  
 ##  
-import os
+
 import nimcx
-import httpclient,browsers,json
 import parsecsv,streams,algorithm,stats
 import db_sqlite
-import typetraits,typeinfo
 export stats
 
 let NIMDATAFRAMEVERSION* = "0.0.5"
@@ -102,7 +102,7 @@ type
            frtextbot* : nimss   # write text into the bottom frame line
     
 proc newNimDf*():nimdf = 
-           new(result)            # needed for ref object  gc managed
+           new(result)          # needed for ref object  gc managed
            result.df = @[]
            result.hasHeader  = false
            result.colcount   = 0
@@ -156,8 +156,6 @@ var stringflag : bool = false
 proc getData1*(url:string,timeout:int = 12000):string =
   ## getData1
   ## 
-  ## timeouts currently not set due to a bug https://github.com/nim-lang/Nim/issues/2753
-  ## 
   ## used for internet based data in csv format 
   ## 
   try:
@@ -194,7 +192,6 @@ proc makeDf1*(ufo1:string,hasHeader:bool = false):nimdf =
       ns = newNimSs()
       for xx in 0..<ufos.len:
           ns.add(ufos[xx].strip(true,true))
-             
           if df.colwidths[xx] < ufos[xx].len: 
              df.colwidths.add(ufos[xx].strip(true,true).len)
           
@@ -211,7 +208,8 @@ proc getData2*(filename:string,cols:int = 2,rows:int = -1,sep:char = ','):auto =
     ## 
     ## used for csv files with a path and filename available
     ## 
- 
+    var gd2 = newCxTimer("getData2")
+    gd2.startTimer
     # we read by row but add to col seqs --> so myseq contains seqs of col data 
     var csvrows = -1    # in case of getdata2 csv files we may get processed rowcount back
     var ccols = cols 
@@ -261,12 +259,16 @@ proc getData2*(filename:string,cols:int = 2,rows:int = -1,sep:char = ','):auto =
                     discard
               
               csvrows = processedRows(csvp)
+              
         except CsvError: 
               discard
         
         close(csvp)
         myseq.rowcount = csvrows
         myseq.colcount = ccols
+        gd2.stopTimer
+        showTimerresults()
+        clearAllTimerResults() 
         result = myseq    # this holds col data now
         
         
@@ -279,7 +281,8 @@ proc makeDf2*(ufo1:nimdf,cols:int = 0,rows:int = -1,hasHeader:bool = false):nimd
    ## which also may come handy
    ## note that overall it is better to preprocess data to check for row quality consistency
    ## which is not done here yet , so errors may show
-   
+   var md2 = newCxTimer("makeDf2")
+   md2.startTimer
    var df = newNimDf()       # new dataframe to be returned
    var arow = newNimSs()     # one row of the data frame
    
@@ -302,7 +305,9 @@ proc makeDf2*(ufo1:nimdf,cols:int = 0,rows:int = -1,hasHeader:bool = false):nimd
      for cls  in 0..<df.colcount:   # cols count  
        # now build our row 
        try: 
-            arow.add(ufo1.df[cls][rws])      
+            arow.add(ufo1.df[cls][rws]) 
+            # feedback line - comment out if not wanted
+            printLnInfoMsg("Row  ",$rws & " of " & $(df.rowcount - 1),xpos = 0);curup(1)
        except IndexError:
             printLn("Error row :  " & $arow,red)
             try:
@@ -322,6 +327,10 @@ proc makeDf2*(ufo1:nimdf,cols:int = 0,rows:int = -1,hasHeader:bool = false):nimd
             
      df.df.add(arow)   
      df.hasHeader = hasHeader
+   
+   md2.stopTimer
+   showTimerresults()
+   clearAllTimerResults()   
    result = df  
 
 
@@ -410,9 +419,13 @@ proc showCounts*(df:nimdf,xpos:int = 2) =
              printLnInfomsg(fmtx([leftfmt],"Data Rows") ,  fmtx([rightfmt],$(df.rowcount - 1)),xpos = xpos)
               
    else:   
-       printLnInfoMsg(fmtx([leftfmt],"NIMDF"), " Data not available in dataframe", red,xpos = xpos + 1)
-       decho(2)   
-
+       printLnInfoMsg(fmtx([leftfmt],"NIMDF"), " Data not available in dataframe", red,xpos = xpos)
+       decho(2) 
+       # maybe we should quit here
+       doFinish()
+       
+              
+       
 proc colFitMax*(df:nimdf,cols:int = 0,adjustwd:int = 0):nimis =
    ## colFitMax
    ## 
@@ -1215,12 +1228,13 @@ proc getColData*(df:nimdf,col:int):nimss =
      ## 
      ## 
      
-     # currently we quit if data is not good to meed df specifications maybe we should be more lenient here ??
+     # currently we quit if data is not good to meet df specifications maybe we should be more lenient here ??
      var zcol = col - 1
      if df.colcount > 0:
         if zcol < 0 or zcol > df.colcount :
-            printLn("Error : Wrong column number specified or incorrect data received",red)
-            dprint("[nimdataframe] Error : Wrong column number specified or incorrect data received")
+            printLnErrorMsg("Wrong column number specified or incorrect data received")
+            printLnErrorMsg("Most likely reason is free api call limit exceeded or server hit to fast")
+            printLnInfoMsg("nimdataframe","getColData")
             echo "zcol/dfcol: ",zcol,"  /  ",df.colcount
             doByeBye()
             quit(0)

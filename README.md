@@ -10,7 +10,7 @@ Dataframe for Nim
 
 | Library      | Status      | Version | License        | OS     | Compiler       |
 |--------------|-------------|---------|----------------|--------|----------------|
-| nimdataframe | Development | 0.0.5.x | MIT opensource | Linux  | Nim >= 0.18.x  |
+| nimdataframe | Development | 0.0.5.x | MIT opensource | Linux  | Nim >= 0.19.x  |
 
 
  Attempt of using csv data from the net, locally or generated to implement
