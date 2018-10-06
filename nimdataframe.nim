@@ -10,7 +10,7 @@
 ##
 ##   ProjectStart: 2016-09-16
 ##   
-##   Latest      : 2018-10-05
+##   Latest      : 2018-10-06
 ##
 ##   Compiler    : Nim >= 0.19.x  devel branch
 ##
@@ -307,7 +307,7 @@ proc makeDf2*(ufo1:nimdf,cols:int = 0,rows:int = -1,hasHeader:bool = false):nimd
        try: 
             arow.add(ufo1.df[cls][rws]) 
             # feedback line - comment out if not wanted
-            printLnInfoMsg("Row  ",$rws & " of " & $(df.rowcount - 1),xpos = 0);curup(1)
+            # printLnInfoMsg("Row  ",$rws & " of " & $(df.rowcount - 1),xpos = 0);curup(1)
        except IndexError:
             printLn("Error row :  " & $arow,red)
             try:
@@ -1532,8 +1532,8 @@ proc createDataFrame*(filename:string,cols:int = 2,rows:int = -1,sep:char = ',',
   ## so showdfinfo will calculate the correct row count otherwise there may be an off by 1 error
   ## 
   
-  printLn("Processing ...",skyblue) 
-  curup(1)
+  #printLn("Processing ...",skyblue) 
+  #curup(1)
   
   if filename.startswith("http") == true:
       var data1 = getData1(filename)
