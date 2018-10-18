@@ -10,7 +10,7 @@
 ##
 ##   ProjectStart: 2016-09-16
 ##   
-##   Latest      : 2018-10-06
+##   Latest      : 2018-10-18
 ##
 ##   Compiler    : Nim >= 0.19.x  devel branch
 ##
@@ -54,7 +54,7 @@
 ##  
 
 import nimcx
-import parsecsv,streams,algorithm,stats
+import parsecsv,streams,algorithm,stats,strutils
 import db_sqlite
 export stats
 
@@ -191,9 +191,9 @@ proc makeDf1*(ufo1:string,hasHeader:bool = false):nimdf =
       ufos = ufol[x].split(",")  # problems may arise if column data has commas ... then need some preprocessing
       ns = newNimSs()
       for xx in 0..<ufos.len:
-          ns.add(ufos[xx].strip(true,true))
+          ns.add(strutils.strip(ufos[xx],true,true))
           if df.colwidths[xx] < ufos[xx].len: 
-             df.colwidths.add(ufos[xx].strip(true,true).len)
+             df.colwidths.add(strutils.strip(ufos[xx]).len)
           
       df.df.add(ns)
    
@@ -351,7 +351,7 @@ proc getColHdx(df:nimdf): nimss =
      
       result = newNimss()
       for hx in df.df[0]:
-         result.add(hx.strip(true,true))      
+         result.add(strutils.strip(hx,true,true))      
 
 proc getTotalHeaderColsWitdh*(df:nimdf):int = 
      ## getTotalHeaderColsWitdh
@@ -361,7 +361,7 @@ proc getTotalHeaderColsWitdh*(df:nimdf):int =
      result = 0
      var ch = getcolhdx(df)
      for x in 0..<ch.len:
-         result = result + ch[x].strip(true,true).len
+         result = result + strutils.strip(ch[x],true,true).len
 
 proc showRaw*[T](df:nimdf,rrows:openarray[T]) =
    ## showRaw
@@ -1650,7 +1650,7 @@ proc dfColumnStats*(df:nimdf,colseq:seq[int]): seq[Runningstat] =
            ps.clear()
            for xx in coldata:
               try:
-                 var xxx =  parsefloat(xx.strip())
+                 var xxx =  parsefloat(strutils.strip(xx))
                  ps.push(xxx)
               except ValueError:
                  discard
@@ -1758,23 +1758,23 @@ proc dfLoad*(filename:string):nimdf =
             inc lc
             case lc 
               of 1 :  
-                      if strip(line) == "true"  : tresult.hasHeader = true
-                      elif strip(line) == "false" : tresult.hasHeader = false
+                      if strutils.strip(line) == "true"  : tresult.hasHeader = true
+                      elif strutils.strip(line) == "false" : tresult.hasHeader = false
                       else : tresult.hasHeader = false
               of 2 :
                      if line.len > 0:
-                        tresult.colcount = parseInt(strip(line))
+                        tresult.colcount = parseInt(strutils.strip(line))
                      else:
                         tresult.colcount = 0
               of 3 :
                      if line.len > 0:
-                        tresult.rowcount = parseInt(strip(line))
+                        tresult.rowcount = parseInt(strutils.strip(line))
                      else:
                         tresult.rowcount = 0
               
               of 4 : 
                      if line.len > 0:
-                                       var cccols = split(strip(line),sep = ',')
+                                       var cccols = split(strutils.strip(line),sep = ',')
                                        for acolor in cccols:
                                            tresult.colcolors.add(getColorConst(acolor))  
                      else:
@@ -1784,7 +1784,7 @@ proc dfLoad*(filename:string):nimdf =
                        
                      if line.len > 0:
                      
-                                       var ccwds = split(strip(line),sep = ',')
+                                       var ccwds = split(strutils.strip(line),sep = ',')
                                        for n in ccwds:
                                            tresult.colwidths.add(parseInt(n))
                      else:
@@ -1794,7 +1794,7 @@ proc dfLoad*(filename:string):nimdf =
                        
                      if line.len > 0:
                      
-                                       var cchds = split(strip(line),sep = ',')
+                                       var cchds = split(strutils.strip(line),sep = ',')
                                        tresult.colHeaders = cchds
                      else:
                         tresult.colHeaders = @[]     
@@ -1803,16 +1803,16 @@ proc dfLoad*(filename:string):nimdf =
                        
                      if line.len > 0:
                      
-                                       var ccrds = split(strip(line),sep = ',')
+                                       var ccrds = split(strutils.strip(line),sep = ',')
                                        tresult.rowHeaders = ccrds
                      else:
                         tresult.rowHeaders = @[]          
                         
               of 8 :
-                      doAssert(strip(line) == "DATA")
+                      doAssert(strutils.strip(line) == "DATA")
                       
               else:
-                    var ccdds = split(strip(line),sep = ',')
+                    var ccdds = split(strutils.strip(line),sep = ',')
                     tresult.df.add(ccdds) 
                     
      result = tresult                  
