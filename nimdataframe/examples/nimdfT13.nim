@@ -42,7 +42,7 @@ if ndf9.hasHeader == true :  # donot read to run stats on the header
        startrow = 1
 else : startrow = 0
 for row in startrow..<ndf9.rowcount:
-    printLn(fmtx(["<20"],$(ndf9.df[row][0])),zippi,styled={stylereverse},xpos = xpos)
+    printLn2(fmtx(["<20"],$(ndf9.df[row][0])),zippi,styled={stylereverse},xpos = xpos)
     
     var x = dfRowStats(ndf9,row)   # x now contains a runningstats instance for one row
     # display stats for all rows

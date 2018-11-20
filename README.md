@@ -99,17 +99,17 @@ if ndf9.hasHeader == true :  # donot read to run stats on the header
        startrow = 1
 else : startrow = 0
 for row in startrow..<ndf9.rowcount:
-    printLn(fmtx(["<20"],$(ndf9.df[row][0])),zippi,styled={stylereverse},xpos = xpos)
+    printLn2(fmtx(["<20"],$(ndf9.df[row][0])),zippi,styled={stylereverse},xpos = xpos)
     
     var x = dfRowStats(ndf9,row)   # x now contains a runningstats instance for one row
     # display stats for all rows
     let n = 3       # decimals
     let sep = ":"
     
-    printLnBiCol("Mean  : " & ff(x.mean,n),yellowgreen,white,sep,xpos = xpos,false,{})
-    printLnBiCol("Var   : " & ff(x.variance,n),yellowgreen,white,sep,xpos = xpos,false,{})
-    printLnBiCol("Min   : " & ff(x.min,n),yellowgreen,white,sep,xpos = xpos,false,{})
-    printLnBiCol("Max   : " & ff(x.max,n),yellowgreen,white,sep,xpos = xpos,false,{})
+    printLnBiCol2("Mean  : " & ff(x.mean,n),yellowgreen,white,sep,xpos = xpos,false,{})
+    printLnBiCol2("Var   : " & ff(x.variance,n),yellowgreen,white,sep,xpos = xpos,false,{})
+    printLnBiCol2("Min   : " & ff(x.min,n),yellowgreen,white,sep,xpos = xpos,false,{})
+    printLnBiCol2("Max   : " & ff(x.max,n),yellowgreen,white,sep,xpos = xpos,false,{})
     curup(5)
     xpos += 21
     if xpos > tw - 30:
@@ -133,8 +133,8 @@ Example screenshots of nimdfT13
 
 NOTE : 
   
-     Improvements (hopefully) may be made at any time and without advance warning.
-     Examples may break occasionally ... nevertheless we hope you have a nice day !
+     Improvements may be made at any time and without advance warning.
+     Examples may break occasionally ...  !
      
      Forking , testing,suggestions , ideas are welcome.
      This is development code hence use at your own risk.
