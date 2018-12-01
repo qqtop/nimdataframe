@@ -22,14 +22,6 @@ Dataframe for Nim
  used with https://github.com/qqtop/NimFinLib
  
  
-Requirements
-------------
-```nimrod
-                  
-        nimble install nimcx
- 
-```
-
               
 API Docs
 --------
@@ -44,6 +36,7 @@ Installation
 ------------
 ```nimrod
 
+        nimble install nimcx
         nimble install https://github.com/qqtop/nimdataframe.git
 
 ```
@@ -134,7 +127,7 @@ Example screenshots of nimdfT13
 NOTE : 
   
      Improvements may be made at any time and without advance warning.
-     Examples may break occasionally ...  !
+     Examples may break occasionally  ...  !
      
      Forking , testing,suggestions , ideas are welcome.
      This is development code hence use at your own risk.

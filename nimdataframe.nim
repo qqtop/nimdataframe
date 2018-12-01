@@ -10,7 +10,7 @@
 ##
 ##   ProjectStart: 2016-09-16
 ##   
-##   Latest      : 2018-10-18
+##   Latest      : 2018-12-01
 ##
 ##   Compiler    : Nim >= 0.19.x  devel branch
 ##
@@ -46,16 +46,19 @@
 ##                 trying to better handle json data  see new json lib by araq
 ##                 future filterDf(df:nimdf,cols:nimis,operator:nimss,vals:nimss)
 ##                 var ndf11 = filterDf(ndf9,@[3,5],@[">","=="],@["Borussia Dortmund","4"]
-##                 strings with accents may mess up the frame alignment --> needs to be taken care off in showdf
+##                 strings with accents may mess up the frame alignment --> needs to be taken care off in showdf maybe toRunes
 ##                 directly use more datasources other than csv , eg: select query outputs etc.
+##                 
+##  Notes        :           
 ##
 ##   Install     : nimble install https://github.com/qqtop/nimdataframe.git
 ##  
 ##  
 
 import nimcx
-import parsecsv,streams,algorithm,stats,strutils
-import db_sqlite
+import parsecsv
+import db_sqlite,stats
+import std/wordwrap
 export stats
 
 let NIMDATAFRAMEVERSION* = "0.0.5"
@@ -101,8 +104,29 @@ type
            frtexttop* : nimss   # write text into the top frame line
            frtextbot* : nimss   # write text into the bottom frame line
     
+
+type 
+     Rowrange* = nimis
+
+
+proc getRowrange*(nrows:int,nrowe:int):Rowrange =
+     var anrows = nrows
+     var anrowe = nrowe
+     if anrows <= 0: 
+        anrows = 0
+     else:
+        anrows = anrows - 1
+        
+     if anrowe <= 0: 
+        anrowe = 0
+     else:
+        anrowe = anrowe - 1  
+        
+     result.add(toSeq(anrows..anrowe))      
+    
+    
 proc newNimDf*():nimdf = 
-           new(result)          # needed for ref object  gc managed
+           new(result)          # needed for ref object gc managed
            result.df = @[]
            result.hasHeader  = false
            result.colcount   = 0
@@ -191,9 +215,9 @@ proc makeDf1*(ufo1:string,hasHeader:bool = false):nimdf =
       ufos = ufol[x].split(",")  # problems may arise if column data has commas ... then need some preprocessing
       ns = newNimSs()
       for xx in 0..<ufos.len:
-          ns.add(strutils.strip(ufos[xx],true,true))
+          ns.add(strip(ufos[xx],true,true))
           if df.colwidths[xx] < ufos[xx].len: 
-             df.colwidths.add(strutils.strip(ufos[xx]).len)
+             df.colwidths.add(strip(ufos[xx]).len)
           
       df.df.add(ns)
    
@@ -351,7 +375,7 @@ proc getColHdx(df:nimdf): nimss =
      
       result = newNimss()
       for hx in df.df[0]:
-         result.add(strutils.strip(hx,true,true))      
+         result.add(strip(hx,true,true))      
 
 proc getTotalHeaderColsWitdh*(df:nimdf):int = 
      ## getTotalHeaderColsWitdh
@@ -361,7 +385,7 @@ proc getTotalHeaderColsWitdh*(df:nimdf):int =
      result = 0
      var ch = getcolhdx(df)
      for x in 0..<ch.len:
-         result = result + strutils.strip(ch[x],true,true).len
+         result = result + strip(ch[x],true,true).len
 
 proc showRaw*[T](df:nimdf,rrows:openarray[T]) =
    ## showRaw
@@ -370,8 +394,18 @@ proc showRaw*[T](df:nimdf,rrows:openarray[T]) =
    ## if you need to return rows see getRowDataRange()
    ## 
    ## 
-   for x in rrows[0]..rrows[1]:
-      printLn(df.df[x],xpos = 2) 
+   #printLn(rrows,fgr=skyblue,xpos=2)
+   try:
+      for x in 0 ..< rrows.len:
+         try:
+            printLn( df.df[rrows[x]],xpos = 2) 
+         except IndexError:
+            printLn("N/A",xpos=2)   
+            printLn(rrows,xpos=2)
+   except IndexError:
+          printLn("N/A",xpos=2) 
+          printLn(rrows,xpos=2)
+            
       
 proc showFirstLast*(df:nimdf,nrows:int = 5) =
    ## shows first and last n lines of df incl. headers if any of dataframe
@@ -393,6 +427,29 @@ proc showFirstLast*(df:nimdf,nrows:int = 5) =
    printLnInfoMsg(fmtx([leftfmt],"Last"), $nrows & " rows ",yellowgreen,xpos = 2)
    showRaw(df,@[df.rowcount - nrows,df.rowcount - 1])
    echo() 
+   
+# TODO: show firstlast in a datafrme
+#    
+   
+proc showAnyRowRange*(df:nimdf,rrows:seq[int]) =
+   ## showAnyRowRange
+   ## 
+   ## shows first and last n lines of df incl. headers if any of dataframe
+   
+   var rowrange = rrows
+   let leftfmt = "<18"
+   if df.hasHeader == true:
+      printLnInfoMsg(fmtx([leftfmt],"Header and Rows") , $(rrows[0] + 1) & " to " & $(rrows[rrows.len - 1] + 1) ,yellowgreen,xpos = 2)
+      if df.colHeaders.len > 0:
+        printLn(df.colHeaders,xpos = 2)
+        showraw(df,rrows)
+      else:
+        showRaw(df,rrows)
+   else:
+      printLnInfoMsg(fmtx([leftfmt],"Rows") , $(rrows[0] + 1) & " to " & $(rrows[rrows.len - 1] + 1),yellowgreen,xpos = 2)
+      showRaw(df,rrows)
+    
+  
          
 proc showHeaderStatus*(df:nimdf,xpos:int = 2) = 
    ## showHeaderStatus
@@ -478,6 +535,8 @@ proc showDf*(df:nimdf,
              showframe     : bool    = false,
              framecolor    : string  = palegreen,
              showHeader    : bool    = false,
+             showRowHeader : bool    = false, # not yet implemented   maybe used for row numbering or other string type info
+             rowHeadertext : nimss   = @[],   # not yet implemented
              headertext    : nimss   = @[],
              leftalignflag : bool    = false,
              cellcolors    : nimss   = @[],    # cell features for coloring individual cells to be implemented
@@ -486,7 +545,7 @@ proc showDf*(df:nimdf,
              cellcalc      : nimss   = @[],    # placeholder for some sort of plugin feature to pass in manipulations/calculations on cells
              frtexttop     : nimss   = @[],
              frtextbot     : nimss   = @[],
-             xpos          : int     = 2) =
+             xpos          : int     = 1) =
              
   ## showDf
   ## 
@@ -513,7 +572,7 @@ proc showDf*(df:nimdf,
   ##
   ## cols,colwd,colcolors parameters seqs must be of equal length and corresponding to each other
   ## 
-  ## Note : best to fill in desired values , a quick showDf(mydf) will not always be satisfactory 
+  ## Note : best to fill in desired values for all parameters , a quick showDf(mydf) will not always be satisfactory , colwd must be supplied
   ## 
   #
   if checkDfok(df) == true: 
@@ -561,7 +620,7 @@ proc showDf*(df:nimdf,
          
     if okcolwd.len < okcols.len:
        # we are missing some colwd data we add default widths
-       for col in okcolwd.len .. okcols.len: okcolwd.add(8)
+       for col in okcolwd.len ..< okcols.len: okcolwd.add(8)
       
     
     # if no cols seq is specified we assume all cols
@@ -603,11 +662,11 @@ proc showDf*(df:nimdf,
        printLnErrorMsg("Program will now exit with assertion error message")
        echo()
        
-    # printLnInfoMsg("Debug","")
-    # echo okcols.len
-    # echo okcolwd.len   
+    #printLnInfoMsg("Debug","")
+    #echo okcols.len
+    #echo okcolwd.len   
     
-    doassert okcols.len == okcolwd.len # will display as out of memory error
+    doassert okcols.len == okcolwd.len # will display as out of assertion error
     frametoplinelen = frametoplinelen + sum(okcolwd) + (2 * okcols.len) + 1
     
     # take care of over lengths
@@ -1255,7 +1314,7 @@ proc getColData*(df:nimdf,col:int):nimss =
                     discard
 
                     
-proc getRowDataRange*(df:nimdf,rows:nimis = @[] , cols:nimis = @[]) : nimdf =
+proc getRowDataRange*(df:nimdf,rows:nimis = @[] , cols:nimis = @[],rowheaders:nimss = @[]) : nimdf =
   ## getRowDataRange
   ## 
   ## creates a new df with rows and cols as stipulated extracted from an exisiting df
@@ -1271,6 +1330,8 @@ proc getRowDataRange*(df:nimdf,rows:nimis = @[] , cols:nimis = @[]) : nimdf =
   aresult.hasHeader = df.hasHeader
   aresult.colcount = cols.len
   aresult.rowcount = rows.len
+  if rowheaders != @[]:
+    aresult.rowHeaders = rowheaders
 
   var b = newNimSs()
   var arows = rows
@@ -1284,9 +1345,14 @@ proc getRowDataRange*(df:nimdf,rows:nimis = @[] , cols:nimis = @[]) : nimdf =
      acols = toSeq(0..<df.colcount)
   
   # we extract named rows and cols from a df and create a new df
+  
+   
   for row in 0..<arows.len:     
      for col in 0..<acols.len:
-         b.add(df.df[arows[row]][acols[col] - 1])       
+         try:
+            b.add(df.df[arows[row]][acols[col] - 1])       
+         except IndexError:
+            discard 
      aresult.df.add(b) 
      b = @[]   
   result = aresult
@@ -1569,7 +1635,7 @@ proc createBinaryTestData*(filename:string = "nimDfBinaryTestData.csv",datarows:
 proc createRandomTestData*(filename:string = "nimDfTestData.csv",datarows:int = 2000,withHeaders:bool = false) =
   ## createRandomTestData
   ##
-  ## a file will be created in current working directory
+  ## a file will be created in current working directory  with mixed type cols
   ## 
   ## default name nimDfTestData.csv or as given
   ## 
@@ -1607,6 +1673,86 @@ proc createRandomTestData*(filename:string = "nimDfTestData.csv",datarows:int = 
   printLn("Created test data file : " & filename )  
   
 
+  
+ 
+proc createRandomTestDataInt*(filename:string = "nimDfTestData.csv",datarows:int = 2000,withHeaders:bool = false) =
+  ## createRandomTestDataInt
+  ##
+  ## a file will be created in current working directory  with 8 int cols
+  ## 
+  ## default name nimDfTestData.csv or as given
+  ## 
+  ## default columns 8 
+  ## default rows 2000
+  ## default headers none
+  ## 
+  ## 
+  
+  var  data = newFileStream(filename, fmWrite)
+  
+  # cols,colwd parameters seqs must be of equal length
+  var cols      = @[1,2,3,4,5,6,7,8]
+  var colwd     = @[10,10,10,10,10,10,10,10]
+
+  if withHeaders == true:
+     var headers = @["A"]
+     for x in 66 .. 90: headers.add($char(x)) 
+     for dx in 0..<cols.len - 1: data.write(headers[dx] & ",")  
+     data.writeLine(headers[cols.len - 1])
+  
+  
+  for dx in 0..<datarows:
+       
+      data.write($getRndInt(0,100000) & ",")
+      data.write($getRndInt(0,100000) & ",")
+      data.write($getRndInt(0,100000) & ",")
+      data.write($getRndInt(0,100000) & ",")
+      data.write($getRndInt(0,100000) & ",")
+      data.write($getRndInt(0,100000) & ",")
+      data.write($getRndInt(0,100000) & ",")
+      data.writeLine($getRndInt(0,100000))
+  
+  data.close()
+  printLn("Created test data file : " & filename )  
+    
+ 
+proc createRandomTestDataFloat*(filename:string = "nimDfTestData.csv",datarows:int = 2000,withHeaders:bool = false) =
+  ## createRandomTestDataFloat
+  ##
+  ## a file will be created in current working directory  with 8 float cols
+  ## 
+  ## default name nimDfTestData.csv or as given
+  ## 
+  ## default columns 8 
+  ## default rows 2000
+  ## default headers none
+  ## 
+  ## 
+  
+  var  data = newFileStream(filename, fmWrite)
+  
+  # cols,colwd parameters seqs must be of equal length
+  var cols      = @[1,2,3,4,5,6,7,8]
+  var colwd     = @[10,10,10,10,10,10,10,10]
+
+  if withHeaders == true:
+     var headers = @["A"]
+     for x in 66 .. 90: headers.add($char(x)) 
+     for dx in 0..<cols.len - 1: data.write(headers[dx] & ",")  
+     data.writeLine(headers[cols.len - 1])
+  
+  
+  for dx in 0..<datarows:
+      for x in 1..7: 
+         data.write($getRndFloat() & ",")
+      data.writeLine($getRndFloat())
+  
+  data.close()
+  printLn("Created test data file : " & filename )  
+    
+    
+  
+  
 proc dfRowStats*(df:nimdf,row:int,exceptCols:seq[int] = @[]):Runningstat =
    # sumStats
    # 
@@ -1650,7 +1796,7 @@ proc dfColumnStats*(df:nimdf,colseq:seq[int]): seq[Runningstat] =
            ps.clear()
            for xx in coldata:
               try:
-                 var xxx =  parsefloat(strutils.strip(xx))
+                 var xxx =  parsefloat(strip(xx))
                  ps.push(xxx)
               except ValueError:
                  discard
@@ -1666,11 +1812,10 @@ proc dfShowColumnStats*(df:nimdf,desiredcols:seq[int],colspace:int = 25,xpos:int
   ## 
   ## TODO: check for headers in first line to avoid crashes
   ##       assert that column data is Somenumber type or have an automatic selector for anything numeric
-  ## 
   ## xpos the starting display position
   ## colspace allows to nudge the distance between the displayed column statistics
   ## 
-  printLn("Dataframe Column Statistics\n",peru,xpos = 2)
+  printLn("Dataframe Column Statistics\n",peru,xpos = 1)
   
   # check that desiredcols is not more than available in df.colcount to avoid indexerrors etc later
   # we just cut off the right most entry of desiredcols until it fits
@@ -1693,22 +1838,23 @@ proc dfShowColumnStats*(df:nimdf,desiredcols:seq[int],colspace:int = 25,xpos:int
       if df.colHeaders.len > 0:
            inc colhitem
            var zz = ddesiredcols[colhitem] - 1
-           printLnBiCol("Column " & $(ddesiredcols[mx]) & " - " & df.colheaders[zz],xpos = nxpos,styled={styleUnderscore})
+           printLnBiCol2(cxpad("Column " & $(ddesiredcols[mx]) & " - " & df.colheaders[zz],colspace - 5),xpos = nxpos,styled={styleUnderscore})
       else:
-           printLnBiCol("Column " & $(ddesiredcols[mx]) & " Statistics",xpos = nxpos,styled={styleUnderscore})
+           printLnBiCol2(cxpad("Column " & $(ddesiredcols[mx]) & " Statistics",colspace - 5),xpos = nxpos,styled={styleUnderscore})
       showStats(mydfstats[mx],xpos = nxpos) 
       nxpos += colspace
       curup(15)
       
   curdn(20) 
+  printLn2("Dataframe info",peru,xpos = 1)
   if df.hasheader == true:
-      printLnBiCol(" hasHeader : " & $df.hasHeader,xpos = 1)
-      printLnBiCol(" Processed " & dodgerblue & "->" & yellowgreen & " Rows : " & $(df.rowcount - 1),xpos = 1)
+      printLnBiCol2(" hasHeader " & dodgerblue & "-> " & yellowgreen & $df.hasHeader,xpos = 0)
+      printLnBiCol2(" Processed " & dodgerblue & "->" & yellowgreen & " Rows : " & $(df.rowcount - 1),xpos = 0)
   else: 
-      printLnBiCol(" hasHeader :" & $df.hasHeader,xpos = 1)
-      printLnBiCol(" Processed " & dodgerblue & "->" & yellowgreen & " Rows : " & $df.rowcount,xpos = 1)
+      printLnBiCol2(" hasHeader " & dodgerblue & "-> " & yellowgreen & $df.hasHeader,xpos = 0)
+      printLnBiCol2(" Processed " & dodgerblue & "->" & yellowgreen & " Rows : " & $df.rowcount,xpos = 0)
     
-  printLnBiCol(" Processed " & dodgerblue & "->" & yellowgreen & " Cols : " & $ddesiredcols.len & " of " & $df.colcount,xpos = 1)
+  printLnBiCol2(" Processed " & dodgerblue & "->" & yellowgreen & " Cols : " & $ddesiredcols.len & " of " & $df.colcount,xpos = 0)
 
 
 
@@ -1736,10 +1882,10 @@ proc dfShowSumStats*(df:nimdf,numericCols:nimis,xpos = 2) =
      ## total sum of all numeric columns and relevant statistics of the resulting sums row
      ## 
      echo()
-     printLn("Dataframe Statistics for Column Sums  -- > Sum is the Total of columns sum statistic\n",peru,xpos = xpos)  
+     printLn2("Dataframe Statistics for Column Sums  -- > Sum is the Total of columns sum statistic\n",peru,xpos = xpos)  
      showStats(sumStats(df,numericCols),xpos = xpos)
-     printLnBiCol(" Processed Sums " & dodgerblue & "->" & yellowgreen & " Rows : " & $1,xpos = 1)
-     printLnBiCol(" Processed      " & dodgerblue & "->" & yellowgreen & " Cols : " & $numericCols.len & " of " & $df.colcount,xpos = 1)
+     printLnBiCol2(" Processed Sums " & dodgerblue & "->" & yellowgreen & " Rows : " & $1,xpos = 1)
+     printLnBiCol2(" Processed      " & dodgerblue & "->" & yellowgreen & " Cols : " & $numericCols.len & " of " & $df.colcount,xpos = 1)
      echo()  
   
 
@@ -1758,23 +1904,23 @@ proc dfLoad*(filename:string):nimdf =
             inc lc
             case lc 
               of 1 :  
-                      if strutils.strip(line) == "true"  : tresult.hasHeader = true
-                      elif strutils.strip(line) == "false" : tresult.hasHeader = false
+                      if strip(line) == "true"  : tresult.hasHeader = true
+                      elif strip(line) == "false" : tresult.hasHeader = false
                       else : tresult.hasHeader = false
               of 2 :
                      if line.len > 0:
-                        tresult.colcount = parseInt(strutils.strip(line))
+                        tresult.colcount = parseInt(strip(line))
                      else:
                         tresult.colcount = 0
               of 3 :
                      if line.len > 0:
-                        tresult.rowcount = parseInt(strutils.strip(line))
+                        tresult.rowcount = parseInt(strip(line))
                      else:
                         tresult.rowcount = 0
               
               of 4 : 
                      if line.len > 0:
-                                       var cccols = split(strutils.strip(line),sep = ',')
+                                       var cccols = split(strip(line),sep = ',')
                                        for acolor in cccols:
                                            tresult.colcolors.add(getColorConst(acolor))  
                      else:
@@ -1784,7 +1930,7 @@ proc dfLoad*(filename:string):nimdf =
                        
                      if line.len > 0:
                      
-                                       var ccwds = split(strutils.strip(line),sep = ',')
+                                       var ccwds = split(strip(line),sep = ',')
                                        for n in ccwds:
                                            tresult.colwidths.add(parseInt(n))
                      else:
@@ -1794,7 +1940,7 @@ proc dfLoad*(filename:string):nimdf =
                        
                      if line.len > 0:
                      
-                                       var cchds = split(strutils.strip(line),sep = ',')
+                                       var cchds = split(strip(line),sep = ',')
                                        tresult.colHeaders = cchds
                      else:
                         tresult.colHeaders = @[]     
@@ -1803,16 +1949,16 @@ proc dfLoad*(filename:string):nimdf =
                        
                      if line.len > 0:
                      
-                                       var ccrds = split(strutils.strip(line),sep = ',')
+                                       var ccrds = split(strip(line),sep = ',')
                                        tresult.rowHeaders = ccrds
                      else:
                         tresult.rowHeaders = @[]          
                         
               of 8 :
-                      doAssert(strutils.strip(line) == "DATA")
+                      doAssert(strip(line) == "DATA")
                       
               else:
-                    var ccdds = split(strutils.strip(line),sep = ',')
+                    var ccdds = split(strip(line),sep = ',')
                     tresult.df.add(ccdds) 
                     
      result = tresult                  
@@ -1900,7 +2046,7 @@ proc dfSave*(df:nimdf,filename:string,quiet:bool = false) =
         printLnBiCol("Dataframe saved to   : " & filename,xpos = 2)
         printLnBiCol("Rows written         : " & $rowcounter1.value,xpos = 2)
         printLnBiCol("Errors count         : " & $errorcounter1.value,xpos = 2) 
-        printLnBiCol("Error rows           : " & wordwrap($errorrows,newLine = "\x0D\x0A" & spaces(25)),xpos = 2)  # align seq printout
+        printLnBiCol("Error rows           : " & wrapWords($errorrows,newLine = "\x0D\x0A" & spaces(25)),xpos = 2)  # align seq printout
         printLnBiCol("Expected Total Cells : " & $(df.colcount * df.rowcount),xpos = 2)     # cell is one data element of a row
         printLnBiCol("Actual Total Cells   : " & $totalcolscounter1.value,xpos = 2)
         if  df.colcount * df.rowcount <> totalcolscounter1.value:
