@@ -25,8 +25,8 @@ isToNimSs	nimdataframe.html#isToNimSs.c,seq[int]	nimdataframe: isToNimSs(aseq: s
 getData1	nimdataframe.html#getData1,string,int	nimdataframe: getData1(url: string; timeout: int = 12000): string	
 makeDf1	nimdataframe.html#makeDf1,string,bool	nimdataframe: makeDf1(ufo1: string; hasHeader: bool = false): nimdf	
 getData2	nimdataframe.html#getData2,string,int,int,char	nimdataframe: getData2(filename: string; cols: int = 2; rows: int = -1; sep: char = &#x27;,&#x27;): auto	
-makeDf2	nimdataframe.html#makeDf2,nimdf,int,int,bool	nimdataframe: makeDf2(ufo1: nimdf; cols: int = 0; rows: int = -1; hasHeader: bool = false): nimdf	
-rotateDf	nimdataframe.html#rotateDf,nimdf,int,bool	nimdataframe: rotateDf(ufo1: nimdf; cols: int = 0; hasHeader: bool = false): nimdf	
+makeDf2	nimdataframe.html#makeDf2,nimdf,int,int,bool,bool	nimdataframe: makeDf2(ufo1: nimdf; cols: int = 0; rows: int = -1; hasHeader: bool = false;\n        feedback: bool = false): nimdf	
+rotateDf	nimdataframe.html#rotateDf,nimdf,int,bool,bool	nimdataframe: rotateDf(ufo1: nimdf; cols: int = 0; hasHeader: bool = false; feedback: bool = false): nimdf	
 getTotalHeaderColsWitdh	nimdataframe.html#getTotalHeaderColsWitdh,nimdf	nimdataframe: getTotalHeaderColsWitdh(df: nimdf): int	
 showRaw	nimdataframe.html#showRaw,nimdf,openArray[T]	nimdataframe: showRaw[T](df: nimdf; rrows: openArray[T])	
 showFirstLast	nimdataframe.html#showFirstLast,nimdf,int	nimdataframe: showFirstLast(df: nimdf; nrows: int = 5)	
@@ -41,9 +41,9 @@ getColData	nimdataframe.html#getColData,nimdf,int	nimdataframe: getColData(df: n
 getRowDataRange	nimdataframe.html#getRowDataRange,nimdf,nimis,nimis,nimss	nimdataframe: getRowDataRange(df: nimdf; rows: nimis = @[]; cols: nimis = @[]; rowheaders: nimss = @[]): nimdf	
 sortdf	nimdataframe.html#sortdf,nimdf,int	nimdataframe: sortdf(df: nimdf; sortcol: int = 1; sortorder = asc): nimdf	
 filterDf	nimdataframe.html#filterDf,nimdf,nimis,nimss,nimss	nimdataframe: filterDf(df: nimdf; cols: nimis; operator: nimss; vals: nimss)	
-makeNimDf	nimdataframe.html#makeNimDf,varargs[nimss],bool,bool	nimdataframe: makeNimDf(dfcols: varargs[nimss]; status: bool = true; hasHeader: bool = false): nimdf	
+makeNimDf	nimdataframe.html#makeNimDf,varargs[nimss],bool,bool,bool	nimdataframe: makeNimDf(dfcols: varargs[nimss]; status: bool = true; hasHeader: bool = false;\n          feedback: bool = false): nimdf	
 dfDefaultSetup	nimdataframe.html#dfDefaultSetup,nimdf,nimss	nimdataframe: dfDefaultSetup(df: nimdf; headertext: nimss = @[]): nimdf	
-createDataFrame	nimdataframe.html#createDataFrame,string,int,int,char,bool	nimdataframe: createDataFrame(filename: string; cols: int = 2; rows: int = -1; sep: char = &#x27;,&#x27;;\n                hasHeader: bool = false): nimdf	
+createDataFrame	nimdataframe.html#createDataFrame,string,int,int,char,bool,bool	nimdataframe: createDataFrame(filename: string; cols: int = 2; rows: int = -1; sep: char = &#x27;,&#x27;;\n                hasHeader: bool = false; feedback: bool = false): nimdf	
 createBinaryTestData	nimdataframe.html#createBinaryTestData,string,int,bool	nimdataframe: createBinaryTestData(filename: string = &quot;nimDfBinaryTestData.csv&quot;;\n                     datarows: int = 2000; withHeaders: bool = false)	
 createRandomTestData	nimdataframe.html#createRandomTestData,string,int,bool	nimdataframe: createRandomTestData(filename: string = &quot;nimDfTestData.csv&quot;; datarows: int = 2000;\n                     withHeaders: bool = false)	
 createRandomTestDataInt	nimdataframe.html#createRandomTestDataInt,string,int,bool	nimdataframe: createRandomTestDataInt(filename: string = &quot;nimDfTestData.csv&quot;;\n                        datarows: int = 2000; withHeaders: bool = false)	

@@ -169,7 +169,7 @@ converter isToNimSs*(aseq:seq[int]):nimss =
           for x in aseq: result.add($x)            
             
 # forward declaration          
-proc createDataFrame*(filename:string,cols:int = 2,rows:int = -1,sep:char = ',',hasHeader:bool = false):nimdf 
+proc createDataFrame*(filename:string,cols:int = 2,rows:int = -1,sep:char = ',',hasHeader:bool = false,feedback:bool = false):nimdf 
 
 # used in sortdf
 var intflag    : bool = false
@@ -296,7 +296,7 @@ proc getData2*(filename:string,cols:int = 2,rows:int = -1,sep:char = ','):auto =
         result = myseq    # this holds col data now
         
         
-proc makeDf2*(ufo1:nimdf,cols:int = 0,rows:int = -1,hasHeader:bool = false):nimdf =
+proc makeDf2*(ufo1:nimdf,cols:int = 0,rows:int = -1,hasHeader:bool = false,feedback:bool = false):nimdf =
    ## makeDf2
    ## 
    ## used to create a dataframe with nimdf object received from getData2  that is local csv
@@ -330,8 +330,9 @@ proc makeDf2*(ufo1:nimdf,cols:int = 0,rows:int = -1,hasHeader:bool = false):nimd
        # now build our row 
        try: 
             arow.add(ufo1.df[cls][rws]) 
-            # feedback line - comment out if not wanted
-            # printLnInfoMsg("Row  ",$rws & " of " & $(df.rowcount - 1),xpos = 0);curup(1)
+            # feedback line - shows simple row status of df creation
+            if feedback == true:
+               printLnInfoMsg("Row  ",$(rws + 1) & " of " & $(df.rowcount),xpos = 0);curup(1)
        except IndexError:
             printLn("Error row :  " & $arow,red)
             try:
@@ -358,12 +359,14 @@ proc makeDf2*(ufo1:nimdf,cols:int = 0,rows:int = -1,hasHeader:bool = false):nimd
    result = df  
 
 
-proc rotateDf*(ufo1:nimdf,cols:int = 0,hasHeader:bool = false):nimdf =  
+proc rotateDf*(ufo1:nimdf,cols:int = 0,hasHeader:bool = false,feedback:bool = false):nimdf =  
      # rotateDf
+     # WIP
      # 
-     # rotates a df to the left that is former header line is now first col
+     # rotates a df so that is former header/first line is now first col
+     # and former first col is first row
      # 
-     result = makedf2(ufo1,cols,hasHeader = false)
+     result = makedf2(ufo1,cols,hasheader=hasHeader,feedback=feedback)
       
 proc getColHdx(df:nimdf): nimss =
       ## getColHeaders
@@ -477,7 +480,7 @@ proc showCounts*(df:nimdf,xpos:int = 2) =
               
    else:   
        printLnInfoMsg(fmtx([leftfmt],"NIMDF"), " Data not available in dataframe", red,xpos = xpos)
-       decho(2) 
+       decho() 
        # maybe we should quit here
        doFinish()
        
@@ -1269,7 +1272,7 @@ proc showDataframeInfo*(df:nimdf) =
    else:
       printLn("none",xpos = 2)      
       
-   decho(2)    
+   decho()    
    hdx(printLn("End of dataframe inspection ", zippi,styled = {}))
    decho(1)
    
@@ -1540,7 +1543,7 @@ proc filterDf*(df:nimdf,cols:nimis,operator:nimss,vals:nimss) =
      discard
   
 
-proc makeNimDf*(dfcols : varargs[nimss],status:bool = true,hasHeader:bool = false):nimdf = 
+proc makeNimDf*(dfcols : varargs[nimss],status:bool = true,hasHeader:bool = false,feedback:bool = false):nimdf = 
   ## makeNimDf
   ## 
   ## creates a nimdf with passed in col data which should be of type nimss
@@ -1550,7 +1553,7 @@ proc makeNimDf*(dfcols : varargs[nimss],status:bool = true,hasHeader:bool = fals
   # 
   var df = newNimDf()
   for x in dfcols: df.df.add(x)
-  result = makeDf2(df,hasheader = hasHeader)
+  result = makeDf2(df,hasheader = hasHeader,feedback = feedback)
 
 
 
@@ -1584,7 +1587,7 @@ proc dfDefaultSetup*(df:nimdf,headertext:nimss = @[]):nimdf =
   
   
   
-proc createDataFrame*(filename:string,cols:int = 2,rows:int = -1,sep:char = ',',hasHeader:bool = false):nimdf = 
+proc createDataFrame*(filename:string,cols:int = 2,rows:int = -1,sep:char = ',',hasHeader:bool = false,feedback:bool = false):nimdf = 
   ## createDataFrame
   ## 
   ## attempts to create a nimdf dataframe from url or local path
@@ -1606,7 +1609,7 @@ proc createDataFrame*(filename:string,cols:int = 2,rows:int = -1,sep:char = ',',
       result = makeDf1(data1,hasHeader = hasHeader)
   else:
       var data2 = getdata2(filename = filename,cols = cols,rows = rows,sep = sep)  
-      result = makeDf2(data2,cols,rows,hasHeader)
+      result = makeDf2(data2,cols,rows,hasHeader,feedback)
 
   printLn(clearline)
   
@@ -1644,8 +1647,8 @@ proc createRandomTestData*(filename:string = "nimDfTestData.csv",datarows:int = 
   ## default headers none
   ## 
   ## 
-  
-  var  data = newFileStream(filename, fmWrite)
+  var rs = epochTime()
+  var data = newFileStream(filename, fmWrite)
   
   # cols,colwd parameters seqs must be of equal length
   var cols      = @[1,2,3,4,5,6,7,8]
@@ -1659,18 +1662,19 @@ proc createRandomTestData*(filename:string = "nimDfTestData.csv",datarows:int = 
   
   
   for dx in 0..<datarows:
-       
+  
+      data.write($(dx + 1) & ",") 
       data.write(getRndDate() & ",")
       data.write($getRndInt(0,100000) & ",")
-      data.write($getRndInt(0,100000) & ",")
+      data.write($getRndInt(0,500000) & ",")
       data.write(newWord(3,8) & ",")
       data.write(ff(getRndFloat() * 345243.132310 * getRandomSignF(),2) & ",")
       data.write(newWord(3,8) & ",")
-      data.write($getRndBool() & ",")
-      data.writeLine($getRndInt(0,100))
+      data.writeLine($getRndBool() )
+      
   
   data.close()
-  printLn("Created test data file : " & filename )  
+  printLn("Created test data file : " & filename & " with 8 columns and " & $datarows & " rows in " & ff(epochTime() - rs,5) & " secs")
   
 
   
@@ -1687,8 +1691,8 @@ proc createRandomTestDataInt*(filename:string = "nimDfTestData.csv",datarows:int
   ## default headers none
   ## 
   ## 
-  
-  var  data = newFileStream(filename, fmWrite)
+  var rs = epochTime()
+  var data = newFileStream(filename, fmWrite)
   
   # cols,colwd parameters seqs must be of equal length
   var cols      = @[1,2,3,4,5,6,7,8]
@@ -1702,8 +1706,7 @@ proc createRandomTestDataInt*(filename:string = "nimDfTestData.csv",datarows:int
   
   
   for dx in 0..<datarows:
-       
-      data.write($getRndInt(0,100000) & ",")
+      data.write($(dx + 1) & ",")  
       data.write($getRndInt(0,100000) & ",")
       data.write($getRndInt(0,100000) & ",")
       data.write($getRndInt(0,100000) & ",")
@@ -1713,7 +1716,7 @@ proc createRandomTestDataInt*(filename:string = "nimDfTestData.csv",datarows:int
       data.writeLine($getRndInt(0,100000))
   
   data.close()
-  printLn("Created test data file : " & filename )  
+  printLn("Created test data file : " & filename & " with 8 columns and " & $datarows & " rows in " & ff(epochTime() - rs,5) & " secs")  
     
  
 proc createRandomTestDataFloat*(filename:string = "nimDfTestData.csv",datarows:int = 2000,withHeaders:bool = false) =
@@ -1728,8 +1731,8 @@ proc createRandomTestDataFloat*(filename:string = "nimDfTestData.csv",datarows:i
   ## default headers none
   ## 
   ## 
-  
-  var  data = newFileStream(filename, fmWrite)
+  let rs = epochTime()
+  var data = newFileStream(filename, fmWrite)
   
   # cols,colwd parameters seqs must be of equal length
   var cols      = @[1,2,3,4,5,6,7,8]
@@ -1743,12 +1746,13 @@ proc createRandomTestDataFloat*(filename:string = "nimDfTestData.csv",datarows:i
   
   
   for dx in 0..<datarows:
-      for x in 1..7: 
+      data.write($(float(dx) + 1) & ",") 
+      for x in 2..7: 
          data.write($getRndFloat() & ",")
       data.writeLine($getRndFloat())
   
   data.close()
-  printLn("Created test data file : " & filename )  
+  printLn("Created test data file : " & filename & " with 8 columns and " & $datarows & " rows in " & ff(epochTime() - rs,5) & " secs")  
     
     
   
