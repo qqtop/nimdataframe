@@ -2,7 +2,7 @@ NIMDATAFRAMEVERSION	nimdataframe.html#NIMDATAFRAMEVERSION	nimdataframe: NIMDATAF
 asc	nimdataframe.html#asc	nimdataframe: asc	
 desc	nimdataframe.html#desc	nimdataframe: desc	
 dfcellobject	nimdataframe.html#dfcellobject	nimdataframe: dfcellobject	
-newdfcellobject	nimdataframe.html#newdfcellobject,	nimdataframe: newdfcellobject(): dfcellobject	
+newdfcellobject	nimdataframe.html#newdfcellobject	nimdataframe: newdfcellobject(): dfcellobject	
 nimss	nimdataframe.html#nimss	nimdataframe: nimss	
 nimis	nimdataframe.html#nimis	nimdataframe: nimis	
 nimfs	nimdataframe.html#nimfs	nimdataframe: nimfs	
@@ -11,11 +11,11 @@ nimcells	nimdataframe.html#nimcells	nimdataframe: nimcells
 nimdf	nimdataframe.html#nimdf	nimdataframe: nimdf	
 Rowrange	nimdataframe.html#Rowrange	nimdataframe: Rowrange	
 getRowrange	nimdataframe.html#getRowrange,int,int	nimdataframe: getRowrange(nrows: int; nrowe: int): Rowrange	
-newNimDf	nimdataframe.html#newNimDf,	nimdataframe: newNimDf(): nimdf	
-newNimSs	nimdataframe.html#newNimSs,	nimdataframe: newNimSs(): nimss	
-newNimIs	nimdataframe.html#newNimIs,	nimdataframe: newNimIs(): nimis	
-newNimFs	nimdataframe.html#newNimFs,	nimdataframe: newNimFs(): nimfs	
-newNimBs	nimdataframe.html#newNimBs,	nimdataframe: newNimBs(): nimbs	
+newNimDf	nimdataframe.html#newNimDf	nimdataframe: newNimDf(): nimdf	
+newNimSs	nimdataframe.html#newNimSs	nimdataframe: newNimSs(): nimss	
+newNimIs	nimdataframe.html#newNimIs	nimdataframe: newNimIs(): nimis	
+newNimFs	nimdataframe.html#newNimFs	nimdataframe: newNimFs(): nimfs	
+newNimBs	nimdataframe.html#newNimBs	nimdataframe: newNimBs(): nimbs	
 toNimSs	nimdataframe.html#toNimSs.c,seq[string]	nimdataframe: toNimSs(aseq: seq[string]): nimss	
 toNimIs	nimdataframe.html#toNimIs.c,seq[int]	nimdataframe: toNimIs(aseq: seq[int]): nimis	
 toNimFs	nimdataframe.html#toNimFs.c,seq[float]	nimdataframe: toNimFs(aseq: seq[float]): nimfs	
@@ -33,6 +33,7 @@ showFirstLast	nimdataframe.html#showFirstLast,nimdf,int	nimdataframe: showFirstL
 showAnyRowRange	nimdataframe.html#showAnyRowRange,nimdf,seq[int]	nimdataframe: showAnyRowRange(df: nimdf; rrows: seq[int])	
 showHeaderStatus	nimdataframe.html#showHeaderStatus,nimdf,int	nimdataframe: showHeaderStatus(df: nimdf; xpos: int = 2)	
 showCounts	nimdataframe.html#showCounts,nimdf,int	nimdataframe: showCounts(df: nimdf; xpos: int = 2)	
+TODO : provide better fit tw as basis is to wide for df with few cols	nimdataframe.html#todo-colon-provide-better-fit-tw-as-basis-is-to-wide-for-df-with-few-cols	 TODO : provide better fit tw as basis is to wide for df with few cols	
 colFitMax	nimdataframe.html#colFitMax,nimdf,int,int	nimdataframe: colFitMax(df: nimdf; cols: int = 0; adjustwd: int = 0): nimis	
 showDf	nimdataframe.html#showDf,nimdf,int,nimis,nimis,nimss,bool,string,bool,bool,nimss,nimss,bool,nimss,nimis,nimis,nimss,nimss,nimss,int	nimdataframe: showDf(df: nimdf; rows: int = 10; cols: nimis = @[]; colwd: nimis = @[];\n       colcolors: nimss = @[white, white]; showframe: bool = false;\n       framecolor: string = palegreen; showHeader: bool = false;\n       showRowHeader: bool = false; rowHeadertext: nimss = @[];\n       headertext: nimss = @[]; leftalignflag: bool = false; cellcolors: nimss = @[];\n       cellrows: nimis = @[]; cellcols: nimis = @[]; cellcalc: nimss = @[];\n       frtexttop: nimss = @[]; frtextbot: nimss = @[]; xpos: int = 1)	
 showDataframeInfo	nimdataframe.html#showDataframeInfo,nimdf	nimdataframe: showDataframeInfo(df: nimdf)	
@@ -41,7 +42,7 @@ getColData	nimdataframe.html#getColData,nimdf,int	nimdataframe: getColData(df: n
 getRowDataRange	nimdataframe.html#getRowDataRange,nimdf,nimis,nimis,nimss	nimdataframe: getRowDataRange(df: nimdf; rows: nimis = @[]; cols: nimis = @[]; rowheaders: nimss = @[]): nimdf	
 sortdf	nimdataframe.html#sortdf,nimdf,int	nimdataframe: sortdf(df: nimdf; sortcol: int = 1; sortorder = asc): nimdf	
 filterDf	nimdataframe.html#filterDf,nimdf,nimis,nimss,nimss	nimdataframe: filterDf(df: nimdf; cols: nimis; operator: nimss; vals: nimss)	
-makeNimDf	nimdataframe.html#makeNimDf,varargs[nimss],bool,bool,bool	nimdataframe: makeNimDf(dfcols: varargs[nimss]; status: bool = true; hasHeader: bool = false;\n          feedback: bool = false): nimdf	
+makeNimDf	nimdataframe.html#makeNimDf,seq[nimss],bool,bool,bool	nimdataframe: makeNimDf(dfcols: seq[nimss]; status: bool = true; hasHeader: bool = false;\n          feedback: bool = false): nimdf	
 dfDefaultSetup	nimdataframe.html#dfDefaultSetup,nimdf,nimss	nimdataframe: dfDefaultSetup(df: nimdf; headertext: nimss = @[]): nimdf	
 createDataFrame	nimdataframe.html#createDataFrame,string,int,int,char,bool,bool	nimdataframe: createDataFrame(filename: string; cols: int = 2; rows: int = -1; sep: char = &#x27;,&#x27;;\n                hasHeader: bool = false; feedback: bool = false): nimdf	
 createBinaryTestData	nimdataframe.html#createBinaryTestData,string,int,bool	nimdataframe: createBinaryTestData(filename: string = &quot;nimDfBinaryTestData.csv&quot;;\n                     datarows: int = 2000; withHeaders: bool = false)	
@@ -55,3 +56,4 @@ sumStats	nimdataframe.html#sumStats,nimdf,nimis	nimdataframe: sumStats(df: nimdf
 dfShowSumStats	nimdataframe.html#dfShowSumStats,nimdf,nimis,int	nimdataframe: dfShowSumStats(df: nimdf; numericCols: nimis; xpos = 2)	
 dfLoad	nimdataframe.html#dfLoad,string	nimdataframe: dfLoad(filename: string): nimdf	
 dfSave	nimdataframe.html#dfSave,nimdf,string,bool	nimdataframe: dfSave(df: nimdf; filename: string; quiet: bool = false)	
+end of nimdataframe.nim ###############################################################################################        	nimdataframe.html#end-of-nimdataframedotnim	 end of nimdataframe.nim ###############################################################################################        	

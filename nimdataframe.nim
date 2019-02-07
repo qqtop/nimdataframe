@@ -10,7 +10,7 @@
 ##
 ##   ProjectStart: 2016-09-16
 ##   
-##   Latest      : 2018-12-01
+##   Latest      : 2019-02-07
 ##
 ##   Compiler    : Nim >= 0.19.x  devel branch
 ##
@@ -1543,13 +1543,15 @@ proc filterDf*(df:nimdf,cols:nimis,operator:nimss,vals:nimss) =
      discard
   
 
-proc makeNimDf*(dfcols : varargs[nimss],status:bool = true,hasHeader:bool = false,feedback:bool = false):nimdf = 
+
+proc makeNimDf*(dfcols:seq[nimss],status:bool = true,hasHeader:bool = false,feedback:bool = false):nimdf = 
   ## makeNimDf
   ## 
   ## creates a nimdf with passed in col data which should be of type nimss
   ## 
   #  TODO  will need to check if all cols are same length otherwise append  NaN etc
   #        and put in the status check
+  #  NOTE  dfcols now to be passed as seq[nimss] as the earlier varargs solution does not compile anymore with latst nim 0.19.9
   # 
   var df = newNimDf()
   for x in dfcols: df.df.add(x)
