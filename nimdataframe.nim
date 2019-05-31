@@ -10,7 +10,7 @@
 ##
 ##   ProjectStart: 2016-09-16
 ##   
-##   Latest      : 2019-02-07
+##   Latest      : 2019-05-31
 ##
 ##   Compiler    : Nim >= 0.19.x  devel branch
 ##
@@ -1844,9 +1844,9 @@ proc dfShowColumnStats*(df:nimdf,desiredcols:seq[int],colspace:int = 25,xpos:int
       if df.colHeaders.len > 0:
            inc colhitem
            var zz = ddesiredcols[colhitem] - 1
-           printLnBiCol2(cxpad("Column " & $(ddesiredcols[mx]) & " - " & df.colheaders[zz],colspace - 5),xpos = nxpos,styled={styleUnderscore})
+           printLnBiCol(cxpad("Column " & $(ddesiredcols[mx]) & " - " & df.colheaders[zz],colspace - 5),xpos = nxpos,styled={styleUnderscore})
       else:
-           printLnBiCol2(cxpad("Column " & $(ddesiredcols[mx]) & " Statistics",colspace - 5),xpos = nxpos,styled={styleUnderscore})
+           printLnBiCol(cxpad("Column " & $(ddesiredcols[mx]) & " Statistics",colspace - 5),xpos = nxpos,styled={styleUnderscore})
       showStats(mydfstats[mx],xpos = nxpos) 
       nxpos += colspace
       curup(15)
@@ -1854,13 +1854,13 @@ proc dfShowColumnStats*(df:nimdf,desiredcols:seq[int],colspace:int = 25,xpos:int
   curdn(20) 
   printLn2("Dataframe info",peru,xpos = 1)
   if df.hasheader == true:
-      printLnBiCol2(" hasHeader " & dodgerblue & "-> " & yellowgreen & $df.hasHeader,xpos = 0)
-      printLnBiCol2(" Processed " & dodgerblue & "->" & yellowgreen & " Rows : " & $(df.rowcount - 1),xpos = 0)
+      printLnBiCol(" hasHeader " & dodgerblue & "-> " & yellowgreen & $df.hasHeader,xpos = 0)
+      printLnBiCol(" Processed " & dodgerblue & "->" & yellowgreen & " Rows : " & $(df.rowcount - 1),xpos = 0)
   else: 
-      printLnBiCol2(" hasHeader " & dodgerblue & "-> " & yellowgreen & $df.hasHeader,xpos = 0)
-      printLnBiCol2(" Processed " & dodgerblue & "->" & yellowgreen & " Rows : " & $df.rowcount,xpos = 0)
+      printLnBiCol(" hasHeader " & dodgerblue & "-> " & yellowgreen & $df.hasHeader,xpos = 0)
+      printLnBiCol(" Processed " & dodgerblue & "->" & yellowgreen & " Rows : " & $df.rowcount,xpos = 0)
     
-  printLnBiCol2(" Processed " & dodgerblue & "->" & yellowgreen & " Cols : " & $ddesiredcols.len & " of " & $df.colcount,xpos = 0)
+  printLnBiCol(" Processed " & dodgerblue & "->" & yellowgreen & " Cols : " & $ddesiredcols.len & " of " & $df.colcount,xpos = 0)
 
 
 
@@ -1888,10 +1888,10 @@ proc dfShowSumStats*(df:nimdf,numericCols:nimis,xpos = 2) =
      ## total sum of all numeric columns and relevant statistics of the resulting sums row
      ## 
      echo()
-     printLn2("Dataframe Statistics for Column Sums  -- > Sum is the Total of columns sum statistic\n",peru,xpos = xpos)  
+     printLn("Dataframe Statistics for Column Sums  -- > Sum is the Total of columns sum statistic\n",peru,xpos = xpos)  
      showStats(sumStats(df,numericCols),xpos = xpos)
-     printLnBiCol2(" Processed Sums " & dodgerblue & "->" & yellowgreen & " Rows : " & $1,xpos = 1)
-     printLnBiCol2(" Processed      " & dodgerblue & "->" & yellowgreen & " Cols : " & $numericCols.len & " of " & $df.colcount,xpos = 1)
+     printLnBiCol(" Processed Sums " & dodgerblue & "->" & yellowgreen & " Rows : " & $1,xpos = 1)
+     printLnBiCol(" Processed      " & dodgerblue & "->" & yellowgreen & " Cols : " & $numericCols.len & " of " & $df.colcount,xpos = 1)
      echo()  
   
 
