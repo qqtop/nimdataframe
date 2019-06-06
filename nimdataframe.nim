@@ -10,7 +10,7 @@
 ##
 ##   ProjectStart: 2016-09-16
 ##   
-##   Latest      : 2019-05-31
+##   Latest      : 2019-06-06
 ##
 ##   Compiler    : Nim >= 0.19.x  devel branch
 ##
@@ -176,7 +176,26 @@ var intflag    : bool = false
 var floatflag  : bool = false
 var stringflag : bool = false
 
-
+proc getColorConst*[T](sc:T):string = 
+   ## getColorConst
+   ## 
+   ## this functions returns the colorname constant color escape sequence based on a colorname
+   ## ready to be used in print routines , it is the reverse of the getColorName function.
+   ## usefull if we have colorname strings read in from a file or a sequence
+   ## 
+   ##.. code-block:: nim
+   ##  import nimcx
+   ##  var astringseq = split("lightgrey,pastelgreen,pastelpink,lightblue,goldenrod,truetomato,truetomato,white",sep=',')          
+   ##  for acolor in astringseq:          
+   ##      printLn("good color " & acolor , getColorConst(acolor))    
+   ## 
+   ##
+   result = "unknown color"
+   for x in colornames:
+       if x[0] == sc:
+          result = x[1]
+          
+          
 proc getData1*(url:string,timeout:int = 12000):string =
   ## getData1
   ## 
@@ -1852,7 +1871,7 @@ proc dfShowColumnStats*(df:nimdf,desiredcols:seq[int],colspace:int = 25,xpos:int
       curup(15)
       
   curdn(20) 
-  printLn2("Dataframe info",peru,xpos = 1)
+  printLn("Dataframe info",peru,xpos = 1)
   if df.hasheader == true:
       printLnBiCol(" hasHeader " & dodgerblue & "-> " & yellowgreen & $df.hasHeader,xpos = 0)
       printLnBiCol(" Processed " & dodgerblue & "->" & yellowgreen & " Rows : " & $(df.rowcount - 1),xpos = 0)
