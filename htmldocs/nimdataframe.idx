@@ -22,6 +22,7 @@ toNimFs	nimdataframe.html#toNimFs.c,seq[T][float]	nimdataframe: toNimFs(aseq: se
 toNimBs	nimdataframe.html#toNimBs.c,seq[T][bool]	nimdataframe: toNimBs(aseq: seq[bool]): nimbs	
 fsToNimSs	nimdataframe.html#fsToNimSs.c,seq[T][float]	nimdataframe: fsToNimSs(aseq: seq[float]): nimss	
 isToNimSs	nimdataframe.html#isToNimSs.c,seq[T][int]	nimdataframe: isToNimSs(aseq: seq[int]): nimss	
+getColorConst	nimdataframe.html#getColorConst,T	nimdataframe: getColorConst[T](sc: T): string	
 getData1	nimdataframe.html#getData1,string,int	nimdataframe: getData1(url: string; timeout: int = 12000): string	
 makeDf1	nimdataframe.html#makeDf1,string,bool	nimdataframe: makeDf1(ufo1: string; hasHeader: bool = false): nimdf	
 getData2	nimdataframe.html#getData2,string,int,int,char	nimdataframe: getData2(filename: string; cols: int = 2; rows: int = -1; sep: char = &apos;,&apos;): auto	
@@ -54,5 +55,6 @@ dfColumnStats	nimdataframe.html#dfColumnStats,nimdf,seq[T][int]	nimdataframe: df
 dfShowColumnStats	nimdataframe.html#dfShowColumnStats,nimdf,seq[T][int],int,int	nimdataframe: dfShowColumnStats(df: nimdf; desiredcols: seq[int]; colspace: int = 25; xpos: int = 1)	
 sumStats	nimdataframe.html#sumStats,nimdf,seq[int]	nimdataframe: sumStats(df: nimdf; numericCols: nimis): RunningStat	
 dfShowSumStats	nimdataframe.html#dfShowSumStats,nimdf,seq[int],int	nimdataframe: dfShowSumStats(df: nimdf; numericCols: nimis; xpos = 2)	
+dfLoad	nimdataframe.html#dfLoad,string	nimdataframe: dfLoad(filename: string): nimdf	
 dfSave	nimdataframe.html#dfSave,nimdf,string,bool	nimdataframe: dfSave(df: nimdf; filename: string; quiet: bool = false)	
 end of nimdataframe.nim ###############################################################################################        	nimdataframe.html#end-of-nimdataframedotnim	 end of nimdataframe.nim ###############################################################################################        	

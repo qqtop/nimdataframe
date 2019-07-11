@@ -10,7 +10,7 @@
 ##
 ##   ProjectStart: 2016-09-16
 ##   
-##   Latest      : 2019-06-06
+##   Latest      : 2019-07-11
 ##
 ##   Compiler    : Nim >= 0.19.x  devel branch
 ##
@@ -69,7 +69,7 @@ const
       
 # dfcellobject related code is experimental and still may be changed in the near future      
 type      
-    dfcellobject* =   object {.inheritable.} 
+    dfcellobject* {.inheritable.} = object  
          cellrow*   : int
          cellcol*   : int
          cellcolor* : string
@@ -89,8 +89,8 @@ type
     
     
 type
-    nimdf* =  ref object  {.inheritable.}       
-           df* : seq[nimss]     # nim data frame 
+    nimdf* {.inheritable.} =  ref object        
+           df*  : seq[nimss]     # nim data frame 
            hasHeader* : bool
            colcount*  : int
            rowcount*  : int
