@@ -504,7 +504,7 @@ proc showCounts*(df:nimdf,xpos:int = 2) =
 proc colFitMax*(df:nimdf,cols:int = 0,adjustwd:int = 0):nimis =
    ## colFitMax
    ## 
-   ## # TODO : provide better fit tw as basis is to wide for df with few cols
+   ## TODO : provide better fit tw as basis is to wide for df with few cols
    ## 
    ## calculates best column width to fit into terminal width
    ## 
@@ -615,7 +615,7 @@ proc showDf*(df:nimdf,
         
     if cols.len == 1:
         # to display one column data showheader and showFrame must be false
-        # to avoid messed up display , Todo: take care of this eventually 
+        # to avoid messed up display   
         header = false
         frame = false
     
@@ -2077,4 +2077,4 @@ proc dfSave*(df:nimdf,filename:string,quiet:bool = false) =
         echo()
 
         
-### end of nimdataframe.nim ###############################################################################################        
+        
