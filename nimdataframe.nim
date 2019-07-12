@@ -10,7 +10,7 @@
 ##
 ##   ProjectStart: 2016-09-16
 ##   
-##   Latest      : 2019-07-11
+##   Latest      : 2019-07-12
 ##
 ##   Compiler    : Nim >= 0.19.x  devel branch
 ##
@@ -416,38 +416,34 @@ proc showRaw*[T](df:nimdf,rrows:openarray[T]) =
    ## if you need to return rows see getRowDataRange()
    ## 
    ## 
-   #printLn(rrows,fgr=skyblue,xpos=2)
-   try:
-      for x in 0 ..< rrows.len:
+   #echo $df.df  
+   for x in countup(rrows[0],rrows[1] - 1,1):
          try:
-            printLn( df.df[rrows[x]],xpos = 2) 
+            printLn("row   : " & $(x + 2) & " " & df.df[x + 1],xpos = 2) 
          except IndexError:
             printLn("N/A",xpos=2)   
             printLn(rrows,xpos=2)
-   except IndexError:
-          printLn("N/A",xpos=2) 
-          printLn(rrows,xpos=2)
-            
+              
       
-proc showFirstLast*(df:nimdf,nrows:int = 5) =
+proc showFirstLast*(df:nimdf,nrows:int = df.rowcount) =
    ## shows first and last n lines of df incl. headers if any of dataframe
    ## 
    ## 
    let leftfmt = "<18"
    if df.hasHeader == true:
-      printLnInfoMsg(fmtx([leftfmt],"Header and First") , $nrows & " rows ",yellowgreen,xpos = 2)
+      printLnInfoMsg(fmtx([leftfmt],"Header and First") , $(nrows) & " rows ",yellowgreen,xpos = 2)
       if df.colHeaders.len > 0:
-        printLn(df.colHeaders,xpos = 2)
-        showRaw(df,@[0,nrows])
+        printLn("colHeader: " & df.colHeaders,xpos = 2)
+        showRaw(df,@[0,nrows - 1])
       else:
         showRaw(df,@[0,nrows])
    else:
-      printLnInfoMsg(fmtx([leftfmt],"First") , $nrows & " rows ",yellowgreen,xpos = 2)
+      printLnInfoMsg(fmtx([leftfmt],"First") , $(nrows - 1) & " rows ",yellowgreen,xpos = 2)
       showRaw(df,@[0,nrows - 1])
       
    echo()
    printLnInfoMsg(fmtx([leftfmt],"Last"), $nrows & " rows ",yellowgreen,xpos = 2)
-   showRaw(df,@[df.rowcount - nrows,df.rowcount - 1])
+   showRaw(df,@[df.rowcount - nrows - 1, df.rowcount - 1])
    echo() 
    
 # TODO: show firstlast in a datafrme
@@ -1073,7 +1069,7 @@ proc showDf*(df:nimdf,
                                   # end exp uncomm line below
                           else:                          
                                   printLn(".",lime)
-                          toplineflag = true                                # set toplineflag , topline of frame ok
+                          toplineflag = true     # set toplineflag , topline of frame ok
                       
                       if col == 0: 
                             print(framecolor & vfcs & okcolcolors[col] & fmtx(fma,displaystr,spaces(1) & framecolor & vfc & white),okcolcolors[col],styled = {},xpos = xpos)
@@ -1098,7 +1094,7 @@ proc showDf*(df:nimdf,
                                   # end exp uncomm line below
                           else:   
                                   printLn(".",lime)
-                          toplineflag = true                                # set toplineflag , topline of frame ok
+                          toplineflag = true    # set toplineflag , topline of frame ok
                       
                       if col == 0: 
                             print(framecolor & vfcs & okcolcolors[col] & fmtx(fma,displaystr,spaces(1) & framecolor & vfc & white),okcolcolors[col],styled = {},xpos = xpos)
@@ -1233,7 +1229,7 @@ proc showDf*(df:nimdf,
           
 
 
-proc showDataframeInfo*(df:nimdf) = 
+proc showDataframeInfo*(df:nimdf,nrows:int = df.rowcount) = 
    ## showDataframeInfo
    ## 
    ## some basic information of the dataframe
@@ -1244,7 +1240,7 @@ proc showDataframeInfo*(df:nimdf) =
    showHeaderStatus(df)
    showCounts(df)
    echo()
-   showFirstLast(df,5)
+   showFirstLast(df,nrows)
    echo()
    printLn(dodgerblue & rightarrow & sandybrown & " Display parameters if available inside the df object ",sandybrown,xpos = 2)
    printLn(dodgerblue & rightarrow & sandybrown & " Column headers / first row will be shown if hasHeader == true ",sandybrown,xpos = 2)
@@ -1270,7 +1266,7 @@ proc showDataframeInfo*(df:nimdf) =
    
    printLn("Column Colors  ( as specified , if any ) :",greenyellow,xpos = 2)
    if df.colColors.len > 0:
-     for x in 0..<df.colcolors.len:
+     for x in 0 ..< df.colcolors.len:
         if x == 0:
              #print("col" & $(x + 1) & "-" getColorName(df.colcolors[x]) & ", ",df.colcolors[x],xpos = 2)
               print(getColorName(df.colcolors[x]) & ", ",df.colcolors[x],xpos = 2)
@@ -1296,7 +1292,7 @@ proc showDataframeInfo*(df:nimdf) =
    decho(1)
    
 
-proc showDfInfo*(df:nimdf) = showDataframeInfo(df)   # convenience function same as showDataframeInfo
+proc showDfInfo*(df:nimdf,nrows:int = df.rowcount) = showDataframeInfo(df,nrows)   # convenience function same as showDataframeInfo
 
    
 proc getColData*(df:nimdf,col:int):nimss =
