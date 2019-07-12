@@ -28,6 +28,7 @@ API Docs
 
 
   [Index       ](http://qqtop.github.io/nimdataframeindex.html)
+  
   [Nimdataframe](http://qqtop.github.io/nimdataframe.html)
 
 
@@ -50,8 +51,6 @@ Example Code
  
 ```nimrod
 ## nimdfT13.nim
-## 
-## Testing nimdataframe
 ## 
 ## 
 #  October data from http://www.imf.org/external/np/fin/data/rms_mth.aspx?reportType=CVSDR 

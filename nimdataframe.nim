@@ -570,7 +570,7 @@ proc showDf*(df:nimdf,
   ## Displays a dataframe 
   ## 
   ## allows selective display of columns , with column numbers passed in as a seq
-  ## https://github.com/amallia/GaussianNB
+  ##
   ## Convention :  the first column = 1 
   ## 
   ## number of rows    default = 10
