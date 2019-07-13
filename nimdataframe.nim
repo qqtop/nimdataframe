@@ -1853,7 +1853,7 @@ proc dfShowColumnStats*(df:nimdf,desiredcols:seq[int],colspace:int = 25,xpos:int
   for mx in 0..<mydfstats.len:
       # if there are many columns we try to display grid wise
       if nxpos > tw - 22:
-        curdn(20)
+        curdn(21)
         nxpos = xpos
       
       if df.colHeaders.len > 0:
@@ -1864,9 +1864,9 @@ proc dfShowColumnStats*(df:nimdf,desiredcols:seq[int],colspace:int = 25,xpos:int
            printLnBiCol(cxpad("Column " & $(ddesiredcols[mx]) & " Statistics",colspace - 5),xpos = nxpos,styled={styleUnderscore})
       showStats(mydfstats[mx],xpos = nxpos) 
       nxpos += colspace
-      curup(15)
+      curup(16)
       
-  curdn(20) 
+  curdn(21) 
   printLn("Dataframe info",peru,xpos = 1)
   if df.hasheader == true:
       printLnBiCol(" hasHeader " & dodgerblue & "-> " & yellowgreen & $df.hasHeader,xpos = 0)

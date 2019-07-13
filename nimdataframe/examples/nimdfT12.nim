@@ -1,5 +1,8 @@
+import nimcx
+import nimdataframe
 
-import nimcx , nimdataframe
+
+#import nimcx , nimdataframe
 
 # nimdfT12
 # 
@@ -65,4 +68,4 @@ dfShowColumnStats(ndf9,statcols,colspace = 30,xpos = 2)          # show stats fo
 dfShowSumStats(ndf9,statcols)                                    # show stats for horizontal sums that is: Sum is the total of all cols summed
 
 
-doFinish()                                                         # print bottom info
+doFinish()                                                       # print bottom info
