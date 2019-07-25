@@ -10,7 +10,7 @@
 ##
 ##   ProjectStart: 2016-09-16
 ##   
-##   Latest      : 2019-07-12
+##   Latest      : 2019-07-25
 ##
 ##   Compiler    : Nim >= 0.19.x  devel branch
 ##
@@ -412,14 +412,15 @@ proc getTotalHeaderColsWitdh*(df:nimdf):int =
 proc showRaw*[T](df:nimdf,rrows:openarray[T]) =
    ## showRaw
    ## 
-   ## needs a df object and a seq with two values the first being the startrow the second the end row to show
-   ## if you need to return rows see getRowDataRange()
+   ## needs a df object and a seq with two values the first being the startrow 
+   ## the second being the end row to show,
+   ## if you need to return certain rows see getRowDataRange()
    ## 
    ## 
    #echo $df.df  
-   for x in countup(rrows[0],rrows[1] - 1,1):
+   for x in countup(rrows[0],rrows[1] ,1):    
          try:
-            printLn("row   : " & $(x + 2) & " " & df.df[x + 1],xpos = 2) 
+            printLn("row   : " & $(x + 1) & " " & df.df[x],xpos = 2)  
          except IndexError:
             printLn("N/A",xpos=2)   
             printLn(rrows,xpos=2)
@@ -438,8 +439,9 @@ proc showFirstLast*(df:nimdf,nrows:int = df.rowcount) =
       else:
         showRaw(df,@[0,nrows])
    else:
-      printLnInfoMsg(fmtx([leftfmt],"First") , $(nrows - 1) & " rows ",yellowgreen,xpos = 2)
-      showRaw(df,@[0,nrows - 1])
+      assert df.hasHeader == false 
+      printLnInfoMsg(fmtx([leftfmt],"First") , $(nrows) & " rows ",yellowgreen,xpos = 2)
+      showRaw(df,@[0,nrows])
       
    echo()
    printLnInfoMsg(fmtx([leftfmt],"Last"), $nrows & " rows ",yellowgreen,xpos = 2)

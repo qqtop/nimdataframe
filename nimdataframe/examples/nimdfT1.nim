@@ -11,7 +11,7 @@
 
 import nimdataframe , nimcx
 
-let ufo = "http://bit.ly/uforeports"    # data used in pandas documentation
+let ufo  ="http://bit.ly/uforeports"    # data used in pandas documentation
 #let ufo = """https://raw.githubusercontent.com/justmarkham/pandas-videos/master/data/ufo.csv"""
 var ndf9 = createDataFrame(ufo,hasHeader = true)
 
@@ -32,6 +32,6 @@ showDf(ndf9,
    leftalignflag = true,
    xpos = 3) 
 decho(3)
-showDataframeInfo(ndf9)
+showDataframeInfo(ndf9,15)
 doFinish()
 
